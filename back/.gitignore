@@ -1,0 +1,13 @@
+# envファイルを無視
+backend/venv
+.venv
+
+__pycache__/
+*.pyc
+
+
+# videosフォルダを無視
+backend/media
+
+venv/
+.env

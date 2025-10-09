@@ -1,0 +1,26 @@
+{
+  "name": "Animation Agent",
+  "dockerComposeFile": ["../docker-compose.yml"],
+  "service": "app",
+  "workspaceFolder": "/workspaces/ai_agent",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.debugpy",
+        "ms-toolsai.jupyter",
+        "ms-azuretools.vscode-docker",
+        "esbenp.prettier-vscode",
+        "biomejs.biome-vscode",
+        "bradlc.vscode-tailwindcss",
+        "rickaym.manim-sideview",
+        "mhutchie.git-graph",
+        "github.copilot",
+        "github.copilot-chat"
+      ]
+    }
+  },
+  "forwardPorts": [3000, 8000, 5432],
+  "remoteUser": "root",
+  "postCreateCommand": "bash .devcontainer/setup.sh"
+}

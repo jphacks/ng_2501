@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    container_name: ai_agent
+    volumes:
+      - .:/workspaces/ai_agent:cached
+    command: sleep infinity
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/devdb
+      - PYTHONPATH=/workspaces/ai_agent
+    ports:
+      - "8000:8000"
+      - "3000:3000"
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16-alpine
+    container_name: ai_agent_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: devdb
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  db_data:

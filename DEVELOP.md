@@ -77,7 +77,8 @@ echo 'eval "$(uv generate-shell-completion bash)"' >> ~/.bashrc
 git init  が起こらないように作成
 
 ```bash 
-uv init back --vcs none  --package  
+uv init back --vcs none
+
 ```
 
 ### バックエンドのインストール

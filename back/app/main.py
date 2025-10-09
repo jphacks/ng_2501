@@ -18,9 +18,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # ルーター登録
 app.include_router(sample_router.router)
 
-@app.get("/")
-async def root():
-    return {"message": "✅ FastAPI is running successfully!"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

@@ -20,7 +20,6 @@ services:
 
   db:
     image: postgres:16-alpine
-    container_name: ai_agent_db
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres

@@ -1,0 +1,37 @@
+name: Deploy to GCE
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    name: Deploy to GCE
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: SSH into GCE and deploy
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.GCE_HOST }}
+          username: ${{ secrets.GCE_USER }}
+          key: ${{ secrets.GCE_SSH_KEY }}
+          script: |
+            set -eux
+            cd /home/${{ secrets.GCE_USER }}/ai_agent
+
+            echo "🔄 Pulling latest code..."
+            git fetch --all
+            git reset --hard origin/main
+
+            echo "🧹 Stopping old containers..."
+            docker compose down --remove-orphans
+
+            echo "⚙️ Building and starting new containers..."
+            docker compose up -d --build
+
+            echo "✅ Deployment complete!"
+            docker ps

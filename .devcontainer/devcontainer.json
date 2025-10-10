@@ -1,6 +1,6 @@
 {
   "name": "Animation Agent",
-  "dockerComposeFile": ["../docker-compose.yml"],
+  "dockerComposeFile": ["./docker-compose.yml"],
   "service": "app",
   "workspaceFolder": "/workspaces/ai_agent",
   "customizations": {
@@ -21,6 +21,5 @@
     }
   },
   "forwardPorts": [3000, 8000, 5432],
-  "remoteUser": "root",
-  "postCreateCommand": "bash .devcontainer/setup.sh"
+  "remoteUser": "root"
 }

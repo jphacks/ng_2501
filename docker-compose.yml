@@ -7,7 +7,7 @@ services:
     container_name: ai_agent
     volumes:
       - .:/workspaces/ai_agent:cached
-    command: bash -c "bash .devcontainer/setup.sh && uv run uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    command: bash -c "bash /workspaces/ai_agent/.devcontainer/setup.sh && uv run uvicorn app.main:app --host 0.0.0.0 --port 8000"
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/devdb
       - PYTHONPATH=/workspaces/ai_agent

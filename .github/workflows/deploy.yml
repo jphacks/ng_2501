@@ -21,7 +21,8 @@ jobs:
           key: ${{ secrets.GCE_SSH_KEY }}
           script: |
             set -eux
-            cd /home/${{ secrets.GCE_USER }}/ai_agent
+
+            cd /home/${{ secrets.GCE_USER }}/ng_2501
 
             echo "🔄 Pulling latest code..."
             git fetch --all

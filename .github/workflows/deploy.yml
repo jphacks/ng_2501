@@ -24,15 +24,15 @@ jobs:
 
             cd /home/${{ secrets.GCE_USER }}/ng_2501
 
-            echo "🔄 Pulling latest code..."
+            echo " Pulling latest code..."
             git fetch --all
             git reset --hard origin/main
 
             echo "🧹 Stopping old containers..."
             docker compose down --remove-orphans
 
-            echo "⚙️ Building and starting new containers..."
+            echo "Building and starting new containers..."
             docker compose up -d --build
 
-            echo "✅ Deployment complete!"
+            echo "Deployment complete!"
             docker ps

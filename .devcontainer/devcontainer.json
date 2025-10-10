@@ -21,5 +21,7 @@
     }
   },
   "forwardPorts": [3000, 8000, 5432],
-  "remoteUser": "root"
+  "remoteUser": "root",
+  "postCreateCommand": ".devcontainer/setup.sh"
+
 }

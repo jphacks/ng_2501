@@ -1,36 +1,271 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# tips-maker
 
-## Getting Started
+## ユーザーの課題
 
-First, run the development server:
+- スマホで数式を書くのは難しい
+- 数式をわかりやすく伝えたい
+- 教師がわかりやすい動画教材を作りたい
+
+## 解決法
+
+- スマホからでも入力できるライティング機能
+- 数式を動画化してわかりやすく伝える
+- manimを使った高品質な数学動画の自動生成
+
+## 主な機能
+
+### 1. テキスト入力機能（ランディングページ）
+
+数式を含むテキストをWebフォームから入力し、動画生成のためのプロンプトを自動生成する。
+
+**入力**
+
+- **必須**: 数式を含むテキスト（めろくんなどが作成）
+  - LaTeX形式の数式に対応（例: `\int_0^1 x^2 dx`）
+  - 通常のテキストと数式を混在可能
+  - 具体例: 「積分の基本的な計算方法を説明します。\int_0^1 x^2 dx = [x^3/3]_0^1 = 1/3」
+- **任意**: 動画生成のプロンプト（トグルで表示/非表示）
+  - 動画の見た目や演出の指示
+  - 具体例: 「積分記号を赤色で強調してほしい」「計算過程をゆっくり表示してほしい」
+
+**出力**
+
+- `VideoGenerationPrompt`オブジェクト
+  - `prompt`: AIが生成した動画生成用プロンプト（テキスト形式）
+  - `manimCode`: manimで動画を生成するためのPythonコード
+  - `originalText`: ユーザーが入力した元のテキスト
+
+### 2. 中間プロンプト確認・編集機能
+
+AIが自動生成したプロンプトとmanimコードを確認・編集する。AIの誤認識やタイポを修正可能。
+
+**表示・編集内容**
+
+- **編集可能なプロンプト**
+  - AIが生成した動画生成プロンプトを自由に編集
+- **原文表示**（トグル）
+  - ユーザーが最初に入力したテキストを表示
+  - AIがどのように解釈したか確認できる
+- **Manimコード編集**（トグル）
+  - AIが生成したPythonコード（manim）を表示・編集
+
+**操作**
+
+- 「動画を生成」ボタンで次のステップへ進む
+- 編集内容は動画生成時に反映される
+
+### 3. 動画生成機能
+
+編集済みのプロンプトとmanimコードを使用して、数式解説動画を自動生成する。
+
+**入力**
+
+- `VideoGenerationPrompt`オブジェクト
+  - ユーザーが確認・編集済みのプロンプト
+  - manimコード
+
+**処理**
+
+- manimを使用した動画レンダリング
+- LaTeX形式の数式を高品質な動画に変換
+- 数式の変形過程をアニメーション化
+
+**出力**
+
+- `VideoResult`オブジェクト
+  - `videoUrl`: 生成された動画ファイルのURL（MP4形式）
+  - `prompt`: 使用されたプロンプト情報
+
+### 4. 動画編集・再生成機能
+
+生成された動画に対して追加の指示を出し、動画を再生成できます。
+
+**表示内容**
+
+- 生成された動画（videoタグで再生可能）
+- 使用されたプロンプトの確認
+- 動画の生成日時
+
+**編集機能**
+
+- **編集ダイアログ**
+  - 「動画を編集する」ボタンで表示
+  - 修正指示をテキストで入力
+  - 具体例: 「図と式が重なっているので、図を左にずらしてください」「文字サイズを大きくしてください」
+- **再生成**
+  - 編集指示を元に動画を再生成
+  - 既存のプロンプトに追加の指示を適用
+
+**入力**
+
+- `VideoEditRequest`オブジェクト
+  - `videoId`: 編集対象の動画ID（videoUrl）
+  - `editPrompt`: 修正内容の指示（テキスト）
+
+**出力**
+
+- 新しい`VideoResult`オブジェクト（再生成された動画）
+
+### 5. 共有機能（今後実装予定）
+
+ユーザー同士で作成した動画を共有できる。数学の単元ごとに整理されたブログ的な機能。
+
+## 技術構成
+
+### フロントエンド
+
+- **ランタイム管理**: fnm (Fast Node Manager)
+- **パッケージマネージャー**: pnpm
+- **フレームワーク**: Next.js 15.5.4 + React 19.1.0
+- **ビルドツール**: Turbopack
+- **リンター・フォーマッター**: Biome
+- **スタイリング**: Tailwind CSS
+- **型安全性**: TypeScript
+
+### バックエンド
+
+- **動画生成**: manim (Mathematical Animation Engine)
+- **LaTeX処理**: TinyTeX + required packages
+- **AI処理**: LLM（Gemini API / WebLLM等を検討中）
+- **データベース**: SQLite（将来的に）
+
+### インフラ
+
+- **コンテナ化**: Docker
+- **開発環境**: devcontainer対応
+
+## 環境構築
+
+### 前提条件
+
+- Node.js 18以上（fnm推奨）
+- pnpm
+
+#### fnmのインストール
+
+Node.jsのバージョン管理にfnmを使用します。
+
+**macOS/Linux:**
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+curl -fsSL https://fnm.vercel.app/install | bash
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**インストール後、Node.jsをインストール:**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+fnm install 20
+fnm use 20
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+#### pnpmのインストール
 
-## Learn More
+pnpmがインストールされていない場合は、以下のコマンドでインストール
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm install -g pnpm
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### セットアップ手順
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **依存関係のインストール**
 
-## Deploy on Vercel
+   ```bash
+   pnpm install
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2. **開発サーバーの起動（Turbopack使用）**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   ```bash
+   pnpm dev
+   ```
+
+   ブラウザで <http://localhost:3000> にアクセス
+
+3. **コードのリンティング・フォーマット**
+
+   ```bash
+   # リンティングチェック
+   pnpm lint
+   
+   # リンティングと自動修正
+   pnpm lint:fix
+   
+   # コードフォーマット
+   pnpm format
+   ```
+
+### プロジェクト構造
+
+```text
+tips-maker/
+├── src/
+│   ├── app/
+│   │   ├── datas/                    # Domain層: データモデル定義・バリデーション
+│   │   │   ├── Video.ts              # 動画生成のメインモデル（リクエスト、プロンプト、結果）
+│   │   │   ├── Persona.ts            # ペルソナモデル（旧要件からの移行用）
+│   │   │   └── Tips.ts               # TIPSモデル（旧要件からの移行用）
+│   │   ├── hooks/                    # UseCase層: ビジネスロジック・API処理
+│   │   │   └── useTextAnalysis.ts    # 動画生成フロー全体のロジック
+│   │   ├── layout.tsx                # ルートレイアウト
+│   │   ├── page.tsx                  # トップページ
+│   │   └── globals.css               # グローバルスタイル
+│   └── components/                   # Presentation層: UIコンポーネント
+│       ├── VideoGenerationFlow.tsx   # 状態管理
+│       ├── landing/                  # 状態1: ランディングページ
+│       │   ├── Landing.tsx           # ランディングページ全体のラッパー
+│       │   └── MathTextInput.tsx     # 数式テキスト入力フォーム
+│       ├── prompt/                   # 状態2: プロンプト確認ページ
+│       │   ├── Prompt.tsx            # プロンプト確認ページ全体のラッパー
+│       │   └── PromptEditor.tsx      # プロンプト・Manimコード編集UI
+│       ├── generating/               # 状態3: 動画生成中
+│       │   └── Generating.tsx        # ローディング表示
+│       └── result/                   # 状態4: リザルトページ
+│           ├── Result.tsx            # リザルトページ全体
+│           ├── VideoPlayer.tsx       # 動画プレイヤー
+│           └── VideoEditDialog.tsx   # 動画編集ダイアログ
+├── biome.json                        # Biome設定ファイル
+└── package.json                      # 依存関係とスクリプト
+```
+
+#### アーキテクチャ
+
+1. **Domain層** (`src/app/datas/`)
+   - **役割**: ビジネスドメインのデータモデル定義とバリデーション
+   - **主要ファイル**:
+     - `Video.ts`: 現在のメインモデル。動画生成リクエスト、プロンプト、結果の型定義
+     - `Persona.ts`: ペルソナ（学習者プロファイル）モデル ※旧要件から継承
+     - `Tips.ts`: TIPS（学習コンテンツ）モデル ※旧要件から継承
+
+2. **UseCase層** (`src/app/hooks/`)
+   - **役割**: ビジネスロジック、API通信、状態管理
+   - **主要ファイル**:
+     - `useTextAnalysis.ts`: 動画生成フローのコアロジック（プロンプト生成 → 動画生成 → 編集）
+
+3. **Presentation層** (`src/components/`)
+   - **役割**: UIコンポーネント、ユーザーインタラクション、状態に基づく画面表示
+   - **主要ファイル**:
+     - `VideoGenerationFlow.tsx`: **アプリ全体のフロー制御**。
+   - **状態別コンポーネント**:
+     1. `landing/`: テキスト入力画面
+     2. `prompt/`: プロンプト確認・編集画面
+     3. `generating/`: 動画生成中のローディング画面
+     4. `result/`: 動画表示・編集画面
+
+## UI/UX
+
+- **デザイン**: PC優先だけどスマホ対応（レスポンシブデザイン）
+- **ページ遷移**: 将来的にはページ遷移なしがいい
+- **トグル**: 詳細設定やmanim原文は必要に応じて表示したいね
+
+## 今後の実装予定
+
+- [ ] 数式入力機能（LaTeX形式対応）
+- [ ] プロンプト生成機能（AI統合）
+- [ ] 中間プロンプト編集UI
+- [ ] manim連携・動画生成機能
+- [ ] 動画プレイヤー実装
+- [ ] 動画編集・再生成機能
+- [ ] 共有機能（ブログ的な機能）
+- [ ] 単元ごとの分類機能
+- [ ] データベース統合

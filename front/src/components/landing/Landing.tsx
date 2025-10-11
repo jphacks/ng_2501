@@ -14,7 +14,7 @@ interface LandingProps {
  */
 export function Landing({ onSubmit, isGenerating, error }: LandingProps) {
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full min-w-0">
             {/* エラー表示 */}
             {error && (
                 <div className="p-3 bg-red-50 border border-red-300 rounded mb-3">
@@ -24,7 +24,7 @@ export function Landing({ onSubmit, isGenerating, error }: LandingProps) {
             )}
 
             {/* テキスト入力フォーム（flex-1で残りスペース占有） */}
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 overflow-hidden">
                 <MathTextInput onSubmit={onSubmit} isGenerating={isGenerating} />
             </div>
         </div>

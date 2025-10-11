@@ -14,16 +14,7 @@ interface PromptProps {
  */
 export function Prompt({ prompt, isGenerating, onGenerate }: PromptProps) {
     return (
-        <div className="space-y-4">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                    ステップ2: プロンプトの確認・編集
-                </h3>
-                <p className="text-sm text-gray-600">
-                    AIが生成したプロンプトを確認し、必要に応じて編集してください
-                </p>
-            </div>
-
+        <div className="h-full flex flex-col min-w-0 w-full">
             <PromptEditor prompt={prompt} isGenerating={isGenerating} onGenerate={onGenerate} />
         </div>
     )

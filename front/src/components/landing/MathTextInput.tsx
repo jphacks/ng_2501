@@ -396,7 +396,7 @@ $$(\\cos(\\theta+\\pi),\\,\\sin(\\theta+\\pi)) = (-\\cos\\theta,\\,-\\sin\\theta
 
     return (
         <ErrorProvider>
-            <form onSubmit={handleSubmit} className="flex flex-col h-full">
+            <form onSubmit={handleSubmit} className="flex flex-col h-full min-w-0">
                 {/* 数式エディタポップアップ */}
                 {showInlinePopup && showMathEditor && popupPosition && (
                     <div
@@ -449,9 +449,9 @@ $$(\\cos(\\theta+\\pi),\\,\\sin(\\theta+\\pi)) = (-\\cos\\theta,\\,-\\sin\\theta
                 </div>
 
                 {/* メインコンテンツ: 2カラムレイアウト */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0 min-w-0">
                     {/* 左側: 編集・プレビューエリア（メイン） */}
-                    <div className="lg:col-span-2 flex flex-col space-y-3 min-h-0">
+                    <div className="lg:col-span-2 flex flex-col space-y-3 min-h-0 min-w-0">
                         {/* 表示モード切り替え */}
                         <div className="flex gap-1 bg-gray-100 p-1 rounded">
                             <button
@@ -535,7 +535,7 @@ $$(\\cos(\\theta+\\pi),\\,\\sin(\\theta+\\pi)) = (-\\cos\\theta,\\,-\\sin\\theta
                     </div>
 
                         {/* メインエディタエリア（flex-1で残りスペースを占有） */}
-                        <div className="flex-1 min-h-0">{/* min-h-0でflexの縮小を許可 */}
+                        <div className="flex-1 min-h-0 overflow-auto">{/* 左側は内部スクロール */}
                     {/* 編集モード */}
                     {viewMode === 'edit' && (
                         <textarea
@@ -594,9 +594,9 @@ $$(\\cos(\\theta+\\pi),\\,\\sin(\\theta+\\pi)) = (-\\cos\\theta,\\,-\\sin\\theta
                 </div>
 
                     {/* 右側: 操作エリア */}
-                    <div className="flex flex-col min-h-0">
+                    <div className="flex flex-col min-h-0 min-w-0">
                         {/* オプション機能エリア（スクロール可能） */}
-                        <div className="overflow-y-auto flex-1 min-h-0 pr-2">
+                        <div className="overflow-y-auto flex-1 min-h-0 pr-2">{/* 右側も内部スクロール */}
                             <div className="space-y-3">
                                 {/* AIで文章のひな形を生成 */}
                                 <div className="bg-gray-50 border border-gray-200 rounded p-3">

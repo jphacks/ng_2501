@@ -16,7 +16,6 @@ interface ResultProps {
  * PC向けに画面を贅沢に使う2カラムレイアウト
  */
 export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
-    const [showPrompt, setShowPrompt] = useState(false)
     const [showEditPanel, setShowEditPanel] = useState(false)
     const [editPrompt, setEditPrompt] = useState('')
 
@@ -48,59 +47,31 @@ export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
             </div>
 
             {/* メインコンテンツ: 2カラムレイアウト */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0 min-w-0">
                 {/* 左側: 動画プレイヤー（メイン） */}
-                <div className="lg:col-span-2 space-y-3">
-            <VideoPlayer videoUrl={result.videoUrl} />
-
-                    {/* プロンプト確認（折りたたみ可能） */}
-                    <div className="border border-gray-200 rounded overflow-hidden">
-                        <button
-                            type="button"
-                            onClick={() => setShowPrompt(!showPrompt)}
-                            className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
-                        >
-                            <span className="text-sm font-medium text-gray-700">使用されたプロンプト</span>
-                            <svg 
-                                className={`w-4 h-4 text-gray-500 transition-transform ${showPrompt ? 'rotate-180' : ''}`}
-                                fill="none" 
-                                stroke="currentColor" 
-                                viewBox="0 0 24 24"
-                            >
-                                <title>{showPrompt ? '閉じる' : '開く'}</title>
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </button>
-                        {showPrompt && (
-                            <div className="p-3 bg-white border-t border-gray-200">
-                                <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                                    {result.prompt.prompt}
-                                </p>
-                            </div>
-                        )}
-                    </div>
+                <div className="lg:col-span-2 flex flex-col min-h-0 min-w-0 w-full">
+                    <VideoPlayer videoUrl={result.videoUrl} />
                 </div>
 
                 {/* 右側: 編集エリア */}
-                <div className="space-y-3">
-                    <div className="sticky top-4">
-                        {/* 編集パネル切り替えボタン */}
-                        <button
-                            type="button"
-                            onClick={() => setShowEditPanel(!showEditPanel)}
-                            disabled={isGenerating}
-                            className={`w-full py-3 px-4 rounded font-medium transition-all ${
-                                showEditPanel 
-                                    ? 'bg-gray-600 text-white hover:bg-gray-700' 
-                                    : 'bg-blue-600 text-white hover:bg-blue-700'
-                            } disabled:bg-gray-400 disabled:cursor-not-allowed`}
-                        >
-                            {showEditPanel ? '編集をキャンセル' : '動画を編集する'}
-                        </button>
+                <div className="flex flex-col min-h-0 min-w-0 w-full">
+                    {/* 編集パネル切り替えボタン */}
+                    <button
+                        type="button"
+                        onClick={() => setShowEditPanel(!showEditPanel)}
+                        disabled={isGenerating}
+                        className={`w-full py-3 px-4 rounded font-medium transition-all mb-3 ${
+                            showEditPanel 
+                                ? 'bg-gray-600 text-white hover:bg-gray-700' 
+                                : 'bg-blue-600 text-white hover:bg-blue-700'
+                        } disabled:bg-gray-400 disabled:cursor-not-allowed`}
+                    >
+                        {showEditPanel ? '編集をキャンセル' : '動画を編集する'}
+                    </button>
 
-                        {/* 編集パネル */}
-                        {showEditPanel && (
-                            <div className="mt-3 p-4 bg-blue-50 border border-blue-200 rounded space-y-3 animate-fade-in">
+                    {/* 編集パネル */}
+                    {showEditPanel && (
+                        <div className="p-4 bg-blue-50 border border-blue-200 rounded space-y-3 animate-fade-in mb-3">
                                 <div>
                                     <label htmlFor="edit-prompt" className="block text-sm font-medium text-gray-700 mb-2">
                                         修正指示
@@ -134,29 +105,19 @@ export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
                                         '動画を再生成'
                                     )}
                                 </button>
-                            </div>
-                        )}
+                        </div>
+                    )}
 
-                        {/* ヘルプ情報 */}
-                        {!showEditPanel && (
-                            <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded">
-                                <h4 className="text-xs font-semibold text-gray-700 mb-2">次にできること</h4>
-                                <ul className="text-xs text-gray-600 space-y-1.5">
-                                    <li className="flex items-start gap-1.5">
-                                        <span className="text-blue-600 mt-0.5">▸</span>
-                                        <span>動画をダウンロードして共有</span>
-                                    </li>
-                                    <li className="flex items-start gap-1.5">
-                                        <span className="text-blue-600 mt-0.5">▸</span>
-                                        <span>編集ボタンから修正指示を出す</span>
-                                    </li>
-                                    <li className="flex items-start gap-1.5">
-                                        <span className="text-blue-600 mt-0.5">▸</span>
-                                        <span>新しい動画を作成する</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        )}
+                    {/* 使用されたプロンプト */}
+                    <div className="flex flex-col border border-gray-200 rounded bg-white flex-1 min-h-0">
+                        <div className="p-3 bg-gray-50 border-b border-gray-200">
+                            <h4 className="text-sm font-medium text-gray-700">使用されたプロンプト</h4>
+                        </div>
+                        <div className="p-3 overflow-y-auto flex-1">
+                            <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                                {result.prompt.prompt}
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

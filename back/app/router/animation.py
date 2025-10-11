@@ -30,8 +30,6 @@ class InitialPrompt(BaseModel):
     
 
 # 知識の構造化説明をgetするためのルータ
-
-
 service = ManimAnimationService()
 @router.post("/api/prompt", response_model=Output)
 def concept_enhance(concept_input: input):
@@ -50,6 +48,7 @@ async def prompt(prompt: InitialPrompt):
         prompt.enhance_prompt
     )
     return Output(output=err)
+
 
 @router.post('api/animatio/{video_id}',response_class=FileResponse)
 def get_animation(video_id:str):

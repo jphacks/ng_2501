@@ -213,6 +213,24 @@ $$\\int f(x)dx = F(x) + C$$
             <form onSubmit={handleSubmit} className="space-y-4">
                 {/* AIタイトル生成セクション */}
                 <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg">
+                    {/* 数式エディタ（編集モードと分割モード） */}
+                    {showMathEditor && (viewMode === 'edit' || viewMode === 'split') && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                            <div className="p-4 border border-blue-300 rounded-lg bg-blue-50 max-w-md w-full mx-4">
+                                <h3 className="text-sm font-medium text-gray-700 mb-3">数式エディタ</h3>
+                                <MathEditor
+                                    value={currentMathValue}
+                                    onChange={setCurrentMathValue}
+                                    onComplete={() => handleMathComplete(currentMathValue)}
+                                    onCancel={handleMathCancel}
+                                    isVisible={true}
+                                />
+                                <p className="mt-2 text-xs text-gray-600">
+                                    Enterキーで確定、Escキーでキャンセルできます。数式は自動的に $ で囲まれます。
+                                </p>
+                            </div>
+                        </div>
+                    )}
                     <h3 className="text-sm font-semibold text-gray-800 mb-3">🤖 AIで文章を自動生成</h3>
                     <div className="flex gap-2">
                         <input
@@ -366,23 +384,6 @@ $$\\int f(x)dx = F(x) + C$$
                         )}
                     </p>
                 </div>
-
-                {/* 数式エディタ（編集モードと分割モード） */}
-                {showMathEditor && (viewMode === 'edit' || viewMode === 'split') && (
-                    <div className="p-4 border border-blue-300 rounded-lg bg-blue-50">
-                        <h3 className="text-sm font-medium text-gray-700 mb-3">数式エディタ</h3>
-                        <MathEditor
-                            value={currentMathValue}
-                            onChange={setCurrentMathValue}
-                            onComplete={() => handleMathComplete(currentMathValue)}
-                            onCancel={handleMathCancel}
-                            isVisible={true}
-                        />
-                        <p className="mt-2 text-xs text-gray-600">
-                            Enterキーで確定、Escキーでキャンセルできます。数式は自動的に $ で囲まれます。
-                        </p>
-                    </div>
-                )}
 
                 {/* 詳細設定（トグル） */}
                 <div>

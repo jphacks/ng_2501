@@ -20,7 +20,7 @@ export function VideoGenerationFlow() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="h-full flex flex-col">
             {/* 状態1: ランディング（テキスト入力） */}
             {!prompt && !result && (
                 <Landing onSubmit={handleLandingSubmit} isGenerating={isGenerating} error={error} />

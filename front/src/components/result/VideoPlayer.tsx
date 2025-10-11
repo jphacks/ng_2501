@@ -6,15 +6,22 @@ interface VideoPlayerProps {
 
 /**
  * Presentation層: リザルト専用の動画プレイヤー
+ * シンプルで機能優先
  */
 export function VideoPlayer({ videoUrl }: VideoPlayerProps) {
     return (
-        <div className="bg-gray-900 rounded-lg overflow-hidden aspect-video">
-            <video className="rounded-lg h-full w-full object-contain" controls>
-                <source src={videoUrl} type="video/mp4" />
-                <track kind="captions" label="日本語" srcLang="ja" />
-                Your browser does not support the video tag.
-            </video>
+        <div className="bg-black rounded overflow-hidden border border-gray-300">
+            <div className="aspect-video">
+                <video 
+                    className="w-full h-full object-contain" 
+                    controls
+                    preload="metadata"
+                >
+                    <source src={videoUrl} type="video/mp4" />
+                    <track kind="captions" label="日本語" srcLang="ja" />
+                    Your browser does not support the video tag.
+                </video>
+            </div>
         </div>
     )
 }

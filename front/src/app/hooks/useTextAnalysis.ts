@@ -85,7 +85,7 @@ export const useVideoGeneration = () => {
 
     const requestAnimation = async (videoId: string, content: string, enhancePrompt?: string) => {
         const baseUrl = resolveBackendUrl()
-        const response = await fetch(`${baseUrl}/animation`, {
+        const response = await fetch(`${baseUrl}/api/animation`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -131,20 +131,20 @@ export const useVideoGeneration = () => {
      * ランディングから動画生成完了までを一括で実行
      */
     const startVideoGeneration = async (text: string, videoPrompt?: string) => {
-        const request: VideoGenerationRequest = { text, videoPrompt }
-        validateRequestOrThrow(request)
-
-        const videoId = createVideoId()
-        lastRequestRef.current = request
-
-        setIsGenerating(true)
-        setError(null)
-        setPrompt(null)
-        setResult(null)
-
-        const nextPrompt = createVideoGenerationPrompt(request)
-
         try {
+            const request: VideoGenerationRequest = { text, videoPrompt }
+            validateRequestOrThrow(request)
+
+            const videoId = createVideoId()
+            lastRequestRef.current = request
+
+            setIsGenerating(true)
+            setError(null)
+            setPrompt(null)
+            setResult(null)
+
+            const nextPrompt = createVideoGenerationPrompt(request)
+
             await requestAnimation(videoId, request.text, request.videoPrompt)
             const videoUrl = await replaceVideoUrl(videoId)
 

@@ -89,6 +89,8 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
     const [popupPosition, setPopupPosition] = useState<{ top: number; left: number } | null>(null)
     const [showInlinePopup, setShowInlinePopup] = useState(false)
 
+    const isDeleteOperationRef = useRef(false)
+
     // カーソル位置からのポップアップの座標を計算
     const calculatePopupPosition = useCallback(() => {
         if (!textAreaRef.current) return null
@@ -129,9 +131,66 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
         await onSubmit(text, videoPrompt || undefined)
     }
 
+    // const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    //     const currentText = e.target.value[-1]
+    //     // 前回の値を取得
+    //     const previousText = previousTextRef.current
+
+    //     if (previousText === "$") {
+    //         if (currentText === "$") {
+    //             console.log("case 1")
+    //             setText(`${currentText} $$`)
+    //             setCursorPosition(e.target.selectionStart + 1)
+    //         } else {
+    //             console.log("case 2")
+    //             console.log("currentText:", currentText)
+    //             console.log("previousText:", previousText)
+    //             setText(`${currentText}$`)
+    //             setCursorPosition(e.target.selectionStart)
+    //         }
+    //     } else {
+    //         console.log("case 3")
+    //         setText(currentText)
+    //         setCursorPosition(e.target.selectionStart)
+    //     }
+    //     previousTextRef.current = currentText
+
+    //     if (showInlinePopup) {
+    //         const position = calculatePopupPosition()
+    //         setPopupPosition(position)
+    //     }
+
+    //     if (showMathEditor) {
+    //         setShowInlinePopup(false)
+    //     }
+    // }
     const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setText(e.target.value)
-        setCursorPosition(e.target.selectionStart)
+        var input = e.target.value
+        var cursorPos = e.target.selectionStart
+
+        console.log("input:", input)
+        console.log("input.type:", typeof input)
+        if (input.length > 1) {
+            const currentText = input.slice(-1)
+            const previousText = input.slice(-2,-1)
+            console.log("currentText:", currentText)
+            console.log("previousText:", previousText)
+            console.log("isDeleteOperationRef.current:", isDeleteOperationRef.current)
+            if (!isDeleteOperationRef.current) {
+                if (previousText === "$") {
+                    if (currentText === "$") {
+                        console.log("case 1")
+                        input += " $$ "
+                        cursorPos += 1
+                    } else {
+                        console.log("case 2")
+                        input += "$ "
+                    }
+                }
+            }
+        }
+        setText(input)
+        setCursorPosition(cursorPos)
 
         if (showInlinePopup) {
             const position = calculatePopupPosition()
@@ -143,6 +202,15 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
         }
     }
 
+    const handleTextAreaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        // Delete, Backspace, Cut操作を検出
+        console.log("Key pressed:", e.key)
+        if (e.key === 'Delete' || e.key === 'Backspace' || (e.ctrlKey && e.key === 'x')) {
+            isDeleteOperationRef.current = true
+        } else {
+            isDeleteOperationRef.current = false
+        }
+    }
     const handleTextAreaClick = (e: React.MouseEvent<HTMLTextAreaElement>) => {
         const target = e.target as HTMLTextAreaElement
         setCursorPosition(target.selectionStart)
@@ -413,7 +481,7 @@ $$\\int f(x)dx = F(x) + C$$
                             value={text}
                             onChange={handleTextAreaChange}
                             onClick={handleTextAreaClick}
-                            onKeyUp={handleTextAreaClick}
+                            onKeyDown={handleTextAreaKeyDown}
                             placeholder="例: 積分の定義について説明します。&#10;&#10;数式はLaTeX形式で入力できます：&#10;- インライン数式: $\int f(x)dx$&#10;- ブロック数式: $$\int_0^1 x^2 dx = \frac{1}{3}$$&#10;&#10;Markdown記法にも対応しています（見出し、箇条書き、強調など）"
                             className="w-full p-4 border border-gray-300 rounded-lg h-64 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
                             disabled={isGenerating}
@@ -436,7 +504,7 @@ $$\\int f(x)dx = F(x) + C$$
                                     value={text}
                                     onChange={handleTextAreaChange}
                                     onClick={handleTextAreaClick}
-                                    onKeyUp={handleTextAreaClick}
+                                    onKeyDown={handleTextAreaKeyDown}
                                     placeholder="編集してください..."
                                     className="w-full p-4 border border-gray-300 rounded-lg h-96 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm resize-none"
                                     disabled={isGenerating}

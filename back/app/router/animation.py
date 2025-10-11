@@ -10,7 +10,6 @@ from pydantic import BaseModel
 
 from app.service.agent import ManimAnimationService
 from app.service.rag_agent import ManimAnimationOnRAGService
-from app.service.react_agent import build_react_agent
 
 load_dotenv()
 
@@ -144,4 +143,4 @@ async def generate_rag_animation(initial_prompt: InitialPrompt):
             ok=False,
             video_id=initial_prompt.video_id,
             message="failed",
-        )   
+        )

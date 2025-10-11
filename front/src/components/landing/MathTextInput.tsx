@@ -90,6 +90,8 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
     const [popupPosition, setPopupPosition] = useState<{ top: number; left: number } | null>(null)
     const [showInlinePopup, setShowInlinePopup] = useState(false)
 
+     const isDeleteOperationRef = useRef(false)
+
     // カーソル位置からのポップアップの座標を計算
     const calculatePopupPosition = useCallback(() => {
         if (!textAreaRef.current) return null
@@ -131,8 +133,25 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
     }
 
     const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setText(e.target.value)
-        setCursorPosition(e.target.selectionStart)
+        var input = e.target.value
+        var cursorPos = e.target.selectionStart
+
+        if (input.length > 1) {
+            const currentText = input.slice(-1)
+            const previousText = input.slice(-2,-1)
+            if (!isDeleteOperationRef.current) {
+                if (previousText === "$") {
+                    if (currentText === "$") {
+                        input += " $$ "
+                        cursorPos += 1
+                    } else {
+                        input += "$ "
+                    }
+                }
+            }
+        }
+        setText(input)
+        setCursorPosition(cursorPos)
 
         if (showInlinePopup) {
             const position = calculatePopupPosition()
@@ -141,29 +160,89 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
 
         if (showMathEditor) {
             setShowInlinePopup(false)
+        } else {
+            judgeShowPopup(input, cursorPos)
         }
+    }
+
+        const judgeShowPopup = (input: string, cursorPos: number) => {
+        let indentList = Array(input.length).fill(0);
+        let currentIndent = 1;
+        for (let i = 0; i < input.length; i++) {
+            if (input[i] === '$') {
+                if (i > 1 && indentList[i - 1] === currentIndent) {
+                    currentIndent -= 1;
+                    indentList[i] = currentIndent;
+                }
+                if (indentList[i] === 0) {
+                    indentList[i] = currentIndent;
+                }
+                currentIndent += 1;
+
+                if (i >= cursorPos && indentList[i] !== 0) {
+
+                    if (indentList[i] % 2 === 0) {
+                        setCurrentMathValue('')
+                        const position = calculatePopupPosition()
+                        setPopupPosition(position)
+                        setShowInlinePopup(true)
+                        setShowMathEditor(true)
+                    } else {
+                        setShowMathEditor(false)
+                        setShowInlinePopup(false)
+                        setCurrentMathValue('')
+                        setPopupPosition(null)
+                    }
+                    break
+                }
+            }
+        }
+    }
+
+    const handleTextAreaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        // Delete, Backspace, Cut操作を検出
+        console.log("Key pressed:", e.key)
+        if (e.key === 'Delete' || e.key === 'Backspace' || (e.ctrlKey && e.key === 'x')) {
+            isDeleteOperationRef.current = true
+        } else {
+            isDeleteOperationRef.current = false
+        }
+
+        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown'].includes(e.key)) {
+        // キーイベント後にカーソル位置が更新されるまで少し待つ
+        setTimeout(() => {
+            const target = e.target as HTMLTextAreaElement
+            const newCursorPosition = target.selectionStart
+            console.log("Cursor moved to:", newCursorPosition)
+            
+            // カーソル位置の状態を更新
+            setCursorPosition(newCursorPosition)
+            
+            // ポップアップの判定を実行
+            judgeShowPopup(text, newCursorPosition)
+            
+            // ポップアップが表示されている場合は位置を更新
+            if (showInlinePopup) {
+                const position = calculatePopupPosition()
+                setPopupPosition(position)
+            }
+        }, 0)
+    }
     }
 
     const handleTextAreaClick = (e: React.MouseEvent<HTMLTextAreaElement>) => {
         const target = e.target as HTMLTextAreaElement
         setCursorPosition(target.selectionStart)
 
-        // ポップアップの位置を更新
-        if (showInlinePopup) {
-            const position = calculatePopupPosition()
-            setPopupPosition(position)
-        }
-    }
+        // // ポップアップの位置を更新
+        // if (showInlinePopup) {
+        //     const position = calculatePopupPosition()
+        //     setPopupPosition(position)
+        // } else {
+        //     judgeShowPopup(text, target.selectionStart)
+        // }
 
-    const handleTextAreaKeyUp = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        const target = e.target as HTMLTextAreaElement
-        setCursorPosition(target.selectionStart)
-
-        // ポップアップの位置を更新
-        if (showInlinePopup) {
-            const position = calculatePopupPosition()
-            setPopupPosition(position)
-        }
+        judgeShowPopup(text, target.selectionStart)
     }
 
     const handleMathEditorOpen = () => {
@@ -544,7 +623,7 @@ $$(\\cos(\\theta+\\pi),\\,\\sin(\\theta+\\pi)) = (-\\cos\\theta,\\,-\\sin\\theta
                             value={text}
                             onChange={handleTextAreaChange}
                             onClick={handleTextAreaClick}
-                                    onKeyUp={handleTextAreaKeyUp}
+                                    onKeyDown={handleTextAreaKeyDown}
                                     placeholder={placeholderText}
                                     className="w-full h-full p-4 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm resize-none"
                             disabled={isGenerating}
@@ -567,7 +646,7 @@ $$(\\cos(\\theta+\\pi),\\,\\sin(\\theta+\\pi)) = (-\\cos\\theta,\\,-\\sin\\theta
                                     value={text}
                                     onChange={handleTextAreaChange}
                                     onClick={handleTextAreaClick}
-                                            onKeyUp={handleTextAreaKeyUp}
+                                            onKeyDown={handleTextAreaKeyDown}
                                             placeholder={placeholderText}
                                             className="w-full h-full p-4 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm resize-none"
                                     disabled={isGenerating}

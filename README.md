@@ -81,6 +81,8 @@
 - 何度でも動画生成・編集ができる直感操作UIと、そのためのクラウド環境を実装
 - モダンな技術基盤で、動作の軽快さと堅牢性を実現、開発者にとっての**安心・安全な環境**を確立
 
+---(それぞれが頑張って書こう^^)---
+
 ## 開発技術
 
 ### 活用した技術
@@ -102,25 +104,8 @@
 * **uv**: Python高速パッケージマネージャー
 
 #### デバイス
-* PC（デスクトップ/ノートPC）
-* スマートフォン（iOS/Android）
-* タブレット
 
 ### 独自技術
 
 #### ハッカソンで開発した独自機能・技術
 
-* **AI駆動の動画生成パイプライン**: ユーザー入力テキスト → AIプロンプト生成 → manimコード生成 → 動画レンダリングの一連のフローを完全自動化
-  * 実装: [`front/src/app/hooks/useTextAnalysis.ts`](front/src/app/hooks/useTextAnalysis.ts)
-  * AIモデルの選定とプロンプトエンジニアリング
-  
-* **インタラクティブな動画編集システム**: 生成された動画に対して自然言語で修正指示を出し、AIが既存のmanimコードを編集して再生成
-  * 実装: [`front/src/components/result/VideoEditDialog.tsx`](front/src/components/result/VideoEditDialog.tsx)
-  * 動画編集ロジック: [`front/src/app/hooks/useTextAnalysis.ts`](front/src/app/hooks/useTextAnalysis.ts) の `editVideo` 関数
-
-* **4ステップの状態管理フロー**: Landing → Prompt → Generating → Result の直感的なUI設計
-  * 実装: [`front/src/components/VideoGenerationFlow.tsx`](front/src/components/VideoGenerationFlow.tsx)
-  * 各状態に応じたコンポーネントの切り替えと、データの受け渡しを設計
-
-* **レスポンシブな数式入力UI**: LaTeX形式に対応し、プレビュー機能付きの入力フォーム
-  * 実装: [`front/src/components/landing/MathTextInput.tsx`](front/src/components/landing/MathTextInput.tsx)

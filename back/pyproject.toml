@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "dotenv>=0.9.9",
     "fastapi>=0.118.2",
     "json-repair>=0.52.0",
     "langchain>=0.3.27",
@@ -18,6 +19,7 @@ dependencies = [
     "markdown-it-py>=4.0.0",
     "pandas>=2.3.3",
     "pydantic>=2.12.0",
+    "pyright>=1.1.406",
     "ruff>=0.14.0",
     "sqlalchemy>=2.0.43",
     "uvicorn>=0.37.0",

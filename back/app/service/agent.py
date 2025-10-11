@@ -149,7 +149,7 @@ class ManimAnimationService:
         )
         
         with open(tmp_path, "w") as f:
-            f.write(script)
+            f.write(script.replace("```python", "").replace("```", ""))
         return script.replace("```python", "").replace("```", "")
 
     def parse_pyright_output_for_llm(self,pyright_json: dict) -> str:

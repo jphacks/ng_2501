@@ -90,13 +90,19 @@ def generate_animation(initial_prompt: InitialPrompt):
         # サービス内例外は 500 で返却
         raise HTTPException(status_code=500, detail=str(e))
 
-    if str(is_success).lower() in {"success", "true", "1"} or bool(is_success):
+    if is_success == "Success":
         latest = find_latest_video(initial_prompt.video_id)
         return SuccessResponse(
             ok=True,
             video_id=initial_prompt.video_id,
             message="done",
             path=str(latest) if latest else None,
+        )
+    elif is_success=="bad_request":
+        return SuccessResponse(
+            ok=False,
+            video_id=initial_prompt.video_id,
+            message="bad"
         )
     else:
         return SuccessResponse(

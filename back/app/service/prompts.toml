@@ -35,6 +35,7 @@ class GeneratedScene(Scene):
         # 必要な Manim オブジェクトとアニメーション呼び出し
         # Text(r"\\frac{{a}}{{b}}")
         # ...
+```
 """
 manim_planer_with_instruct = """
 あなたは Manim のプロダクションプランナーです。次のユーザーのプロンプトに基づいて、Manim でどのようなアニメーションや図形を作成すべきかを箇条書きで要約してください。

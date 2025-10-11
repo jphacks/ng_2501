@@ -12,7 +12,7 @@ import { Result } from './result/Result'
  * 状態遷移とルーティングを担当
  */
 export function VideoGenerationFlow() {
-    const { isGenerating, prompt, result, error, generatePrompt, generateVideo, editVideo } =
+    const { isGenerating, prompt, result, error, generatePrompt, generateVideo, editVideo, clearResult } =
         useVideoGeneration()
 
     const handleLandingSubmit = async (text: string, videoPrompt?: string) => {
@@ -35,7 +35,7 @@ export function VideoGenerationFlow() {
             {isGenerating && prompt && !result && <Generating />}
 
             {/* 状態4: リザルト */}
-            {result && <Result result={result} isGenerating={isGenerating} onEdit={editVideo} />}
+            {result && <Result result={result} isGenerating={isGenerating} onEdit={editVideo} onReset={clearResult} />}
         </div>
     )
 }

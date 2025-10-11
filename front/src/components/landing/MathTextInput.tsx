@@ -13,7 +13,60 @@ interface MathTextInputProps {
     isGenerating: boolean
 }
 
-type ViewMode = 'edit' | 'preview'
+type ViewMode = 'edit' | 'preview' | 'split'
+
+/**
+ * プレビューパネルコンポーネント（再利用可能）
+ */
+function PreviewPanel({ text, className = '' }: { text: string; className?: string }) {
+    return (
+        <div className={`w-full p-4 border border-gray-300 rounded-lg overflow-y-auto bg-white prose prose-sm max-w-none ${className}`}>
+            {text.trim() ? (
+                <ReactMarkdown
+                    remarkPlugins={[remarkMath, remarkGfm]}
+                    rehypePlugins={[rehypeKatex]}
+                    components={{
+                        // カスタムスタイリング
+                        h1: ({ node, ...props }) => (
+                            <h1 className="text-2xl font-bold mb-4 text-gray-900" {...props} />
+                        ),
+                        h2: ({ node, ...props }) => (
+                            <h2 className="text-xl font-bold mb-3 text-gray-900" {...props} />
+                        ),
+                        h3: ({ node, ...props }) => (
+                            <h3 className="text-lg font-bold mb-2 text-gray-900" {...props} />
+                        ),
+                        p: ({ node, ...props }) => (
+                            <p className="mb-3 text-gray-700 leading-relaxed" {...props} />
+                        ),
+                        ul: ({ node, ...props }) => (
+                            <ul className="list-disc list-inside mb-3 text-gray-700" {...props} />
+                        ),
+                        ol: ({ node, ...props }) => (
+                            <ol className="list-decimal list-inside mb-3 text-gray-700" {...props} />
+                        ),
+                        code: ({ node, inline, ...props }) =>
+                            inline ? (
+                                <code
+                                    className="px-1 py-0.5 bg-gray-100 text-pink-600 rounded text-sm font-mono"
+                                    {...props}
+                                />
+                            ) : (
+                                <code
+                                    className="block p-3 bg-gray-100 rounded text-sm font-mono overflow-x-auto"
+                                    {...props}
+                                />
+                            ),
+                    }}
+                >
+                    {text}
+                </ReactMarkdown>
+            ) : (
+                <p className="text-gray-400 italic">プレビューするテキストを入力してください</p>
+            )}
+        </div>
+    )
+}
 
 /**
  * Presentation層: 数式テキスト入力フォーム（MathEditor統合版 + プレビュー対応）
@@ -134,6 +187,18 @@ $$\\int f(x)dx = F(x) + C$$
                             </button>
                             <button
                                 type="button"
+                                onClick={() => setViewMode('split')}
+                                disabled={isGenerating || !text.trim()}
+                                className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                                    viewMode === 'split'
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                            >
+                                分割
+                            </button>
+                            <button
+                                type="button"
                                 onClick={() => setViewMode('preview')}
                                 disabled={isGenerating || !text.trim()}
                                 className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
@@ -159,6 +224,7 @@ $$\\int f(x)dx = F(x) + C$$
                                 onClick={handleMathEditorOpen}
                                 disabled={isGenerating || viewMode === 'preview'}
                                 className="text-sm text-blue-600 hover:text-blue-800 font-medium disabled:text-gray-400"
+                                title={viewMode === 'preview' ? 'プレビューモードでは使用できません' : '数式を挿入'}
                             >
                                 ＋ 数式を入力
                             </button>
@@ -181,50 +247,29 @@ $$\\int f(x)dx = F(x) + C$$
 
                     {/* プレビューモード */}
                     {viewMode === 'preview' && (
-                        <div className="w-full p-4 border border-gray-300 rounded-lg h-64 overflow-y-auto bg-white prose prose-sm max-w-none">
-                            {text.trim() ? (
-                                <ReactMarkdown
-                                    remarkPlugins={[remarkMath, remarkGfm]}
-                                    rehypePlugins={[rehypeKatex]}
-                                    components={{
-                                        // カスタムスタイリング
-                                        h1: ({ node, ...props }) => (
-                                            <h1 className="text-2xl font-bold mb-4 text-gray-900" {...props} />
-                                        ),
-                                        h2: ({ node, ...props }) => (
-                                            <h2 className="text-xl font-bold mb-3 text-gray-900" {...props} />
-                                        ),
-                                        h3: ({ node, ...props }) => (
-                                            <h3 className="text-lg font-bold mb-2 text-gray-900" {...props} />
-                                        ),
-                                        p: ({ node, ...props }) => (
-                                            <p className="mb-3 text-gray-700 leading-relaxed" {...props} />
-                                        ),
-                                        ul: ({ node, ...props }) => (
-                                            <ul className="list-disc list-inside mb-3 text-gray-700" {...props} />
-                                        ),
-                                        ol: ({ node, ...props }) => (
-                                            <ol className="list-decimal list-inside mb-3 text-gray-700" {...props} />
-                                        ),
-                                        code: ({ node, inline, ...props }) =>
-                                            inline ? (
-                                                <code
-                                                    className="px-1 py-0.5 bg-gray-100 text-pink-600 rounded text-sm font-mono"
-                                                    {...props}
-                                                />
-                                            ) : (
-                                                <code
-                                                    className="block p-3 bg-gray-100 rounded text-sm font-mono overflow-x-auto"
-                                                    {...props}
-                                                />
-                                            ),
-                                    }}
-                                >
-                                    {text}
-                                </ReactMarkdown>
-                            ) : (
-                                <p className="text-gray-400 italic">プレビューするテキストを入力してください</p>
-                            )}
+                        <PreviewPanel text={text} className="h-64" />
+                    )}
+
+                    {/* 分割モード */}
+                    {viewMode === 'split' && (
+                        <div className="flex flex-col md:flex-row gap-4">
+                            {/* 左側: 編集エリア */}
+                            <div className="flex-1">
+                                <textarea
+                                    id="math-text-split"
+                                    value={text}
+                                    onChange={handleTextAreaChange}
+                                    onClick={handleTextAreaClick}
+                                    onKeyUp={handleTextAreaClick}
+                                    placeholder="編集してください..."
+                                    className="w-full p-4 border border-gray-300 rounded-lg h-96 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm resize-none"
+                                    disabled={isGenerating}
+                                />
+                            </div>
+                            {/* 右側: プレビューエリア */}
+                            <div className="flex-1">
+                                <PreviewPanel text={text} className="h-96" />
+                            </div>
                         </div>
                     )}
 
@@ -235,14 +280,18 @@ $$\\int f(x)dx = F(x) + C$$
                                 LaTeX数式: インライン <code className="px-1 bg-gray-100">$...$</code> ブロック{' '}
                                 <code className="px-1 bg-gray-100">$$...$$</code> | Markdown記法対応
                             </>
+                        ) : viewMode === 'split' ? (
+                            <>
+                                リアルタイムプレビュー: 左側で編集すると右側に即座に反映されます
+                            </>
                         ) : (
                             <>数式とMarkdownのレンダリング結果を表示しています</>
                         )}
                     </p>
                 </div>
 
-                {/* 数式エディタ（編集モードのみ） */}
-                {showMathEditor && viewMode === 'edit' && (
+                {/* 数式エディタ（編集モードと分割モード） */}
+                {showMathEditor && (viewMode === 'edit' || viewMode === 'split') && (
                     <div className="p-4 border border-blue-300 rounded-lg bg-blue-50">
                         <h3 className="text-sm font-medium text-gray-700 mb-3">数式エディタ</h3>
                         <MathEditor

@@ -72,7 +72,7 @@ class ManimAnimationService:
             }
         )
         return output.replace("```python", "").replace("```", "")
-        
+    
     
     def generate_script(self, user_prompt: str) -> str:
         prompt1 = PromptTemplate(
@@ -109,6 +109,17 @@ class ManimAnimationService:
         except subprocess.CalledProcessError as e:
             return e.stderr
     
+    def generate_raw_video(self,video_id,content,enhance_prompt):
+        # スクリプト生成
+        script = self.generate_script_with_prompt(
+            content,
+            enhance_prompt
+        )
+        is_success = self.run_script(
+            video_id,
+            script=script
+        )
+        return is_success
     
     
 if __name__ == "__main__":

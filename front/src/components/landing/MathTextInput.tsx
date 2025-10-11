@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkMath from 'remark-math'
 import remarkGfm from 'remark-gfm'
@@ -84,6 +84,44 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
     const [titleInput, setTitleInput] = useState('')
     const [isGeneratingContent, setIsGeneratingContent] = useState(false)
     const [generationError, setGenerationError] = useState<string | null>(null)
+    
+    const textAreaRef = useRef<HTMLTextAreaElement>(null)
+    const [popupPosition, setPopupPosition] = useState<{ top: number; left: number } | null>(null)
+    const [showInlinePopup, setShowInlinePopup] = useState(false)
+
+    // カーソル位置からのポップアップの座標を計算
+    const calculatePopupPosition = useCallback(() => {
+        if (!textAreaRef.current) return null
+
+        const textArea = textAreaRef.current
+        const { selectionStart } = textArea
+        const textBeforeCursor = textArea.value.substring(0, selectionStart)
+
+        // 行数計算
+        const lines = textBeforeCursor.split('\n')
+        const currentLine = lines.length - 1
+        const currentColumn = lines[lines.length - 1].length
+
+        // テキストエリアのスタイル情報を取得
+        const computedStyle = window.getComputedStyle(textArea)
+        const lineHeight = parseInt(computedStyle.lineHeight || '20', 10)
+        const fontSize = parseInt(computedStyle.fontSize || '14', 10)
+        const paddingTop = parseInt(computedStyle.paddingTop || '0', 10)
+        const paddingLeft = parseInt(computedStyle.paddingLeft || '0', 10)
+
+        // テキストエリアの位置を取得
+        const rect = textArea.getBoundingClientRect()
+
+        // カーソルの概算位置を計算
+        const charWidth = fontSize * 0.6
+        const cursorTop = rect.top + paddingTop + (currentLine * lineHeight)
+        const cursorLeft = rect.left + paddingLeft + (currentColumn * charWidth)
+
+        return {
+            top: Math.min(cursorTop, rect.bottom - 20) - 150,
+            left: Math.max(rect.left, Math.min(cursorLeft, rect.right - 300)) - 40, 
+        }
+    }, [])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -94,22 +132,46 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
     const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setText(e.target.value)
         setCursorPosition(e.target.selectionStart)
+
+        if (showInlinePopup) {
+            const position = calculatePopupPosition()
+            setPopupPosition(position)
+        }
+
+        if (showMathEditor) {
+            setShowInlinePopup(false)
+        }
     }
 
     const handleTextAreaClick = (e: React.MouseEvent<HTMLTextAreaElement>) => {
         const target = e.target as HTMLTextAreaElement
         setCursorPosition(target.selectionStart)
+
+        // ポップアップの位置を更新
+        if (showInlinePopup) {
+            const position = calculatePopupPosition()
+            setPopupPosition(position)
+        }
     }
 
     const handleMathEditorOpen = () => {
+        if (viewMode === 'preview') return
+        
         setCurrentMathValue('')
+        
+        // インライン数式エディタを表示
+        const position = calculatePopupPosition()
+        setPopupPosition(position)
+        setShowInlinePopup(true)
         setShowMathEditor(true)
     }
 
     const handleMathComplete = (latex: string) => {
         if (!latex.trim()) {
             setShowMathEditor(false)
+            setShowInlinePopup(false)
             setCurrentMathValue('')
+            setPopupPosition(null)
             return
         }
 
@@ -131,12 +193,26 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
         setText(newText)
         setCursorPosition(before.length + (needSpaceBefore ? 1 : 0) + mathFormula.length)
         setShowMathEditor(false)
+        setShowInlinePopup(false)
         setCurrentMathValue('')
+        setPopupPosition(null)
+        
+        // フォーカスをテキストエリアに戻す
+        setTimeout(() => {
+            textAreaRef.current?.focus()
+        }, 100)
     }
 
     const handleMathCancel = () => {
         setShowMathEditor(false)
+        setShowInlinePopup(false)
         setCurrentMathValue('')
+        setPopupPosition(null)
+        
+        // フォーカスをテキストエリアに戻す
+        setTimeout(() => {
+            textAreaRef.current?.focus()
+        }, 100)
     }
 
     const loadSampleText = () => {
@@ -213,22 +289,25 @@ $$\\int f(x)dx = F(x) + C$$
             <form onSubmit={handleSubmit} className="space-y-4">
                 {/* AIタイトル生成セクション */}
                 <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg">
-                    {/* 数式エディタ（編集モードと分割モード） */}
-                    {showMathEditor && (viewMode === 'edit' || viewMode === 'split') && (
-                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                            <div className="p-4 border border-blue-300 rounded-lg bg-blue-50 max-w-md w-full mx-4">
-                                <h3 className="text-sm font-medium text-gray-700 mb-3">数式エディタ</h3>
-                                <MathEditor
-                                    value={currentMathValue}
-                                    onChange={setCurrentMathValue}
-                                    onComplete={() => handleMathComplete(currentMathValue)}
-                                    onCancel={handleMathCancel}
-                                    isVisible={true}
-                                />
-                                <p className="mt-2 text-xs text-gray-600">
-                                    Enterキーで確定、Escキーでキャンセルできます。数式は自動的に $ で囲まれます。
-                                </p>
-                            </div>
+                {/* 数式エディタ（編集モードと分割モード） */}
+                    {showInlinePopup && showMathEditor && popupPosition && (
+                        <div
+                            className="fixed z-50 bg-white border-2 border-blue-300 rounded-lg shadow-lg p-4 min-w-80"
+                            style={{
+                                top: `${popupPosition.top}px`,
+                                left: `${popupPosition.left}px`,
+                            }}
+                        >
+                            <MathEditor
+                                value={currentMathValue}
+                                onChange={setCurrentMathValue}
+                                onComplete={() => handleMathComplete(currentMathValue)}
+                                onCancel={handleMathCancel}
+                                isVisible={true}
+                            />
+                            <p className="mt-2 text-xs text-gray-600">
+                                Enterキーで確定、Escキーでキャンセル
+                            </p>
                         </div>
                     )}
                     <h3 className="text-sm font-semibold text-gray-800 mb-3">🤖 AIで文章を自動生成</h3>
@@ -329,6 +408,7 @@ $$\\int f(x)dx = F(x) + C$$
                     {/* 編集モード */}
                     {viewMode === 'edit' && (
                         <textarea
+                            ref={textAreaRef}
                             id="math-text"
                             value={text}
                             onChange={handleTextAreaChange}
@@ -352,6 +432,7 @@ $$\\int f(x)dx = F(x) + C$$
                             <div className="flex-1">
                                 <textarea
                                     id="math-text-split"
+                                    ref={textAreaRef}
                                     value={text}
                                     onChange={handleTextAreaChange}
                                     onClick={handleTextAreaClick}

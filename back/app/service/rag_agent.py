@@ -111,11 +111,9 @@ class ManimAnimationOnRAGService:
             embedding_function=embedding_function,
         )
 
-    def rag_search_related_docs(self, diagnostics: list[dict], k: int = 2) -> str:
-        """
-        各Pyright diagnosticに対してRAG検索を行い、
-        ruleごとにドキュメントをまとめて返す。
-        """
+    # --- Pyright diagnostics 用 ---
+    def rag_search_related_docs_for_diagnostics(self, diagnostics: list[dict], k: int = 2) -> str:
+        """Pyright診断ごとにRAG検索を行い、ルール別にまとめる"""
         db = self._load_rag_db()
         seen_urls = set()
         rule_to_docs = {}
@@ -123,7 +121,6 @@ class ManimAnimationOnRAGService:
         for diag in diagnostics:
             message = diag.get("message", "")
             rule = diag.get("rule", "unknown")
-            # Manim API名などを優先的に検索キーワードに
             manim_refs = re.findall(r"manim[\.\w]+", message)
             query = " ".join(manim_refs) if manim_refs else message[:160]
 
@@ -135,69 +132,126 @@ class ManimAnimationOnRAGService:
                     seen_urls.add(url)
                     docs.append(
                         f"- {r.metadata.get('full_name', '')}\n"
-                        f"{r.page_content[:300]}...\n"
+                        f"{r.page_content[:400]}...\n"
                         f"URL: {url}\n"
                     )
-
             if docs:
-                if rule not in rule_to_docs:
-                    rule_to_docs[rule] = []
-                rule_to_docs[rule].extend(docs)
+                rule_to_docs.setdefault(rule, []).extend(docs)
 
         if not rule_to_docs:
             return "No related documentation found."
 
-        # 各ruleごとに上位2件ずつまとめる
         doc_sections = []
         for rule, docs in rule_to_docs.items():
             section = f"### Rule: {rule}\n" + "\n".join(docs[:2])
             doc_sections.append(section)
 
         return "\n\n".join(doc_sections[:5])
-    
-    
-    def fix_code_agent(self, file_name: str, concept: str, pyright_json: dict):
+
+    # --- Inner Error 用 ---
+    def rag_search_related_docs_for_innererror(self, inner_error: str, k: int = 3) -> str:
         """
-        RAGを統合したコード修正AI。
-        - 各エラー（diagnostic）ごとにManimドキュメントを参照し、
-        構文と型を意識した修正版を出力する。
+        Manim実行時エラー文字列に対してRAG検索。
+        例: AttributeError, ValueError, LaTeX Errorなどを自動解析。
+        """
+        db = self._load_rag_db()
+        seen_urls = set()
+
+        # manim構文・クラス名を優先的に拾う
+        manim_refs = re.findall(r"manim[\.\w]+", inner_error)
+        base_queries = manim_refs or []
+
+        # 一般的な例外メッセージを抽出
+        error_phrases = re.findall(
+            r"(?:AttributeError|TypeError|ValueError|LaTeX|ImportError|SyntaxError|NameError).*", inner_error
+        )
+        if error_phrases:
+            base_queries.extend(error_phrases)
+
+        # fallback（文全体の一部）
+        if not base_queries:
+            base_queries.append(inner_error[:200])
+
+        # 実際の検索
+        aggregated_results = []
+        for q in base_queries[:4]:  # 最大4クエリ
+            results = db.similarity_search(q, k=k)
+            for r in results:
+                url = r.metadata.get("source_url", "")
+                if url not in seen_urls:
+                    seen_urls.add(url)
+                    aggregated_results.append(
+                        f"- {r.metadata.get('full_name', '')}\n"
+                        f"{r.page_content[:400]}...\n"
+                        f"URL: {url}\n"
+                    )
+
+        if not aggregated_results:
+            return "No related documentation found."
+        return "\n\n".join(aggregated_results[:6])
+    
+    
+    def fix_code_agent(self, file_name: str, concept: str, error_info, mode: str = "lint"):
+        """
+        RAG統合コード修正エージェント。
+        mode="lint"       → Pyright JSON (静的エラー)
+        mode="innererror" → Manim 実行エラーテキスト
+        RAG統合コード修正エージェント。
+        - error_info が dict の場合 → Pyright (静的解析)
+        - error_info が str の場合 → Manim 実行エラー
+        mode は自動判定される
         """
         tmp_path = Path(f"tmp/{file_name}.py")
         with open(tmp_path, "r") as f:
             script = f.read()
 
-        diagnostics = pyright_json.get("generalDiagnostics", [])
-        summary = pyright_json.get("summary", {})
-        if not diagnostics:
-            print("⚠️ No diagnostics found for fix_code_agent().")
-            return script
+        # --- 自動判定 ---
+        if mode is None:
+            if isinstance(error_info, dict):
+                mode = "lint"
+            elif isinstance(error_info, str):
+                mode = "innererror"
+            else:
+                raise TypeError(f"Unsupported error_info type: {type(error_info)}")
 
-        # 🔍 複数エラーに対してRAG検索
-        related_docs = self.rag_search_related_docs(diagnostics)
-        print("RAG解析完了!")
+        # --- Lintモード ---
+        if mode == "lint":
+            diagnostics = error_info.get("generalDiagnostics", [])
+            related_docs = self.rag_search_related_docs_for_diagnostics(diagnostics)
+            error_descriptions = "\n\n".join([
+                f"[{i+1}] Rule: {d.get('rule','?')}\n"
+                f"Severity: {d.get('severity')}\n"
+                f"Message: {d.get('message')}"
+                for i, d in enumerate(diagnostics[:10])
+            ])
+            error_context_title = "静的解析（Pyright）診断結果"
 
-        # 各エラーを人間が理解しやすいように整形
-        error_descriptions = "\n\n".join([
-            f"[{i+1}] Rule: {d.get('rule','?')}\n"
-            f"Severity: {d.get('severity')}\n"
-            f"Message: {d.get('message')}"
-            for i, d in enumerate(diagnostics[:10])
-        ])
+        # --- InnerErrorモード ---
+        elif mode == "innererror":
+            related_docs = self.rag_search_related_docs_for_innererror(error_info)
+            error_descriptions = error_info[:800]
+            error_context_title = "実行時エラー（Manim Traceback）"
+
+        else:
+            raise ValueError(f"Invalid mode: {mode}")
+
+        print(f"🧩 FixCodeAgent Mode: {mode}")
+
 
         repair_prompt = PromptTemplate(
-            input_variables=["concept_summary", "error_descriptions", "related_docs", "original_script"],
-            template="""
-        あなたはプロの Manim 開発者かつPython Linterの専門家です。
-
-        以下の情報を参考に、スクリプトのすべてのエラーを修正してください。
+        input_variables=["concept_summary", "error_context_title", "error_descriptions", "related_docs", "original_script"],
+        template=self.prompts["repair"]["prompt_template"]
+        if "repair" in self.prompts else """
+        あなたはプロのManim開発者であり、Pythonエラー修正の専門家です。
+        以下の情報をもとにスクリプトを修正してください。
 
         ## コンセプト概要
         {concept_summary}
 
-        ## 静的解析エラー一覧
+        ## {error_context_title}
         {error_descriptions}
 
-        ## 参考ドキュメント（Manim RAG検索結果）
+        ## 関連するManim公式ドキュメント（RAG検索結果）
         {related_docs}
 
         ## 元のスクリプト
@@ -205,9 +259,9 @@ class ManimAnimationOnRAGService:
 
         ---
         タスク:
-        - 全てのエラーを修正し、Manim APIの正しい構文に合わせる
-        - ドキュメントで説明された正しいクラス・関数・引数を利用する
-        - コメントや説明は書かず、実行可能なPythonコードのみを出力する
+        - 全てのエラーを修正し、Manim APIの正しい構文・型・引数に合わせる
+        - 不要なコメントや説明は書かず、有効なPythonコードのみ出力
+        - 日本語フォントを明示指定するようにしてください
 
         出力フォーマット:
         ```python
@@ -215,26 +269,22 @@ class ManimAnimationOnRAGService:
         class GeneratedScene(Scene):
             def construct(self):
                 # 修正版コード
-        ```
-        """
-        )
-
+        """)
         parser = StrOutputParser()
-        chain = repair_prompt | self.pro_llm | parser  # Gemini-proを利用（構文生成が強い）
+        chain = repair_prompt | self.pro_llm | parser
+        script_fixed = chain.invoke({
+            "concept_summary": concept,
+            "error_context_title": error_context_title,
+            "error_descriptions": error_descriptions,
+            "related_docs": related_docs,
+            "original_script": script,
+        })
 
-        script = chain.invoke(
-            {
-                "concept_summary": concept,
-                "error_descriptions": error_descriptions,
-                "related_docs": related_docs,
-                "original_script": script,
-            }
-        )
-
-        script_clean = script.replace("```python", "").replace("```", "")
+        script_clean = script_fixed.replace("```python", "").replace("```", "")
         with open(tmp_path, "w") as f:
             f.write(script_clean)
         return script_clean
+
 
     def parse_pyright_output_for_llm(self,pyright_json: dict) -> str:
         """Convert Pyright JSON diagnostics into structured plain text for LLM input."""
@@ -321,24 +371,29 @@ class ManimAnimationOnRAGService:
             with open(tmp_path, "w") as f:
                 f.write(script)
             # tmp_pathに対して、format_and_linterを回す
-            err =  format_and_linter(tmp_path)
+            err = format_and_linter(tmp_path)
             print(err)
-            err_paser_output_llm=self.parse_pyright_output_for_llm(err)
+
+            # ❌ parse_pyright_output_for_llm は LLM用説明テキスト生成なので
+            #    fix_code_agent には dict (err) のまま渡す必要がある
             is_success = self.has_no_pyright_errors(err)
+
             if is_success:
-                video_success = self.run_script(video_id,script)
-                if video_success=="Success":
+                video_success = self.run_script(video_id, script)
+                if video_success == "Success":
                     return 'Success'
-                elif video_success=="bad_request":
+                elif video_success == "bad_request":
                     return 'bad_request'
                 else:
                     inner_error = parse_manim_or_python_traceback(video_success)
                     inner_error = format_error_for_llm(inner_error)
-                    script = self.fix_code_agent(video_id,content,inner_error)
+                    # ✅ inner_error は str なので innererrorモード自動判定でOK
+                    script = self.fix_code_agent(video_id, content, inner_error)
                     loop += 1
                     continue
             else:
-                script = self.fix_code_agent(video_id,content,err_paser_output_llm)
+                # ✅ err は dict, lintモード自動判定でOK
+                script = self.fix_code_agent(video_id, content, err)
                 loop += 1
                 continue
         return "error"
@@ -348,7 +403,7 @@ if __name__ == "__main__":
     is_success = service.generate_videos(
         video_id='sankakukannsuu',
         content="""
-        # 三角関数の“動き”を単位円で体感しよう --- ## 0. 今日のゴール - 「sinθ, cosθの“ずらし”や符号について、なぜかを動きで実感しよう」 - 結論：\(\cos\theta = \sin(\theta+\frac{\pi}{2})\)、\(\sin\theta = -\cos(\theta+\frac{\pi}{2})\)が単位円で体感できることを目指す --- ## 1. 単位円で三角関数スタート！ まず半径1（原点中心）の円＝**単位円**を用意しよう。 - x軸の正の方向（右向き）を0°、そこから反時計回りに角度\(\theta\)をとるしたがって、  $$ \cos^2 \theta + \sin^2 \theta = 1 $$という **三角関数の基本的な関係式** が得られます
+        # 三角関数の“動き”を単位円で体感しよう --- ## 0. 今日のゴール - 「sinθ, cosθの“ずらし”や符号について、なぜかを動きで実感しよう」 - 結論：\(\cos\theta = \sin(\theta+\frac{\pi}{2})\)、\(\sin\theta = -\cos(\theta+\frac{\pi}{2})\)が単位円で体感できることを目指す --- ## 1. 単位円で三角関数スタート！ まず半径1（原点中心）の円**単位円**を用意しよう。 - x軸の正の方向（右向き）を0°、そこから反時計回りに角度\(\theta\)をとるしたがって、  $$ \cos^2 \theta + \sin^2 \theta = 1 $$という **三角関数の基本的な関係式** が得られます
         """,
         enhance_prompt=""
     )

@@ -122,6 +122,16 @@ AIが自動生成したプロンプトとmanimコードを確認・編集する�
 - **スタイリング**: Tailwind CSS
 - **型安全性**: TypeScript
 
+#### 数式関連ライブラリ
+- **MathLive 0.107.1**: インタラクティブな数式エディタ（仮想キーボード対応）
+- **KaTeX 0.16.23**: 高速な LaTeX 数式レンダリング
+- **rehype-katex 7.0.1**: Markdown 内の LaTeX 数式処理
+- **remark-math 6.0.0**: Markdown での数式記法サポート
+
+#### Markdown関連
+- **react-markdown 10.1.0**: React用Markdownレンダラー
+- **remark-gfm 4.0.1**: GitHub Flavored Markdown サポート
+
 ### バックエンド
 
 - **動画生成**: manim (Mathematical Animation Engine)
@@ -204,26 +214,45 @@ tips-maker/
 │   │   ├── datas/                    # Domain層: データモデル定義・バリデーション
 │   │   │   ├── Video.ts              # 動画生成のメインモデル（リクエスト、プロンプト、結果）
 │   │   │   ├── Persona.ts            # ペルソナモデル（旧要件からの移行用）
-│   │   │   └── Tips.ts               # TIPSモデル（旧要件からの移行用）
+│   │   │   ├── Tips.ts               # TIPSモデル（旧要件からの移行用）
+│   │   │   ├── MathError.ts          # エラーハンドリング定義
+│   │   │   ├── MathExpression.ts     # 数式表現のモデルと操作
+│   │   │   ├── MathValidation.ts     # LaTeX バリデーション
+│   │   │   └── GeminiConfig.ts       # Gemini API 設定
 │   │   ├── hooks/                    # UseCase層: ビジネスロジック・API処理
-│   │   │   └── useTextAnalysis.ts    # 動画生成フロー全体のロジック
+│   │   │   ├── useTextAnalysis.ts    # 動画生成フロー全体のロジック
+│   │   │   ├── useMathField.ts       # 数式フィールドの状態管理
+│   │   │   ├── useMathAutocomplete.ts # 数式オートコンプリート
+│   │   │   ├── useTouchDevice.ts     # タッチデバイス検出
+│   │   │   └── useGeminiAPI.ts       # Gemini API 呼び出し
+│   │   ├── contexts/                 # Contextプロバイダー
+│   │   │   └── ErrorContext.tsx      # エラー通知管理
 │   │   ├── layout.tsx                # ルートレイアウト
 │   │   ├── page.tsx                  # トップページ
 │   │   └── globals.css               # グローバルスタイル
-│   └── components/                   # Presentation層: UIコンポーネント
-│       ├── VideoGenerationFlow.tsx   # 状態管理
-│       ├── landing/                  # 状態1: ランディングページ
-│       │   ├── Landing.tsx           # ランディングページ全体のラッパー
-│       │   └── MathTextInput.tsx     # 数式テキスト入力フォーム
-│       ├── prompt/                   # 状態2: プロンプト確認ページ
-│       │   ├── Prompt.tsx            # プロンプト確認ページ全体のラッパー
-│       │   └── PromptEditor.tsx      # プロンプト・Manimコード編集UI
-│       ├── generating/               # 状態3: 動画生成中
-│       │   └── Generating.tsx        # ローディング表示
-│       └── result/                   # 状態4: リザルトページ
-│           ├── Result.tsx            # リザルトページ全体
-│           ├── VideoPlayer.tsx       # 動画プレイヤー
-│           └── VideoEditDialog.tsx   # 動画編集ダイアログ
+│   ├── components/                   # Presentation層: UIコンポーネント
+│   │   ├── VideoGenerationFlow.tsx   # 状態管理
+│   │   ├── landing/                  # 状態1: ランディングページ
+│   │   │   ├── Landing.tsx           # ランディングページ全体のラッパー
+│   │   │   └── MathTextInput.tsx     # 数式テキスト入力フォーム
+│   │   ├── prompt/                   # 状態2: プロンプト確認ページ
+│   │   │   ├── Prompt.tsx            # プロンプト確認ページ全体のラッパー
+│   │   │   └── PromptEditor.tsx      # プロンプト・Manimコード編集UI
+│   │   ├── generating/               # 状態3: 動画生成中
+│   │   │   └── Generating.tsx        # ローディング表示
+│   │   ├── result/                   # 状態4: リザルトページ
+│   │   │   ├── Result.tsx            # リザルトページ全体
+│   │   │   ├── VideoPlayer.tsx       # 動画プレイヤー
+│   │   │   └── VideoEditDialog.tsx   # 動画編集ダイアログ
+│   │   └── math/                     # 数式編集コンポーネント
+│   │       ├── MathField.tsx         # MathLive ラッパー
+│   │       ├── LazyMathField.tsx     # 遅延ロード対応
+│   │       └── MathEditor.tsx        # 数式エディタ（オートコンプリート付き）
+│   ├── utils/                        # ユーティリティ関数
+│   │   ├── mathLiveUtils.ts          # MathLive 初期化・操作
+│   │   └── touchUtils.ts             # タッチデバイス最適化
+│   └── styles/                       # 追加スタイル
+│       └── math-editor.css           # 数式エディタ専用CSS
 ├── biome.json                        # Biome設定ファイル
 └── package.json                      # 依存関係とスクリプト
 ```
@@ -233,24 +262,33 @@ tips-maker/
 1. **Domain層** (`src/app/datas/`)
    - **役割**: ビジネスドメインのデータモデル定義とバリデーション
    - **主要ファイル**:
-     - `Video.ts`: 現在のメインモデル。動画生成リクエスト、プロンプト、結果の型定義
-     - `Persona.ts`: ペルソナ（学習者プロファイル）モデル ※旧要件から継承
-     - `Tips.ts`: TIPS（学習コンテンツ）モデル ※旧要件から継承
+     - `Video.ts`: 動画生成リクエスト、プロンプト、結果の型定義
+     - `Persona.ts`: ペルソナ（学習者プロファイル）モデル
+     - `Tips.ts`: TIPS（学習コンテンツ）モデル
+     - `MathError.ts`: エラークラスとエラーハンドリング
+     - `MathExpression.ts`: 数式データ型、Markdown内の数式操作
+     - `MathValidation.ts`: LaTeX式のバリデーションロジック
+     - `GeminiConfig.ts`: Gemini API設定とデータ型
 
 2. **UseCase層** (`src/app/hooks/`)
    - **役割**: ビジネスロジック、API通信、状態管理
    - **主要ファイル**:
-     - `useTextAnalysis.ts`: 動画生成フローのコアロジック（プロンプト生成 → 動画生成 → 編集）
+     - `useTextAnalysis.ts`: 動画生成フローのコアロジック
+     - `useMathField.ts`: 数式入力フィールドの状態管理
+     - `useMathAutocomplete.ts`: Gemini APIを使用した数式補完
+     - `useTouchDevice.ts`: タッチデバイス検出とUI最適化
+     - `useGeminiAPI.ts`: Gemini API呼び出しロジック
 
 3. **Presentation層** (`src/components/`)
    - **役割**: UIコンポーネント、ユーザーインタラクション、状態に基づく画面表示
    - **主要ファイル**:
-     - `VideoGenerationFlow.tsx`: **アプリ全体のフロー制御**。
+     - `VideoGenerationFlow.tsx`: **アプリ全体のフロー制御**
    - **状態別コンポーネント**:
-     1. `landing/`: テキスト入力画面
+     1. `landing/`: テキスト入力画面（数式入力対応）
      2. `prompt/`: プロンプト確認・編集画面
      3. `generating/`: 動画生成中のローディング画面
      4. `result/`: 動画表示・編集画面
+     5. `math/`: 数式エディタコンポーネント（MathLive統合）
 
 ## UI/UX
 

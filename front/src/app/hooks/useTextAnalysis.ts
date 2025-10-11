@@ -20,49 +20,98 @@ export const useVideoGeneration = () => {
     const [result, setResult] = useState<VideoResult | null>(null)
     const [error, setError] = useState<string | null>(null)
 
+    const setHandledError = (err: unknown, fallbackMessage: string) => {
+        const message = err instanceof Error ? err.message : fallbackMessage
+        setError(message)
+        return err
+    }
+
+    const createPrompt = async (request: VideoGenerationRequest): Promise<VideoGenerationPrompt> => {
+        const validation = validateVideoGeneration(request)
+        if (!validation.isValid) {
+            throw new ValidationError(validation.errors)
+        }
+
+        // TODO: 実際のAPI呼び出しに置き換える
+        // const response = await fetch('/api/generate-prompt', {
+        //     method: 'POST',
+        //     headers: { 'Content-Type': 'application/json' },
+        //     body: JSON.stringify(request)
+        // })
+        // const data = await response.json()
+
+        // 模擬的な処理（実装時に削除）
+        await new Promise((resolve) => setTimeout(resolve, 2000))
+
+        // 模擬的な結果（実装時に削除）
+        return {
+            prompt: `${request.text}の数式を視覚的に解説する動画を生成します。${request.videoPrompt ? `追加指示: ${request.videoPrompt}` : ''}`,
+            manimCode: '# Manim code will be generated here',
+            originalText: request.text,
+        }
+    }
+
+    const createVideo = async (generationPrompt: VideoGenerationPrompt): Promise<VideoResult> => {
+        // TODO: 実際のAPI呼び出しに置き換える
+        // const response = await fetch('/api/generate-video', {
+        //     method: 'POST',
+        //     headers: { 'Content-Type': 'application/json' },
+        //     body: JSON.stringify(generationPrompt)
+        // })
+        // const data = await response.json()
+
+        // 模擬的な処理（実装時に削除）
+        await new Promise((resolve) => setTimeout(resolve, 3000))
+
+        // 模擬的な結果（実装時に削除）
+        return {
+            videoUrl: '/mock-video.mp4',
+            prompt: generationPrompt,
+            generatedAt: new Date(),
+        }
+    }
+
+    /**
+     * ランディングから動画生成完了までを一括で実行
+     */
+    const startVideoGeneration = async (text: string, videoPrompt?: string) => {
+        const request: VideoGenerationRequest = { text, videoPrompt }
+
+        setIsGenerating(true)
+        setError(null)
+        setPrompt(null)
+        setResult(null)
+
+        try {
+            const generatedPrompt = await createPrompt(request)
+            setPrompt(generatedPrompt)
+            const generatedResult = await createVideo(generatedPrompt)
+            setResult(generatedResult)
+            return generatedResult
+        } catch (err) {
+            setHandledError(err, '動画生成中にエラーが発生しました')
+            throw err
+        } finally {
+            setIsGenerating(false)
+        }
+    }
+
     /**
      * プロンプトを生成
      */
     const generatePrompt = async (text: string, videoPrompt?: string) => {
-        // リクエストデータの作成
         const request: VideoGenerationRequest = { text, videoPrompt }
-
-        // バリデーション
-        const validation = validateVideoGeneration(request)
-        if (!validation.isValid) {
-            setError(validation.errors.join(', '))
-            throw new ValidationError(validation.errors)
-        }
 
         setIsGenerating(true)
         setError(null)
         setPrompt(null)
 
         try {
-            // TODO: 実際のAPI呼び出しに置き換える
-            // const response = await fetch('/api/generate-prompt', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(request)
-            // })
-            // const data = await response.json()
-
-            // 模擬的な処理（実装時に削除）
-            await new Promise((resolve) => setTimeout(resolve, 2000))
-
-            // 模擬的な結果（実装時に削除）
-            const mockPrompt: VideoGenerationPrompt = {
-                prompt: `${text}の数式を視覚的に解説する動画を生成します。${videoPrompt ? `追加指示: ${videoPrompt}` : ''}`,
-                manimCode: '# Manim code will be generated here',
-                originalText: text,
-            }
-
-            setPrompt(mockPrompt)
-            return mockPrompt
+            const generatedPrompt = await createPrompt(request)
+            setPrompt(generatedPrompt)
+            return generatedPrompt
         } catch (err) {
-            const errorMessage =
-                err instanceof Error ? err.message : 'プロンプト生成中にエラーが発生しました'
-            setError(errorMessage)
+            setHandledError(err, 'プロンプト生成中にエラーが発生しました')
             throw err
         } finally {
             setIsGenerating(false)
@@ -77,30 +126,12 @@ export const useVideoGeneration = () => {
         setError(null)
 
         try {
-            // TODO: 実際のAPI呼び出しに置き換える
-            // const response = await fetch('/api/generate-video', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(editedPrompt)
-            // })
-            // const data = await response.json()
-
-            // 模擬的な処理（実装時に削除）
-            await new Promise((resolve) => setTimeout(resolve, 3000))
-
-            // 模擬的な結果（実装時に削除）
-            const mockResult: VideoResult = {
-                videoUrl: '/mock-video.mp4',
-                prompt: editedPrompt,
-                generatedAt: new Date(),
-            }
-
-            setResult(mockResult)
-            return mockResult
+            setPrompt(editedPrompt)
+            const generatedResult = await createVideo(editedPrompt)
+            setResult(generatedResult)
+            return generatedResult
         } catch (err) {
-            const errorMessage =
-                err instanceof Error ? err.message : '動画生成中にエラーが発生しました'
-            setError(errorMessage)
+            setHandledError(err, '動画生成中にエラーが発生しました')
             throw err
         } finally {
             setIsGenerating(false)
@@ -148,9 +179,7 @@ export const useVideoGeneration = () => {
             setResult(mockResult)
             return mockResult
         } catch (err) {
-            const errorMessage =
-                err instanceof Error ? err.message : '動画編集中にエラーが発生しました'
-            setError(errorMessage)
+            setHandledError(err, '動画編集中にエラーが発生しました')
             throw err
         } finally {
             setIsGenerating(false)
@@ -171,6 +200,7 @@ export const useVideoGeneration = () => {
         prompt,
         result,
         error,
+        startVideoGeneration,
         generatePrompt,
         generateVideo,
         editVideo,

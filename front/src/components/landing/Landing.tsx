@@ -14,17 +14,19 @@ interface LandingProps {
  */
 export function Landing({ onSubmit, isGenerating, error }: LandingProps) {
     return (
-        <div className="space-y-6">
+        <div className="flex flex-col h-full min-w-0">
             {/* エラー表示 */}
             {error && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-red-700 font-medium">エラー</p>
-                    <p className="text-red-600 text-sm mt-1">{error}</p>
+                <div className="p-3 bg-red-50 border border-red-300 rounded mb-3">
+                    <p className="text-sm font-medium text-red-800">エラーが発生しました</p>
+                    <p className="text-sm text-red-700 mt-1">{error}</p>
                 </div>
             )}
 
-            {/* テキスト入力フォーム */}
-            <MathTextInput onSubmit={onSubmit} isGenerating={isGenerating} />
+            {/* テキスト入力フォーム（flex-1で残りスペース占有） */}
+            <div className="flex-1 min-h-0 overflow-hidden">
+                <MathTextInput onSubmit={onSubmit} isGenerating={isGenerating} />
+            </div>
         </div>
     )
 }

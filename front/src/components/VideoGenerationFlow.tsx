@@ -19,15 +19,19 @@ export function VideoGenerationFlow() {
         await generatePrompt(text, videoPrompt)
     }
 
+    const isLanding = !prompt && !result
+    const isPrompt = !!prompt && !result && !isGenerating
+    const isResult = !!result
+
     return (
-        <div className="space-y-6">
+        <div className={`h-full flex flex-col w-full min-w-0 ${isLanding || isPrompt ? 'overflow-hidden' : 'overflow-auto'}`}>
             {/* 状態1: ランディング（テキスト入力） */}
-            {!prompt && !result && (
+            {isLanding && (
                 <Landing onSubmit={handleLandingSubmit} isGenerating={isGenerating} error={error} />
             )}
 
             {/* 状態2: プロンプト確認 */}
-            {prompt && !result && !isGenerating && (
+            {isPrompt && (
                 <Prompt prompt={prompt} isGenerating={isGenerating} onGenerate={generateVideo} />
             )}
 
@@ -35,7 +39,7 @@ export function VideoGenerationFlow() {
             {isGenerating && prompt && !result && <Generating />}
 
             {/* 状態4: リザルト */}
-            {result && <Result result={result} isGenerating={isGenerating} onEdit={editVideo} onReset={clearResult} />}
+            {isResult && <Result result={result} isGenerating={isGenerating} onEdit={editVideo} onReset={clearResult} />}
         </div>
     )
 }

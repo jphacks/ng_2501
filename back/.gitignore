@@ -6,3 +6,4 @@ __pycache__/
 .env
 tmp/
 media/
+.ruff_chache

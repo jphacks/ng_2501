@@ -11,6 +11,7 @@ from langchain_core.output_parsers import StrOutputParser
 
 from app.tools.lint import format_and_linter
 from app.tools.manim_lint import parse_manim_or_python_traceback,format_error_for_llm
+from app.tools.secure import is_code_safe
 
 load_dotenv()
 
@@ -106,22 +107,26 @@ class ManimAnimationService:
         repair_prompt = PromptTemplate(
             input_variables=["concept_summary", "lint_summary", "original_script"],
             template="""
-        You are a professional Manim developer.
+        あなたはプロの Manim 開発者です。
 
-        ## 1. Concept Context
+        1. コンセプトの要約
+
         {concept_summary}
 
-        ## 2. Static Analysis Diagnostics
+        2. 静的解析の診断結果
+
         {lint_summary}
 
-        ## 3. Original Script
+        3. 元のスクリプト
+
         {original_script}
 
-        ### Task
-        Rewrite the code to fix all listed errors while preserving the meaning and visuals implied by the concept.
-        Do NOT include explanations; output **only valid Python code**.
-        
-        ### 出力形式:
+        タスク
+
+        上記の診断で指摘された すべてのエラーを修正しつつ、コンセプトが示す意図（意味・見た目）を保ったままコードを書き直してください。
+        説明は一切書かず、有効な Python コードのみを出力してください。
+
+        出力形式
         ```python
         from manim import *
         class GeneratedScene(Scene):
@@ -145,9 +150,9 @@ class ManimAnimationService:
         
         with open(tmp_path, "w") as f:
             f.write(script)
-        return script
+        return script.replace("```python", "").replace("```", "")
 
-    def parse_pyright_output_for_llm(pyright_json: dict) -> str:
+    def parse_pyright_output_for_llm(self,pyright_json: dict) -> str:
         """Convert Pyright JSON diagnostics into structured plain text for LLM input."""
         diagnostics = pyright_json.get("generalDiagnostics", [])
         summary = pyright_json.get("summary", {})
@@ -179,7 +184,7 @@ class ManimAnimationService:
 
         return "\n".join(lines)
 
-    def has_no_pyright_errors(pyright_json: dict) -> bool:
+    def has_no_pyright_errors(self,pyright_json: dict) -> bool:
         """
         Return True if there are no Pyright errors (errorCount == 0), else False.
 
@@ -200,16 +205,20 @@ class ManimAnimationService:
         tmp_path = Path(f"tmp/{video_id}.py")
         with open(tmp_path, "w") as f:
             f.write(script)
-        try:
-            subprocess.run(
-                ["manim", "-pql", str(tmp_path), "GeneratedScene"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True, check=True
-            )
-            return "Success"
-        except subprocess.CalledProcessError as e:
-            return e.stderr
+        is_secure=is_code_safe(script)
+        if is_secure:
+            try:
+                subprocess.run(
+                    ["manim", "-pql", str(tmp_path), "GeneratedScene"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True, check=True
+                )
+                return "Success"
+            except subprocess.CalledProcessError as e:
+                return e.stderr
+        else:
+            return "bad_request"
     
     # 動画作成ループをかける
     def generate_videos(self,video_id,content,enhance_prompt):
@@ -229,12 +238,15 @@ class ManimAnimationService:
                 f.write(script)
             # tmp_pathに対して、format_and_linterを回す
             err =  format_and_linter(tmp_path)
+            print(err)
             err_paser_output_llm=self.parse_pyright_output_for_llm(err)
             is_success = self.has_no_pyright_errors(err)
             if is_success:
                 video_success = self.run_script(video_id,script)
-                if video_success:
+                if video_success=="Success":
                     return 'Success'
+                elif video_success=="bad_request":
+                    return 'bad_request'
                 else:
                     inner_error = parse_manim_or_python_traceback(video_success)
                     inner_error = format_error_for_llm(inner_error)
@@ -243,20 +255,9 @@ class ManimAnimationService:
                     continue
             else:
                 script = self.fix_code_agent(video_id,content,err_paser_output_llm)
-                loop=+1
+                loop += 1
                 continue
         return "error"
-        
-        
-        
-    
-    
-    
-        
-        
-        
-    
-    
     
 if __name__ == "__main__":
     service = ManimAnimationService()
@@ -265,7 +266,7 @@ if __name__ == "__main__":
     is_success = service.generate_videos(
         video_id='sankakukannsuu',
         content="""
-        # 【高校1年生向け】三角関数の“動き”を単位円で体感しよう --- ## 0. 今日のゴール - 「sinθ, cosθの“ずらし”や符号について、なぜかを動きで実感しよう」 - 結論：\(\cos\theta = \sin(\theta+\frac{\pi}{2})\)、\(\sin\theta = -\cos(\theta+\frac{\pi}{2})\)が単位円で体感できることを目指す --- ## 1. 単位円で三角関数スタート！ まず半径1（原点中心）の円＝**単位円**を用意しよう。 - x軸の正の方向（右向き）を0°、そこから反時計回りに角度\(\theta\)をとる。 - このとき単位円上の点\(P\)の座標は \[ P(\cos\theta,\,\sin\theta) \] - 横：\(\cos\theta\) - 縦：\(\sin\theta\) **POINT:** どの\(\theta\)でも\(\cos^2\theta+\sin^2\theta=1\)。 ＝**三角関数の基本式**だね！ --- ## 2. “角度を90°（\(\frac{\pi}{2}\)）ずらす”ってどういうこと？ 次に、点\(P\)を角度90°、つまり\(\frac{\pi}{2}\)進めてみよう。 - 回転後の座標 \[ Q(\cos(\theta+\frac{\pi}{2}),\,\sin(\theta+\frac{\pi}{2})) \] - 実は、これは \[ Q(-\sin\theta,\,\cos\theta) \] となる！ **POINT:** “\(\cos\theta\)”の成分が”\(-\sin\theta\)”に、“\(\sin\theta\)”が“\(\cos\theta\)”に。それぞれ“入れ替わり＋横はマイナス”されてるね。 --- ## 3. 単位円でこの“変化”を見てみる！ - もと：\((\cos\theta,\,\sin\theta)\) の点P - 90°回す：\((-\sin\theta,\,\cos\theta)\) の点Q（矢印で動かして見よう） **解説:** - 右向き（x軸正方向）が0° - そこから\(\theta\)進むとP - さらに90°進むと、横成分と縦成分がどうなるかアニメや図で明示 --- ## 4. 数式の並び替えとゴールの公式 **成分から公式を導出：** - \(\cos(\theta+\frac{\pi}{2}) = -\sin\theta\) - \(\sin(\theta+\frac{\pi}{2}) = \cos\theta\) なので…… \[ \cos\theta = \sin(\theta+\frac{\pi}{2})\\ \sin\theta = -\cos(\theta+\frac{\pi}{2}) \] --- ## 5. 具体的な値でピッタリ体験しよう！ ### (1) \(\theta=0\) のとき - \(\cos 0 = 1\), \(\sin(\frac{\pi}{2}) = 1\) → 一致！ - \(\sin 0 = 0\), \(-\cos(\frac{\pi}{2}) = 0\) → 一致！ ### (2) \(\theta=\frac{\pi}{6}\)（30°） - \(\cos\frac{\pi}{6} = \frac{\sqrt{3}}{2}\), \(\sin(\frac{2\pi}{3}) = \frac{\sqrt{3}}{2}\) → 一致！ - \(\sin\frac{\pi}{6} = \frac{1}{2}\), \(-\cos(\frac{2\pi}{3}) = -(-\frac{1}{2}) = \frac{1}{2}\) → 一致！ ### (3) \(\theta=\frac{\pi}{4}\)（45°） - \(\cos\frac{\pi}{4} = \frac{\sqrt{2}}{2}\), \(\sin(\frac{3\pi}{4}) = \frac{\sqrt{2}}{2}\) → 一致！ - \(\sin\frac{\pi}{4} = \frac{\sqrt{2}}{2}\), \(-\cos(\frac{3\pi}{4}) = -(-\frac{\sqrt{2}}{2}) = \frac{\sqrt{2}}{2}\) → 一致！ **図やアニメで、角度と点の動きの関係を1ステップごとにしっかり見せる** --- ## 6. 180°回した場合（応用） - 180°（\(\pi\)）回すと \[ (\cos(\theta+\pi),\,\sin(\theta+\pi)) = (-\cos\theta,\,-\sin\theta) \] - 点は反対側、両方マイナスになる！ --- ## 7. まとめ - 単位円の“動き”を使えば、\(\cos\theta\)と\(\sin(\theta+\frac{\pi}{2})\)などの関係が**「入れ替わり＋符号」**として自然に分かる - 具体例で数値的にも納得！ - どの角度でもこの関係は成り立つので、丸暗記せず「動き」で理解しよう！
+        # 【高校1年生向け】三角関数の“動き”を単位円で体感しよう --- ## 0. 今日のゴール - 「sinθ, cosθの“ずらし”や符号について、なぜかを動きで実感しよう」 - 結論：\(\cos\theta = \sin(\theta+\frac{\pi}{2})\)、\(\sin\theta = -\cos(\theta+\frac{\pi}{2})\)が単位円で体感できることを目指す --- ## 1. 単位円で三角関数スタート！ まず半径1（原点中心）の円＝**単位円**を用意しよう。 - x軸の正の方向（右向き）を0°、そこから反時計回りに角度\(\theta\)をとる
         """,
         enhance_prompt=""
     )

@@ -12,12 +12,19 @@
     },
     "dependencies": {
         "autoprefixer": "^10.4.21",
+        "katex": "^0.16.23",
+        "mathlive": "^0.107.1",
         "next": "^15.5.4",
         "react": "^19.1.0",
-        "react-dom": "^19.1.0"
+        "react-dom": "^19.1.0",
+        "react-markdown": "^10.1.0",
+        "rehype-katex": "^7.0.1",
+        "remark-gfm": "^4.0.1",
+        "remark-math": "^6.0.0"
     },
     "devDependencies": {
         "@biomejs/biome": "^1.9.4",
+        "@types/katex": "^0.16.7",
         "@types/node": "^20",
         "@types/react": "^19",
         "@types/react-dom": "^19",

@@ -34,6 +34,7 @@ export const getGeminiApiKey = (): string | null => {
 export const buildMathContinuationPrompt = (latex: string): string => {
     return [
         'You assist with editing LaTeX math expressions in a note-taking app.',
+        'The user is a high school student. Your suggestions should be appropriate for a high school mathematics curriculum (e.g., algebra, geometry, trigonometry, and basic calculus).',
         'Rules:',
         '1. Provide one or two candidate expressions, placing each candidate on its own line.',
         '2. **Crucially, ensure all suggestions are mathematically correct.** Do not provide deliberately incorrect or nonsensical options.',

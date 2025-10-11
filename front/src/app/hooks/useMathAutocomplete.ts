@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { GeminiError } from '@/app/datas/GeminiConfig';
 import { predictMathContinuation } from '@/app/hooks/useGeminiAPI';
+import { validateLatex } from '@/app/datas/MathValidation';
 
 const PLACEHOLDER_TOKEN_REGEX = /\\(?:math)?placeholder(?:\[[^\]]*])?{[^{}]*}/g;
 const BARE_PLACEHOLDER_REGEX = /\\(?:math)?placeholder\b/g;
@@ -77,7 +78,7 @@ export const useMathAutocomplete = ({
         }
 
         const trimmedLatex = latex.trim();
-        if (!trimmedLatex) {
+        if (!trimmedLatex || trimmedLatex.length < 4) {
             clearSuggestions();
             setIsLoading(false);
             return;
@@ -103,7 +104,11 @@ export const useMathAutocomplete = ({
 
                 const normalized = (Array.isArray(completions) ? completions : [completions])
                     .map((item) => sanitizeContinuation(item, trimmedLatex))
-                    .filter((item) => item.length > 0);
+                    .filter((item) => {
+                        if (item.length === 0) return false;
+                        const validation = validateLatex(item);
+                        return validation.isValid;
+                    });
 
                 const unique = normalized.filter((item, index, array) => array.indexOf(item) === index);
 

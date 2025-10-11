@@ -131,59 +131,19 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
         await onSubmit(text, videoPrompt || undefined)
     }
 
-    // const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    //     const currentText = e.target.value[-1]
-    //     // 前回の値を取得
-    //     const previousText = previousTextRef.current
-
-    //     if (previousText === "$") {
-    //         if (currentText === "$") {
-    //             console.log("case 1")
-    //             setText(`${currentText} $$`)
-    //             setCursorPosition(e.target.selectionStart + 1)
-    //         } else {
-    //             console.log("case 2")
-    //             console.log("currentText:", currentText)
-    //             console.log("previousText:", previousText)
-    //             setText(`${currentText}$`)
-    //             setCursorPosition(e.target.selectionStart)
-    //         }
-    //     } else {
-    //         console.log("case 3")
-    //         setText(currentText)
-    //         setCursorPosition(e.target.selectionStart)
-    //     }
-    //     previousTextRef.current = currentText
-
-    //     if (showInlinePopup) {
-    //         const position = calculatePopupPosition()
-    //         setPopupPosition(position)
-    //     }
-
-    //     if (showMathEditor) {
-    //         setShowInlinePopup(false)
-    //     }
-    // }
     const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         var input = e.target.value
         var cursorPos = e.target.selectionStart
 
-        console.log("input:", input)
-        console.log("input.type:", typeof input)
         if (input.length > 1) {
             const currentText = input.slice(-1)
             const previousText = input.slice(-2,-1)
-            console.log("currentText:", currentText)
-            console.log("previousText:", previousText)
-            console.log("isDeleteOperationRef.current:", isDeleteOperationRef.current)
             if (!isDeleteOperationRef.current) {
                 if (previousText === "$") {
                     if (currentText === "$") {
-                        console.log("case 1")
                         input += " $$ "
                         cursorPos += 1
                     } else {
-                        console.log("case 2")
                         input += "$ "
                     }
                 }
@@ -199,6 +159,42 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
 
         if (showMathEditor) {
             setShowInlinePopup(false)
+        } else {
+            judgeShowPopup(input, cursorPos)
+        }
+    }
+
+    const judgeShowPopup = (input: string, cursorPos: number) => {
+        let indentList = Array(input.length).fill(0);
+        let currentIndent = 1;
+        for (let i = 0; i < input.length; i++) {
+            if (input[i] === '$') {
+                if (i > 1 && indentList[i - 1] === currentIndent) {
+                    currentIndent -= 1;
+                    indentList[i] = currentIndent;
+                }
+                if (indentList[i] === 0) {
+                    indentList[i] = currentIndent;
+                }
+                currentIndent += 1;
+
+                if (i >= cursorPos && indentList[i] !== 0) {
+
+                    if (indentList[i] % 2 === 0) {
+                        setCurrentMathValue('')
+                        const position = calculatePopupPosition()
+                        setPopupPosition(position)
+                        setShowInlinePopup(true)
+                        setShowMathEditor(true)
+                    } else {
+                        setShowMathEditor(false)
+                        setShowInlinePopup(false)
+                        setCurrentMathValue('')
+                        setPopupPosition(null)
+                    }
+                    break
+                }
+            }
         }
     }
 
@@ -210,16 +206,41 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
         } else {
             isDeleteOperationRef.current = false
         }
+
+        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown'].includes(e.key)) {
+        // キーイベント後にカーソル位置が更新されるまで少し待つ
+        setTimeout(() => {
+            const target = e.target as HTMLTextAreaElement
+            const newCursorPosition = target.selectionStart
+            console.log("Cursor moved to:", newCursorPosition)
+            
+            // カーソル位置の状態を更新
+            setCursorPosition(newCursorPosition)
+            
+            // ポップアップの判定を実行
+            judgeShowPopup(text, newCursorPosition)
+            
+            // ポップアップが表示されている場合は位置を更新
+            if (showInlinePopup) {
+                const position = calculatePopupPosition()
+                setPopupPosition(position)
+            }
+        }, 0)
+    }
     }
     const handleTextAreaClick = (e: React.MouseEvent<HTMLTextAreaElement>) => {
         const target = e.target as HTMLTextAreaElement
         setCursorPosition(target.selectionStart)
 
-        // ポップアップの位置を更新
-        if (showInlinePopup) {
-            const position = calculatePopupPosition()
-            setPopupPosition(position)
-        }
+        // // ポップアップの位置を更新
+        // if (showInlinePopup) {
+        //     const position = calculatePopupPosition()
+        //     setPopupPosition(position)
+        // } else {
+        //     judgeShowPopup(text, target.selectionStart)
+        // }
+
+        judgeShowPopup(text, target.selectionStart)
     }
 
     const handleMathEditorOpen = () => {

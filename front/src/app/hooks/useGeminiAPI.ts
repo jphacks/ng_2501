@@ -2,9 +2,12 @@
 
 import {
     AUTOCOMPLETE_MAX_OUTPUT_TOKENS,
+    COMPLETION_MAX_OUTPUT_TOKENS,
     GeminiError,
     type GeminiMathContinuationResult,
+    type GeminiCompletionResult,
     buildMathContinuationPrompt,
+    buildCompletionPrompt,
     getGeminiApiKey,
     getGeminiModel,
 } from '../datas/GeminiConfig';
@@ -96,5 +99,84 @@ export const predictMathContinuation = async (
         .slice(0, 2);
 
     return { completions: suggestions };
+};
+
+/**
+ * Gemini APIを使用してタイトルから数学ノートを生成
+ */
+export const generateMathNoteFromTitle = async (
+    title: string,
+    signal?: AbortSignal
+): Promise<GeminiCompletionResult> => {
+    const apiKey = getGeminiApiKey();
+
+    if (!apiKey) {
+        throw new GeminiError('Gemini API key is not configured.');
+    }
+
+    const model = getGeminiModel();
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const prompt = buildCompletionPrompt(title);
+
+    const requestBody = {
+        contents: [
+            {
+                role: 'user',
+                parts: [
+                    {
+                        text: prompt,
+                    },
+                ],
+            },
+        ],
+        generationConfig: {
+            temperature: 0.7,
+            topP: 0.9,
+            topK: 40,
+            maxOutputTokens: COMPLETION_MAX_OUTPUT_TOKENS,
+        },
+    };
+
+    let response: Response;
+
+    try {
+        response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+            signal,
+        });
+    } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+            throw error;
+        }
+        throw new GeminiError('Failed to reach Gemini API.');
+    }
+
+    if (!response.ok) {
+        const errorText = await response.text().catch(() => '');
+        throw new GeminiError(
+            `Gemini API request failed (${response.status}): ${errorText || response.statusText}`
+        );
+    }
+
+    const data = await response.json();
+    const firstCandidate = data?.candidates?.[0];
+    const parts = firstCandidate?.content?.parts;
+    const text =
+        Array.isArray(parts) && parts.length > 0
+            ? parts
+                .map((part: { text?: string }) => (typeof part.text === 'string' ? part.text : ''))
+                .join('\n')
+                .trim()
+            : '';
+
+    if (!text) {
+        throw new GeminiError('Gemini API did not return any content.');
+    }
+
+    return { content: text };
 };
 

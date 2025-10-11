@@ -7,6 +7,8 @@ import remarkGfm from 'remark-gfm'
 import rehypeKatex from 'rehype-katex'
 import { MathEditor } from '@/components/math/MathEditor'
 import { ErrorProvider } from '@/app/contexts/ErrorContext'
+import { generateMathNoteFromTitle } from '@/app/hooks/useGeminiAPI'
+import { GeminiError } from '@/app/datas/GeminiConfig'
 
 interface MathTextInputProps {
     onSubmit: (text: string, videoPrompt?: string) => Promise<void>
@@ -79,6 +81,9 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
     const [currentMathValue, setCurrentMathValue] = useState('')
     const [viewMode, setViewMode] = useState<ViewMode>('edit')
     const [cursorPosition, setCursorPosition] = useState<number>(0)
+    const [titleInput, setTitleInput] = useState('')
+    const [isGeneratingContent, setIsGeneratingContent] = useState(false)
+    const [generationError, setGenerationError] = useState<string | null>(null)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -166,9 +171,81 @@ $$\\int f(x)dx = F(x) + C$$
         setCursorPosition(sample.length)
     }
 
+    const handleGenerateFromTitle = async () => {
+        if (!titleInput.trim()) {
+            setGenerationError('タイトルを入力してください')
+            return
+        }
+
+        setIsGeneratingContent(true)
+        setGenerationError(null)
+        setViewMode('edit') // 生成時は編集モードに切り替え
+
+        try {
+            const result = await generateMathNoteFromTitle(titleInput)
+            
+            // 生成された内容を挿入
+            const generatedText = `# ${titleInput}\n\n${result.content}`
+            setText(generatedText)
+            setCursorPosition(generatedText.length)
+            setTitleInput('') // タイトル入力をクリア
+            
+            // 成功したら分割モードに切り替えてプレビュー表示
+            setTimeout(() => {
+                setViewMode('split')
+            }, 100)
+        } catch (error) {
+            if (error instanceof GeminiError) {
+                setGenerationError(error.message)
+            } else if (error instanceof Error) {
+                setGenerationError(`エラーが発生しました: ${error.message}`)
+            } else {
+                setGenerationError('予期しないエラーが発生しました')
+            }
+            console.error('Generation error:', error)
+        } finally {
+            setIsGeneratingContent(false)
+        }
+    }
+
     return (
         <ErrorProvider>
             <form onSubmit={handleSubmit} className="space-y-4">
+                {/* AIタイトル生成セクション */}
+                <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg">
+                    <h3 className="text-sm font-semibold text-gray-800 mb-3">🤖 AIで文章を自動生成</h3>
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            value={titleInput}
+                            onChange={(e) => setTitleInput(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault()
+                                    handleGenerateFromTitle()
+                                }
+                            }}
+                            placeholder="例: 積分の方法、微分の公式、三角関数の性質"
+                            className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            disabled={isGeneratingContent || isGenerating}
+                        />
+                        <button
+                            type="button"
+                            onClick={handleGenerateFromTitle}
+                            disabled={!titleInput.trim() || isGeneratingContent || isGenerating}
+                            className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+                        >
+                            {isGeneratingContent ? '生成中...' : '✨ 生成'}
+                        </button>
+                    </div>
+                    {generationError && (
+                        <p className="mt-2 text-xs text-red-600">{generationError}</p>
+                    )}
+                    <p className="mt-2 text-xs text-gray-600">
+                        学習したいトピックのタイトルを入力すると、GeminiがMarkdown + LaTeX形式で詳しい解説を生成します
+                    </p>
+                </div>
+
                 <div>
                     {/* ヘッダー: タブとボタン */}
                     <div className="flex items-center justify-between mb-2">

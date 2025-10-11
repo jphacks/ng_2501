@@ -2,9 +2,14 @@
 
 export const DEFAULT_MODEL = 'gemini-2.5-flash-lite';
 export const AUTOCOMPLETE_MAX_OUTPUT_TOKENS = 512;
+export const COMPLETION_MAX_OUTPUT_TOKENS = 2048;
 
 export interface GeminiMathContinuationResult {
     completions: string[];
+}
+
+export interface GeminiCompletionResult {
+    content: string;
 }
 
 export class GeminiError extends Error {
@@ -25,7 +30,7 @@ export const getGeminiApiKey = (): string | null => {
     return typeof apiKey === 'string' && apiKey.trim() ? apiKey.trim() : null;
 };
 
-// プロンプト生成
+// プロンプト生成: 数式補完
 export const buildMathContinuationPrompt = (latex: string): string => {
     return [
         'You assist with editing LaTeX math expressions in a note-taking app.',
@@ -39,6 +44,27 @@ export const buildMathContinuationPrompt = (latex: string): string => {
         '7. Output LaTeX only: no prose, numbering, bullet markers, or surrounding $...$ / $$...$$ delimiters.',
         '8. Keep each candidate concise (ideally under 60 tokens).',
         `Current expression:\n${latex}`,
+    ].join('\n');
+};
+
+// プロンプト生成: タイトルから数学ノート生成
+export const buildCompletionPrompt = (title: string): string => {
+    const hasJapanese = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]/.test(title);
+    const targetLanguage = hasJapanese ? 'Japanese' : 'English';
+
+    return [
+        `You are preparing structured math-learning content titled "${title}".`,
+        `Respond in ${targetLanguage}.`,
+        'Produce concise markdown with exactly 3 sections.',
+        'Each section must:',
+        '1. Start with a level-2 heading (##).',
+        '2. Reuse and analyze a single primary LaTeX equation; show the full equation once and refer to its components or rearrangements rather than introducing unrelated formulas.',
+        'Ensure each section includes at least one LaTeX expression derived from that primary equation (inline $...$ or block $$...$$).',
+        '3. Focus purely on mathematical definitions, symbolic manipulation, and planar (2D) interpretations that can be readily visualized; avoid 3D topics.',
+        'Keep prose minimal—prioritize the equation, its derivation, term-by-term explanations, and a short worked numeric example when possible.',
+        'End the final section with a bullet list titled "Tips" that briefly notes at least one real-world or computational use case of the equation.',
+        'Limit the entire response to roughly 1,000 characters; stay concise while fulfilling the requirements.',
+        'Do not modify or restate the provided title, and avoid adding placeholder text or unrelated English filler.',
     ].join('\n');
 };
 

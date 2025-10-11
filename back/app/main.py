@@ -1,6 +1,6 @@
 # main.py
 from fastapi import FastAPI
-from app.router import sample_router
+from app.router import animation
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
@@ -20,7 +20,7 @@ app.add_middleware(
 
 
 # ルーター登録
-app.include_router(sample_router.router)
+app.include_router(animation.router)
 
 
 

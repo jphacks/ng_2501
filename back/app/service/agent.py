@@ -12,7 +12,10 @@ load_dotenv()
 
 class ManimAnimationService:
     def __init__(self):
-        with open("./prompts.toml", 'rb') as f:
+        base_dir = Path(__file__).resolve().parent
+        prompts_path = base_dir / "prompts.toml"
+        prompts_path = str(prompts_path)
+        with open(prompts_path, 'rb') as f:
             self.prompts = tomllib.load(f)
         self.think_llm = self._load_llm("gemini-2.5-flash")
         self.pro_llm   = self._load_llm("gemini-2.5-pro")
@@ -105,7 +108,9 @@ class ManimAnimationService:
             return "Success"
         except subprocess.CalledProcessError as e:
             return e.stderr
-        
+    
+    
+    
 if __name__ == "__main__":
     service = ManimAnimationService()
     prompt = service.explain_concept("微分積分学の基本定理について説明してください。可能な限り容易にしてください。")

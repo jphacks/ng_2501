@@ -1,0 +1,482 @@
+/* MathEditor component styles */
+.math-editor {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px;
+    background: #ffffff;
+    border: 2px solid #e1e5e9;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.math-editor.active {
+    border-color: #0066cc;
+    box-shadow: 0 2px 12px rgba(0, 102, 204, 0.15);
+}
+
+.math-editor-field {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.math-field {
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 16px;
+    line-height: 1.5;
+    background: #ffffff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.math-field:focus {
+    outline: none;
+    border-color: #0066cc;
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+.math-editor-suggestions {
+    font-size: 13px;
+    line-height: 1.4;
+    color: #6b7280;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.math-editor-suggestion-label {
+    font-weight: 600;
+    color: #4b5563;
+}
+
+.math-editor-suggestion-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.math-editor-suggestion-item {
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    background: #f3f4f6;
+    color: #374151;
+    padding: 8px 12px;
+    min-height: 48px;
+    min-width: 72px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.math-editor-suggestion-item:hover {
+    background: #e5e7eb;
+    border-color: #9ca3af;
+}
+
+.math-editor-suggestion-item:focus {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+
+.math-editor-suggestion-status {
+    color: #4b5563;
+}
+
+.math-editor-suggestion-error {
+    color: #ef4444;
+}
+
+.math-editor-suggestion-preview {
+    display: block;
+    color: #111827;
+    font-size: 16px;
+}
+
+.math-editor-suggestion-preview .katex {
+    font-size: 1.1em;
+}
+
+.math-editor-suggestion-fallback {
+    font-family: 'SFMono-Regular', Menlo, Consolas, 'Liberation Mono', monospace;
+    color: #374151;
+    word-break: break-word;
+}
+
+.math-editor-controls {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+    margin-top: 12px;
+}
+
+.math-editor-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.math-editor-btn:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+}
+
+.math-editor-btn:active {
+    background: #f3f4f6;
+    transform: translateY(1px);
+}
+
+.math-editor-btn-complete {
+    color: #059669;
+    border-color: #d1fae5;
+}
+
+.math-editor-btn-complete:hover {
+    background: #ecfdf5;
+    border-color: #059669;
+    color: #047857;
+}
+
+.math-editor-btn-cancel {
+    color: #dc2626;
+    border-color: #fecaca;
+}
+
+.math-editor-btn-cancel:hover {
+    background: #fef2f2;
+    border-color: #dc2626;
+    color: #b91c1c;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .math-editor {
+        background: #1f2937;
+        border-color: #374151;
+    }
+
+    .math-editor.active {
+        border-color: #3b82f6;
+        box-shadow: 0 2px 12px rgba(59, 130, 246, 0.15);
+    }
+
+    .math-field {
+        background: #111827;
+        border-color: #4b5563;
+        color: #f9fafb;
+    }
+
+    .math-editor-suggestions {
+        color: #d1d5db;
+    }
+
+    .math-editor-suggestion-label {
+        color: #e5e7eb;
+    }
+
+    .math-editor-suggestion-item {
+        background: #374151;
+        border-color: #4b5563;
+        color: #f9fafb;
+    }
+
+    .math-editor-suggestion-item:hover {
+        background: #4b5563;
+        border-color: #6b7280;
+    }
+
+    .math-editor-suggestion-item:focus {
+        outline-color: #60a5fa;
+    }
+
+    .math-editor-suggestion-status {
+        color: #e5e7eb;
+    }
+
+    .math-editor-suggestion-preview {
+        color: #f9fafb;
+    }
+
+    .math-editor-suggestion-fallback {
+        color: #f9fafb;
+    }
+
+    .math-field:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .math-editor-btn {
+        background: #374151;
+        border-color: #4b5563;
+        color: #f9fafb;
+    }
+
+    .math-editor-btn:hover {
+        background: #4b5563;
+        border-color: #6b7280;
+    }
+
+    .math-editor-btn:active {
+        background: #6b7280;
+    }
+
+    .math-editor-btn-complete {
+        border-color: #065f46;
+    }
+
+    .math-editor-btn-complete:hover {
+        background: #064e3b;
+        border-color: #059669;
+    }
+
+    .math-editor-btn-cancel {
+        border-color: #991b1b;
+    }
+
+    .math-editor-btn-cancel:hover {
+        background: #7f1d1d;
+        border-color: #dc2626;
+    }
+}
+
+/* MathField fallback styles */
+.math-field-error {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.math-field-fallback {
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 12px;
+    border: 1px solid #fbbf24;
+    border-radius: 4px;
+    font-size: 16px;
+    line-height: 1.5;
+    background: #fffbeb;
+    color: #92400e;
+    font-family: 'Courier New', monospace;
+}
+
+.math-field-fallback:focus {
+    outline: none;
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+.math-field-error-message {
+    font-size: 12px;
+    color: #dc2626;
+    font-weight: 500;
+}
+
+.math-field-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    background: #f9fafb;
+}
+
+.math-field-spinner {
+    font-size: 14px;
+    color: #6b7280;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Dark mode support for fallback */
+@media (prefers-color-scheme: dark) {
+    .math-field-fallback {
+        background: #451a03;
+        border-color: #d97706;
+        color: #fbbf24;
+    }
+
+    .math-field-fallback:focus {
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+
+    .math-field-error-message {
+        color: #f87171;
+    }
+
+    .math-field-loading {
+        background: #374151;
+        border-color: #4b5563;
+    }
+
+    .math-field-spinner {
+        color: #9ca3af;
+    }
+}
+
+/* Touch device optimizations */
+.math-editor.touch-optimized {
+    padding: 12px;
+    gap: 12px;
+}
+
+.math-editor.touch-optimized .math-field {
+    min-height: 48px;
+    padding: 12px 16px;
+    font-size: 18px;
+    touch-action: manipulation;
+}
+
+.math-editor.touch-optimized .math-editor-btn {
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.math-editor.touch-optimized .math-editor-btn:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+}
+
+/* Mobile device optimizations */
+.math-editor.mobile-optimized {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 16px;
+}
+
+.math-editor.mobile-optimized .math-editor-field {
+    min-width: unset;
+}
+
+.math-editor.mobile-optimized .math-field {
+    min-height: 56px;
+    padding: 16px 20px;
+    font-size: 20px;
+    border-radius: 8px;
+}
+
+.math-editor.mobile-optimized .math-editor-controls {
+    justify-content: center;
+    gap: 16px;
+}
+
+.math-editor.mobile-optimized .math-editor-btn {
+    width: 56px;
+    height: 56px;
+    font-size: 20px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+/* High contrast mode for accessibility */
+@media (prefers-contrast: high) {
+    .math-editor.touch-optimized .math-field {
+        border-width: 2px;
+    }
+
+    .math-editor.touch-optimized .math-editor-btn {
+        border-width: 2px;
+        font-weight: 600;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .math-editor.touch-optimized .math-editor-btn:active {
+        transform: none;
+        transition: none;
+    }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .math-editor {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .math-editor-field {
+        min-width: unset;
+    }
+
+    .math-editor-controls {
+        justify-content: center;
+    }
+
+    .math-editor-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+
+    /* Override for touch devices on mobile */
+    .math-editor.touch-optimized {
+        gap: 16px;
+        padding: 16px;
+    }
+
+    .math-editor.touch-optimized .math-editor-btn {
+        width: 48px;
+        height: 48px;
+        font-size: 18px;
+    }
+}
+
+/* Tablet optimizations */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .math-editor.touch-optimized {
+        padding: 14px;
+        gap: 14px;
+    }
+
+    .math-editor.touch-optimized .math-field {
+        min-height: 52px;
+        padding: 14px 18px;
+        font-size: 19px;
+    }
+
+    .math-editor.touch-optimized .math-editor-btn {
+        width: 52px;
+        height: 52px;
+        font-size: 19px;
+    }
+}

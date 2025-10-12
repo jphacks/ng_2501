@@ -23,6 +23,7 @@ export interface VideoGenerationPrompt {
  * 動画生成結果
  */
 export interface VideoResult {
+    videoId: string // 生成された動画ID
     videoUrl: string // 生成された動画のURL
     prompt: VideoGenerationPrompt // 使用されたプロンプト
     generatedAt: Date // 生成日時

@@ -3,3 +3,7 @@ __pycache__/
 *.pyo
 *.pyd
 *.db
+.env
+tmp/
+media/
+.ruff_chache

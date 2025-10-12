@@ -24,6 +24,10 @@
 
 <video src="https://youtu.be/iyhTQFKciaY" controls="true"></video>
 
+#### 生成可能な動画
+
+<video src="https://www.youtube.com/watch?v=XEERMwexpYI" controls="true"></video>
+
 #### 課題の裏付け
 
 - **生徒の課題**

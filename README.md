@@ -22,12 +22,25 @@
 <!-- youtube動画 -->
 #### 紹介動画
 
-<video src="https://youtu.be/iyhTQFKciaY" controls="true"></video>
+<iframe
+  src="https://www.youtube-nocookie.com/embed/iyhTQFKciaY?rel=0"
+  title="紹介動画"
+  allowfullscreen
+  loading="lazy"
+  style="width:100%;height:360px;border:0;border-radius:12px;"
+></iframe>
 
 #### 生成可能な動画
 
-<video src="https://www.youtube.com/watch?v=XEERMwexpYI" controls="true"></video>
+<iframe
+  src="https://www.youtube.com/watch?v=XEERMwexpYI"
+  title="紹介動画"
+  allowfullscreen
+  loading="lazy"
+  style="width:100%;height:360px;border:0;border-radius:12px;"
+></iframe>
 
+ 
 #### 課題の裏付け
 
 - **生徒の課題**

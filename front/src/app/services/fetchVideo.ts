@@ -13,7 +13,7 @@ const fetchVideo = async (videoId: string): Promise<string | null> => {
     }
 
     try {
-        const path = `${baseUrl}/api/animation/${videoId}`
+        const path = `${baseUrl}/api/animation_agent_rag_model${videoId}`
         const response = await fetch(
             path,
             {

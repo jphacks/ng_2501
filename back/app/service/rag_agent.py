@@ -1,5 +1,10 @@
 import os
+import json
+import time
+import uuid
+import logging
 import subprocess
+from functools import wraps
 from pathlib import Path
 from dotenv import load_dotenv
 import tomllib
@@ -8,34 +13,105 @@ from langchain.prompts import PromptTemplate
 from langchain.schema.runnable import RunnableSequence
 from langchain_core.output_parsers import StrOutputParser
 
-import re
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_chroma import Chroma
-from pathlib import Path
 
 from app.tools.lint import format_and_linter
-from app.tools.manim_lint import parse_manim_or_python_traceback,format_error_for_llm
+from app.tools.manim_lint import parse_manim_or_python_traceback, format_error_for_llm
 from app.tools.secure import is_code_safe
+from app.tools.embeding_data.manim_rag import ManimDocsRAG
 
+
+# =========================
+# ロギング共通ユーティリティ
+# =========================
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+TRACE_LLM = bool(int(os.getenv("TRACE_LLM_PROMPTS", "0")))
+TRIM = int(os.getenv("LOG_TRIM", "1200"))  # 長文をログ出力するときの最大文字数
+
+def _setup_logger() -> logging.Logger:
+    logger = logging.getLogger("manim_rag_service")
+    if logger.handlers:
+        return logger
+    logger.setLevel(getattr(logging, LOG_LEVEL, logging.INFO))
+    handler = logging.StreamHandler()
+    fmt = "%(asctime)s.%(msecs)03d %(levelname)s [%(name)s] %(message)s"
+    handler.setFormatter(logging.Formatter(fmt=fmt, datefmt="%Y-%m-%d %H:%M:%S"))
+    logger.addHandler(handler)
+    logger.propagate = False
+    return logger
+
+logger = _setup_logger()
+
+def _redact(s: str) -> str:
+    if not isinstance(s, str):
+        return s
+    s = s.replace(os.getenv("GEMINI_API_KEY", "*****") or "*****", "****REDACTED****")
+    return s
+
+def _clip(s: str, n: int = TRIM) -> str:
+    if not isinstance(s, str):
+        return s
+    return s if len(s) <= n else s[: n] + f"... <trimmed {len(s)-n} chars>"
+
+def trace(func):
+    """関数の入出・所要時間を統一ログ。長文は自動トリム。"""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        call_id = str(uuid.uuid4())[:8]
+        t0 = time.perf_counter()
+        try:
+            safe_kwargs = {
+                k: _clip(_redact(v)) if isinstance(v, str) else v
+                for k, v in kwargs.items()
+            }
+            logger.debug(f"▶️  {func.__name__} start call_id={call_id} kwargs={safe_kwargs}")
+            out = func(*args, **kwargs)
+            t1 = time.perf_counter()
+            logger.debug(f"✅  {func.__name__} end   call_id={call_id} elapsed={t1-t0:.3f}s "
+                         f"result_preview={_clip(str(out))}")
+            return out
+        except Exception as e:
+            t1 = time.perf_counter()
+            logger.exception(f"💥 {func.__name__} error call_id={call_id} elapsed={t1-t0:.3f}s: {e}")
+            raise
+    return wrapper
 
 load_dotenv()
 
 class ManimAnimationOnRAGService:
     def __init__(self):
+        self.req_id = str(uuid.uuid4())[:8]
         base_dir = Path(__file__).resolve().parent
         prompts_path = base_dir / "prompts.toml"
         prompts_path = str(prompts_path)
+        logger.info(f"[{self.req_id}] 初始化 start prompts_path={prompts_path}")
         with open(prompts_path, 'rb') as f:
             self.prompts = tomllib.load(f)
+
+        # LLM読み込み
         self.think_llm = self._load_llm("gemini-2.5-flash")
         self.pro_llm   = self._load_llm("gemini-2.5-pro")
         self.flash_llm = self._load_llm("gemini-2.5-flash")
         self.lite_llm  = self._load_llm("gemini-2.5-flash-lite")
+        self.rag_client = ManimDocsRAG(logger=logger)
+
+        # optional_variables は LangChain の PromptTemplate には無いオプション
+        # → 将来の混乱を避けるため警告のみ出し、機能はそのまま（無視される）
+        if logger.isEnabledFor(logging.WARNING):
+            logger.warning(f"[{self.req_id}] 注意: PromptTemplate に 'optional_variables' は存在しません（無視されます）")
+
+        logger.info(f"[{self.req_id}] 初始化 done")
+
     def _load_llm(self, model_type: str):
+        logger.debug(f"[{self.req_id}] LLMロード model={model_type}")
         return ChatGoogleGenerativeAI(model=model_type, google_api_key=os.getenv('GEMINI_API_KEY'))
-    
+
     # 知識の構造化説明
-    def explain_concept(self,input_text: str) -> str:
+    @trace
+    def explain_concept(self, input_text: str) -> str:
+        if TRACE_LLM:
+            logger.debug(f"[{self.req_id}] explain_concept.prompt =\n{_clip(self.prompts['explain']['prompt'])}")
+            logger.debug(f"[{self.req_id}] explain_concept.vars = {{'input_text': '{_clip(input_text)}'}}")
+
         prompt = PromptTemplate(
             input_variables=["input_text"],
             template=self.prompts["explain"]["prompt"]
@@ -46,45 +122,65 @@ class ManimAnimationOnRAGService:
             last=parser
         )
         output = chain.invoke({"input_text": input_text})
+        if TRACE_LLM:
+            logger.debug(f"[{self.req_id}] explain_concept.output =\n{_clip(output)}")
         return output
-    
+
     # スクリプトを作成する最新prompt
-    def generate_script_with_prompt(self,explain_prompt,video_enhance_prompt):
+    @trace
+    def generate_script_with_prompt(self, explain_prompt, video_enhance_prompt):
         """
         動画のスクリプトを生成する関数
-        input:
-            explain_prompt : 知識の構造化説明
-            video_enhance_prompt : ビデオの動画を指導するプロンプト 
-        output:
-            script: 動画スクリプト
         """
+        if TRACE_LLM:
+            logger.debug(f"[{self.req_id}] generate_script_with_prompt.planner_template =\n"
+                         f"{_clip(self.prompts['chain']['manim_planer_with_instruct'])}")
+            logger.debug(f"[{self.req_id}] generate_script_with_prompt.script_template =\n"
+                         f"{_clip(self.prompts['chain']['manim_script_generate'])}")
+
+        # NOTE: optional_variables は無視される
         manim_planer = PromptTemplate(
-            input_variables=['user_prompt'],
-            optional_variables= ['video_enhance_prompt'],
+            input_variables=['user_prompt', 'video_enhance_prompt'],
             template=self.prompts['chain']['manim_planer_with_instruct']
         )
-        parser = StrOutputParser() 
-        
+        parser = StrOutputParser()
+
         manim_script_prompt = PromptTemplate(
             input_variables=["instructions"],
             template=self.prompts["chain"]["manim_script_generate"]
         )
-        
-        chain = RunnableSequence(
-            first= manim_planer | self.flash_llm,
-            last= manim_script_prompt | self.pro_llm | parser
-        )
-        
-        output = chain.invoke(
-            {
-                "user_prompt":explain_prompt,
-                "video_enhance_prompt":video_enhance_prompt
-            }
-        )
-        return output.replace("```python", "").replace("```", "")
-    
+
+        t0 = time.perf_counter()
+        plan = (manim_planer | self.flash_llm).invoke({
+            "user_prompt": explain_prompt,
+            "video_enhance_prompt": video_enhance_prompt or ""
+        })
+        t1 = time.perf_counter()
+        logger.info(f"[{self.req_id}] planner LLM elapsed={t1-t0:.3f}s")
+
+        if TRACE_LLM:
+            logger.debug(f"[{self.req_id}] planner.output =\n{_clip(str(plan))}")
+
+        t2 = time.perf_counter()
+        script = (manim_script_prompt | self.pro_llm | parser).invoke({"instructions": plan})
+        t3 = time.perf_counter()
+        logger.info(f"[{self.req_id}] script LLM elapsed={t3-t2:.3f}s")
+
+        if TRACE_LLM:
+            logger.debug(f"[{self.req_id}] script.raw =\n{_clip(script)}")
+
+        clean = script.replace("```python", "").replace("```", "")
+        logger.debug(f"[{self.req_id}] script.cleaned_len={len(clean)}")
+        return clean
+
     # コード生成AIエージェント
+    @trace
     def generate_script(self, video_instract_prompt: str) -> str:
+        if TRACE_LLM:
+            logger.debug(f"[{self.req_id}] generate_script.templates = "
+                         f"planner:\n{_clip(self.prompts['chain']['manim_planer'])}\n"
+                         f"generator:\n{_clip(self.prompts['chain']['manim_script_generate'])}")
+
         prompt1 = PromptTemplate(
             input_variables=["user_prompt"],
             template=self.prompts["chain"]["manim_planer"]
@@ -94,128 +190,63 @@ class ManimAnimationOnRAGService:
             template=self.prompts["chain"]["manim_script_generate"]
         )
         parser = StrOutputParser()
-        chain = RunnableSequence(
-            first=prompt1 | self.think_llm,
-            last=prompt2 | self.pro_llm | parser
-        )
-        output = chain.invoke({"user_prompt" : video_instract_prompt})
-        return output.replace("```python", "").replace("```", "")
-    
-    def _load_rag_db(self):
-        """Manim公式ドキュメントRAGデータベースをロード"""
-        db_dir = Path(__file__).resolve().parent.parent / "tools" / "embeding_data" / "manim_chroma_db"
-        embedding_function = HuggingFaceEmbeddings(model_name="jinaai/jina-code-embeddings-1.5b")
-        return Chroma(
-            collection_name="manim_docs",
-            persist_directory=str(db_dir),
-            embedding_function=embedding_function,
-        )
+
+        t0 = time.perf_counter()
+        plan = (prompt1 | self.think_llm).invoke({"user_prompt": video_instract_prompt})
+        t1 = time.perf_counter()
+        logger.info(f"[{self.req_id}] generate_script.plan elapsed={t1-t0:.3f}s")
+
+        if TRACE_LLM:
+            logger.debug(f"[{self.req_id}] generate_script.plan_out =\n{_clip(str(plan))}")
+
+        t2 = time.perf_counter()
+        script = (prompt2 | self.pro_llm | parser).invoke({"instructions": plan})
+        t3 = time.perf_counter()
+        logger.info(f"[{self.req_id}] generate_script.codegen elapsed={t3-t2:.3f}s")
+
+        if TRACE_LLM:
+            logger.debug(f"[{self.req_id}] generate_script.raw =\n{_clip(script)}")
+
+        return script.replace("```python", "").replace("```", "")
 
     # --- Pyright diagnostics 用 ---
+    @trace
     def rag_search_related_docs_for_diagnostics(self, diagnostics: list[dict], k: int = 2) -> str:
-        """Pyright診断ごとにRAG検索を行い、ルール別にまとめる"""
-        db = self._load_rag_db()
-        seen_urls = set()
-        rule_to_docs = {}
-
-        for diag in diagnostics:
-            message = diag.get("message", "")
-            rule = diag.get("rule", "unknown")
-            manim_refs = re.findall(r"manim[\.\w]+", message)
-            query = " ".join(manim_refs) if manim_refs else message[:160]
-
-            results = db.similarity_search(query, k=k)
-            docs = []
-            for r in results:
-                url = r.metadata.get("source_url", "")
-                if url not in seen_urls:
-                    seen_urls.add(url)
-                    docs.append(
-                        f"- {r.metadata.get('full_name', '')}\n"
-                        f"{r.page_content[:400]}...\n"
-                        f"URL: {url}\n"
-                    )
-            if docs:
-                rule_to_docs.setdefault(rule, []).extend(docs)
-
-        if not rule_to_docs:
-            return "No related documentation found."
-
-        doc_sections = []
-        for rule, docs in rule_to_docs.items():
-            section = f"### Rule: {rule}\n" + "\n".join(docs[:2])
-            doc_sections.append(section)
-
-        return "\n\n".join(doc_sections[:5])
+        return self.rag_client.diagnostics_report(
+            diagnostics,
+            k=k,
+            log_context=self.req_id,
+        )
 
     # --- Inner Error 用 ---
+    @trace
     def rag_search_related_docs_for_innererror(self, inner_error: str, k: int = 3) -> str:
-        """
-        Manim実行時エラー文字列に対してRAG検索。
-        例: AttributeError, ValueError, LaTeX Errorなどを自動解析。
-        """
-        db = self._load_rag_db()
-        seen_urls = set()
-
-        # manim構文・クラス名を優先的に拾う
-        manim_refs = re.findall(r"manim[\.\w]+", inner_error)
-        base_queries = manim_refs or []
-
-        # 一般的な例外メッセージを抽出
-        error_phrases = re.findall(
-            r"(?:AttributeError|TypeError|ValueError|LaTeX|ImportError|SyntaxError|NameError).*", inner_error
+        return self.rag_client.runtime_error_report(
+            inner_error,
+            k=k,
+            log_context=self.req_id,
         )
-        if error_phrases:
-            base_queries.extend(error_phrases)
 
-        # fallback（文全体の一部）
-        if not base_queries:
-            base_queries.append(inner_error[:200])
-
-        # 実際の検索
-        aggregated_results = []
-        for q in base_queries[:4]:  # 最大4クエリ
-            results = db.similarity_search(q, k=k)
-            for r in results:
-                url = r.metadata.get("source_url", "")
-                if url not in seen_urls:
-                    seen_urls.add(url)
-                    aggregated_results.append(
-                        f"- {r.metadata.get('full_name', '')}\n"
-                        f"{r.page_content[:400]}...\n"
-                        f"URL: {url}\n"
-                    )
-
-        if not aggregated_results:
-            return "No related documentation found."
-        return "\n\n".join(aggregated_results[:6])
-    
-    
+    @trace
     def fix_code_agent(self, file_name: str, concept: str, error_info, mode: str = "lint"):
-        """
-        RAG統合コード修正エージェント。
-        mode="lint"       → Pyright JSON (静的エラー)
-        mode="innererror" → Manim 実行エラーテキスト
-        RAG統合コード修正エージェント。
-        - error_info が dict の場合 → Pyright (静的解析)
-        - error_info が str の場合 → Manim 実行エラー
-        mode は自動判定される
-        """
         tmp_path = Path(f"tmp/{file_name}.py")
         with open(tmp_path, "r") as f:
             script = f.read()
 
         # --- 自動判定 ---
+        auto_mode = mode
         if mode is None:
             if isinstance(error_info, dict):
-                mode = "lint"
+                auto_mode = "lint"
             elif isinstance(error_info, str):
-                mode = "innererror"
+                auto_mode = "innererror"
             else:
                 raise TypeError(f"Unsupported error_info type: {type(error_info)}")
 
+        logger.info(f"[{self.req_id}] FixCodeAgent mode={auto_mode}")
+
         # --- Lintモード ---
-        if mode == "lint":
+        if auto_mode == "lint":
             diagnostics = error_info.get("generalDiagnostics", [])
             related_docs = self.rag_search_related_docs_for_diagnostics(diagnostics)
             error_descriptions = "\n\n".join([
@@ -225,23 +256,23 @@ class ManimAnimationOnRAGService:
                 for i, d in enumerate(diagnostics[:10])
             ])
             error_context_title = "静的解析（Pyright）診断結果"
+            logger.debug(f"[{self.req_id}] FixCodeAgent lint diag_count={len(diagnostics)}")
 
         # --- InnerErrorモード ---
-        elif mode == "innererror":
+        elif auto_mode == "innererror":
             related_docs = self.rag_search_related_docs_for_innererror(error_info)
-            error_descriptions = error_info[:800]
+            error_descriptions = _clip(error_info, 2000)
             error_context_title = "実行時エラー（Manim Traceback）"
+            logger.debug(f"[{self.req_id}] FixCodeAgent innererror desc_len={len(error_descriptions)}")
 
         else:
-            raise ValueError(f"Invalid mode: {mode}")
+            raise ValueError(f"Invalid mode: {auto_mode}")
 
-        print(f"🧩 FixCodeAgent Mode: {mode}")
-
-
+        # Repair LLM 呼び出し
         repair_prompt = PromptTemplate(
-        input_variables=["concept_summary", "error_context_title", "error_descriptions", "related_docs", "original_script"],
-        template=self.prompts["repair"]["prompt_template"]
-        if "repair" in self.prompts else """
+            input_variables=["concept_summary", "error_context_title", "error_descriptions", "related_docs", "original_script"],
+            template=self.prompts["repair"]["prompt_template"]
+            if "repair" in self.prompts else """
         あなたはプロのManim開発者であり、Pythonエラー修正の専門家です。
         以下の情報をもとにスクリプトを修正してください。
 
@@ -269,27 +300,38 @@ class ManimAnimationOnRAGService:
         class GeneratedScene(Scene):
             def construct(self):
                 # 修正版コード
-        """)
+        """
+        )
+        if TRACE_LLM:
+            logger.debug(f"[{self.req_id}] repair.prompt =\n{_clip(repair_prompt.template)}")
+
         parser = StrOutputParser()
-        chain = repair_prompt | self.pro_llm | parser
-        script_fixed = chain.invoke({
+        t0 = time.perf_counter()
+        script_fixed = (repair_prompt | self.pro_llm | parser).invoke({
             "concept_summary": concept,
             "error_context_title": error_context_title,
             "error_descriptions": error_descriptions,
             "related_docs": related_docs,
             "original_script": script,
         })
+        t1 = time.perf_counter()
+        logger.info(f"[{self.req_id}] repair LLM elapsed={t1-t0:.3f}s out_len={len(script_fixed)}")
+
+        if TRACE_LLM:
+            logger.debug(f"[{self.req_id}] repair.output =\n{_clip(script_fixed)}")
 
         script_clean = script_fixed.replace("```python", "").replace("```", "")
         with open(tmp_path, "w") as f:
             f.write(script_clean)
+        logger.info(f"[{self.req_id}] FixCodeAgent wrote file={tmp_path} size={len(script_clean)}")
         return script_clean
 
-
-    def parse_pyright_output_for_llm(self,pyright_json: dict) -> str:
-        """Convert Pyright JSON diagnostics into structured plain text for LLM input."""
+    @trace
+    def parse_pyright_output_for_llm(self, pyright_json: dict) -> str:
         diagnostics = pyright_json.get("generalDiagnostics", [])
         summary = pyright_json.get("summary", {})
+        logger.debug(f"[{self.req_id}] pyright: errors={summary.get('errorCount',0)} "
+                     f"warnings={summary.get('warningCount',0)} files={summary.get('filesAnalyzed',0)}")
 
         lines = []
         for i, diag in enumerate(diagnostics, start=1):
@@ -318,92 +360,116 @@ class ManimAnimationOnRAGService:
 
         return "\n".join(lines)
 
-    def has_no_pyright_errors(self,pyright_json: dict) -> bool:
-        """
-        Return True if there are no Pyright errors (errorCount == 0), else False.
-
-        Args:
-            pyright_json (dict): Parsed Pyright JSON output.
-
-        Returns:
-            bool: True if no errors, False otherwise.
-        """
+    @trace
+    def has_no_pyright_errors(self, pyright_json: dict) -> bool:
         summary = pyright_json.get("summary", {})
         error_count = summary.get("errorCount", 0)
-        return error_count == 0
-    
-     # スクリプト管理するための関数
+        ok = error_count == 0
+        logger.info(f"[{self.req_id}] pyright errorCount={error_count} -> ok={ok}")
+        return ok
+
+    # スクリプト管理するための関数
+    @trace
     def run_script(self, video_id: str, script: str) -> str:
         if not os.path.exists("tmp"):
             os.makedirs("tmp")
         tmp_path = Path(f"tmp/{video_id}.py")
         with open(tmp_path, "w") as f:
             f.write(script)
-        is_secure=is_code_safe(script)
+
+        is_secure = is_code_safe(script)
+        logger.info(f"[{self.req_id}] run_script path={tmp_path} secure={is_secure}")
+
         if is_secure:
             try:
-                subprocess.run(
+                t0 = time.perf_counter()
+                proc = subprocess.run(
                     ["manim", "-pql", str(tmp_path), "GeneratedScene"],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True, check=True
                 )
+                t1 = time.perf_counter()
+                logger.info(f"[{self.req_id}] manim success elapsed={t1-t0:.3f}s")
+                if proc.stdout:
+                    logger.debug(f"[{self.req_id}] manim.stdout:\n{_clip(proc.stdout, 3000)}")
+                if proc.stderr:
+                    logger.debug(f"[{self.req_id}] manim.stderr:\n{_clip(proc.stderr, 3000)}")
                 return "Success"
             except subprocess.CalledProcessError as e:
+                logger.warning(f"[{self.req_id}] manim failed returncode={e.returncode}")
+                if e.stdout:
+                    logger.debug(f"[{self.req_id}] manim.stdout:\n{_clip(e.stdout, 3000)}")
+                if e.stderr:
+                    logger.debug(f"[{self.req_id}] manim.stderr:\n{_clip(e.stderr, 3000)}")
                 return e.stderr
         else:
+            logger.error(f"[{self.req_id}] run_script rejected by safety checker")
             return "bad_request"
-    
+
     # 動画作成ループをかける
-    def generate_videos(self,video_id,content,enhance_prompt):
+    @trace
+    def generate_videos(self, video_id, content, enhance_prompt):
+        logger.info(f"[{self.req_id}] generate_videos start video_id={video_id}")
+
         # スクリプト生成
         script = self.generate_script_with_prompt(
             content,
             enhance_prompt
         )
+
         max_loop = 3
         loop = 0
         while loop < max_loop:
-             # スクリプトを管理する
+            logger.info(f"[{self.req_id}] loop={loop+1}/{max_loop}")
+
             if not os.path.exists("tmp"):
                 os.makedirs("tmp")
             tmp_path = Path(f"tmp/{video_id}.py")
             with open(tmp_path, "w") as f:
                 f.write(script)
-            # tmp_pathに対して、format_and_linterを回す
-            err = format_and_linter(tmp_path)
-            print(err)
 
-            # ❌ parse_pyright_output_for_llm は LLM用説明テキスト生成なので
-            #    fix_code_agent には dict (err) のまま渡す必要がある
+            # Lint実行
+            t0 = time.perf_counter()
+            err = format_and_linter(tmp_path)
+            t1 = time.perf_counter()
+            logger.info(f"[{self.req_id}] lint elapsed={t1-t0:.3f}s")
+            logger.debug(f"[{self.req_id}] lint.raw = { _clip(json.dumps(err, ensure_ascii=False), 3000) }")
+
             is_success = self.has_no_pyright_errors(err)
 
             if is_success:
                 video_success = self.run_script(video_id, script)
                 if video_success == "Success":
+                    logger.info(f"[{self.req_id}] generate_videos SUCCESS")
                     return 'Success'
                 elif video_success == "bad_request":
+                    logger.error(f"[{self.req_id}] generate_videos rejected by safety -> stop")
                     return 'bad_request'
                 else:
+                    # 実行時エラー解析
                     inner_error = parse_manim_or_python_traceback(video_success)
                     inner_error = format_error_for_llm(inner_error)
-                    # ✅ inner_error は str なので innererrorモード自動判定でOK
-                    script = self.fix_code_agent(video_id, content, inner_error)
+                    logger.debug(f"[{self.req_id}] inner_error.parsed =\n{_clip(inner_error, 3000)}")
+                    script = self.fix_code_agent(video_id, content, inner_error, mode=None)  # 自動判定
                     loop += 1
                     continue
             else:
-                # ✅ err は dict, lintモード自動判定でOK
-                script = self.fix_code_agent(video_id, content, err)
+                # 静的エラーをもとに修復
+                script = self.fix_code_agent(video_id, content, err, mode=None)  # 自動判定
                 loop += 1
                 continue
+
+        logger.error(f"[{self.req_id}] generate_videos reached max_loop -> error")
         return "error"
-    
+
+
 if __name__ == "__main__":
     service = ManimAnimationOnRAGService()
     is_success = service.generate_videos(
         video_id='sankakukannsuu',
         content="""
-        # 三角関数の“動き”を単位円で体感しよう --- ## 0. 今日のゴール - 「sinθ, cosθの“ずらし”や符号について、なぜかを動きで実感しよう」 - 結論：\(\cos\theta = \sin(\theta+\frac{\pi}{2})\)、\(\sin\theta = -\cos(\theta+\frac{\pi}{2})\)が単位円で体感できることを目指す --- ## 1. 単位円で三角関数スタート！ まず半径1（原点中心）の円**単位円**を用意しよう。 - x軸の正の方向（右向き）を0°、そこから反時計回りに角度\(\theta\)をとるしたがって、  $$ \cos^2 \theta + \sin^2 \theta = 1 $$という **三角関数の基本的な関係式** が得られます
+        # 三角関数の“動き”を単位円で体感しよう --- ## 0. 今日のゴール - 「sinθ, cosθの“ずらし”や符号について、なぜかを動きで実感しよう」 - 結論：\\(\\cos\\theta = \\sin(\\theta+\\frac{\\pi}{2})\\)、\\(\\sin\\theta = -\\cos(\\theta+\\frac{\\pi}{2})\\)が単位円で体感できることを目指す --- ## 1. 単位円で三角関数スタート！ まず半径1（原点中心）の円**単位円**を用意しよう。 - x軸の正の方向（右向き）を0°、そこから反時計回りに角度\\(\\theta\\)をとるしたがって、  $$ \\cos^2 \\theta + \\sin^2 \\theta = 1 $$という **三角関数の基本的な関係式** が得られます
         """,
         enhance_prompt=""
     )

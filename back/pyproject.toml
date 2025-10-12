@@ -25,6 +25,7 @@ dependencies = [
     "pydantic>=2.12.0",
     "pyright>=1.1.406",
     "ruff>=0.14.0",
+    "sentence-transformers>=5.1.1",
     "sqlalchemy>=2.0.43",
     "uvicorn>=0.37.0",
 ]

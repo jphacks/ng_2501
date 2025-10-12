@@ -27,7 +27,7 @@
 
 #### 生成された動画
 
-[![生成可能な動画](https://img.youtube.com/vi/nVMm8Ll4QYU/maxresdefault.jpg)](https://youtu.be/nVMm8Ll4QYU "YouTubeで再生")
+[![生成可能な動画](GeneratedScene.mp4)](https://youtu.be/nVMm8Ll4QYU "YouTubeで再生")
 
 #### 課題の裏付け
 
@@ -121,6 +121,7 @@
 * **TinyTeX**: 軽量なLaTeX処理エンジン
 
 #### フレームワーク・ライブラリ・モジュール
+* **Docker/DockerCompose/Devcontainer**：開発者用仮想環境
 * **Next.js 15.5.4**: フロントエンドフレームワーク（Turbopack採用）
 * **React 19.1.0**: UIコンポーネントライブラリ
 * **manim (Mathematical Animation Engine)**: 数学動画生成エンジン
@@ -131,7 +132,22 @@
 * **pnpm**: 高速パッケージマネージャー
 * **uv**: Python高速パッケージマネージャー
 * **langchain/LangGraph** LLM エージェント
-* **Chroma**  
+* **Chroma**  RAG用DB
+* **ast** 抽象構文木作成
+* **pyright** Pythonのリンター
+* **Ruff** Rast製のPythonのリンターとフォーマッター
+* **MathLiveEditor** 数式の仮装キーボード実装
+
+#### アーキティクチャ
+
+インフラとしてはdevcontainerとdocker仮想環境を用いることで、ハッカソ中のメンバー毎の環境差異をなくす。さらにpostcommandを用いることでuvとnextのセットアップを自動化。そして、uvやpnpmなどの最新技術を用いることで速度面・セキュリティ面で爆速・安全で時間がないハッカソンでの開発体験を向上させる技術選定を行なった。
+
+フロントエンドのアーキティクチャについてはドメイン駆動設計を使用し、コンポーネントごとの結合度を低い状態で保ち、ハッカソンという限られた場で柔軟に変更できるようにしました。
+
+バックエンドのアーキティクチャについては、API層/アプリケーションロジック層（AI/RAGコア）/サービス補助ツール群というフォルダにまとめ上げることによりクリーンアーキティクチャとして実装することによって結合度を下げハッカソンにおいて可読性高くAPIを実装することができました。
+
+CI/CDについてはフロントエンドはVercelを用い、バックエンドのCI/CDはGoogle Cloud Engineを用いて、github actionによる自動化を実現した。
+
 #### デバイス
 
 - Mac 
@@ -141,6 +157,7 @@
 
 #### ハッカソンで開発した独自機能・技術
 
-- Manim動画生成エージェントとManim動画からのエラーをハンドリングするためのフォーマッター
+- Manim動画生成エージェント
+- Manimスクリプトのエラーをハンドリングするためのフォーマッター
 - Math Live Editorに数式補完機能を作成した。
 - Manimコードドキュメントに対するRAG実装

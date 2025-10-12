@@ -17,6 +17,28 @@ interface MathTextInputProps {
 
 type ViewMode = 'edit' | 'preview' | 'split'
 
+const findScrollableContainer = (element: HTMLElement | null): HTMLElement | null => {
+    if (typeof window === 'undefined') {
+        return null
+    }
+
+    let current: HTMLElement | null = element?.parentElement ?? null
+
+    while (current) {
+        const style = window.getComputedStyle(current)
+        const canScrollY = current.scrollHeight > current.clientHeight && style.overflowY !== 'visible'
+        const canScrollX = current.scrollWidth > current.clientWidth && style.overflowX !== 'visible'
+
+        if (canScrollY || canScrollX) {
+            return current
+        }
+
+        current = current.parentElement
+    }
+
+    return null
+}
+
 /**
  * プレビューパネルコンポーネント（再利用可能）
  */
@@ -85,12 +107,12 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
     const [titleInput, setTitleInput] = useState('')
     const [isGeneratingContent, setIsGeneratingContent] = useState(false)
     const [generationError, setGenerationError] = useState<string | null>(null)
-    
+
     const textAreaRef = useRef<HTMLTextAreaElement>(null)
     const [popupPosition, setPopupPosition] = useState<{ top: number; left: number } | null>(null)
     const [showInlinePopup, setShowInlinePopup] = useState(false)
 
-     const isDeleteOperationRef = useRef(false)
+    const isDeleteOperationRef = useRef(false)
 
     // カーソル位置からのポップアップの座標を計算
     const calculatePopupPosition = useCallback(() => {
@@ -122,7 +144,7 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
 
         return {
             top: Math.min(cursorTop, rect.bottom - 20) - 150,
-            left: Math.max(rect.left, Math.min(cursorLeft, rect.right - 300)) - 40, 
+            left: Math.max(rect.left, Math.min(cursorLeft, rect.right - 300)) - 40,
         }
     }, [])
 
@@ -165,7 +187,7 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
         }
     }
 
-        const judgeShowPopup = (input: string, cursorPos: number) => {
+    const judgeShowPopup = (input: string, cursorPos: number) => {
         let indentList = Array(input.length).fill(0);
         let currentIndent = 1;
         for (let i = 0; i < input.length; i++) {
@@ -209,25 +231,25 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
         }
 
         if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown'].includes(e.key)) {
-        // キーイベント後にカーソル位置が更新されるまで少し待つ
-        setTimeout(() => {
-            const target = e.target as HTMLTextAreaElement
-            const newCursorPosition = target.selectionStart
-            console.log("Cursor moved to:", newCursorPosition)
-            
-            // カーソル位置の状態を更新
-            setCursorPosition(newCursorPosition)
-            
-            // ポップアップの判定を実行
-            judgeShowPopup(text, newCursorPosition)
-            
-            // ポップアップが表示されている場合は位置を更新
-            if (showInlinePopup) {
-                const position = calculatePopupPosition()
-                setPopupPosition(position)
-            }
-        }, 0)
-    }
+            // キーイベント後にカーソル位置が更新されるまで少し待つ
+            setTimeout(() => {
+                const target = e.target as HTMLTextAreaElement
+                const newCursorPosition = target.selectionStart
+                console.log("Cursor moved to:", newCursorPosition)
+
+                // カーソル位置の状態を更新
+                setCursorPosition(newCursorPosition)
+
+                // ポップアップの判定を実行
+                judgeShowPopup(text, newCursorPosition)
+
+                // ポップアップが表示されている場合は位置を更新
+                if (showInlinePopup) {
+                    const position = calculatePopupPosition()
+                    setPopupPosition(position)
+                }
+            }, 0)
+        }
     }
 
     const handleTextAreaClick = (e: React.MouseEvent<HTMLTextAreaElement>) => {
@@ -247,9 +269,9 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
 
     const handleMathEditorOpen = () => {
         if (viewMode === 'preview') return
-        
+
         setCurrentMathValue('')
-        
+
         // インライン数式エディタを表示
         const position = calculatePopupPosition()
         setPopupPosition(position)
@@ -266,32 +288,60 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
             return
         }
 
+        const textArea = textAreaRef.current
+        const previousScrollTop = textArea?.scrollTop ?? 0
+        const previousScrollLeft = textArea?.scrollLeft ?? 0
+        const scrollableParent = textArea ? findScrollableContainer(textArea) : null
+        const parentScrollTop = scrollableParent?.scrollTop ?? 0
+        const parentScrollLeft = scrollableParent?.scrollLeft ?? 0
+
         // Insert the LaTeX formula at cursor position
         const mathFormula = `$${latex}$`
         const before = text.slice(0, cursorPosition)
         const after = text.slice(cursorPosition)
-        
+
         // Add spacing if needed
         const needSpaceBefore = before.length > 0 && !before.endsWith(' ') && !before.endsWith('\n')
         const needSpaceAfter = after.length > 0 && !after.startsWith(' ') && !after.startsWith('\n')
-        
-        const newText = before + 
-            (needSpaceBefore ? ' ' : '') + 
-            mathFormula + 
-            (needSpaceAfter ? ' ' : '') + 
-            after
-        
+
+        const textToInsert = (needSpaceBefore ? ' ' : '') + mathFormula + (needSpaceAfter ? ' ' : '');
+        const newText = before + textToInsert + after
+
+        // Calculate the new cursor position to be right after the inserted formula
+        const newCursorPosition = cursorPosition + (needSpaceBefore ? 1 : 0) + mathFormula.length;
+
         setText(newText)
-        setCursorPosition(before.length + (needSpaceBefore ? 1 : 0) + mathFormula.length)
+        setCursorPosition(newCursorPosition)
+
         setShowMathEditor(false)
         setShowInlinePopup(false)
         setCurrentMathValue('')
         setPopupPosition(null)
-        
-        // フォーカスをテキストエリアに戻す
-        setTimeout(() => {
-            textAreaRef.current?.focus()
-        }, 100)
+
+        // 数式挿入後のカーソル位置を戻す
+        const restoreFocusAndSelection = () => {
+            const target = textAreaRef.current
+            if (!target) {
+                return
+            }
+
+            target.focus({ preventScroll: true })
+            target.setSelectionRange(newCursorPosition, newCursorPosition)
+            target.scrollTop = previousScrollTop
+            target.scrollLeft = previousScrollLeft
+
+            const parent = scrollableParent ?? findScrollableContainer(target)
+            if (parent) {
+                parent.scrollTop = parentScrollTop
+                parent.scrollLeft = parentScrollLeft
+            }
+        }
+
+        if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+            window.requestAnimationFrame(restoreFocusAndSelection)
+        } else {
+            setTimeout(restoreFocusAndSelection, 0)
+        }
     }
 
     const handleMathCancel = () => {
@@ -299,7 +349,7 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
         setShowInlinePopup(false)
         setCurrentMathValue('')
         setPopupPosition(null)
-        
+
         // フォーカスをテキストエリアに戻す
         setTimeout(() => {
             textAreaRef.current?.focus()
@@ -359,7 +409,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
 となる！
 
 **POINT:** "$\\cos\\theta$"の成分が"$-\\sin\\theta$"に、"$\\sin\\theta$"が"$\\cos\\theta$"に。それぞれ"入れ替わり、横はマイナス"されてるね。`
-        
+
         setText(sample)
         setCursorPosition(sample.length)
     }
@@ -376,13 +426,13 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
 
         try {
             const result = await generateMathNoteFromTitle(titleInput)
-            
+
             // 生成された内容を挿入
             const generatedText = `# ${titleInput}\n\n${result.content}`
             setText(generatedText)
             setCursorPosition(generatedText.length)
             setTitleInput('') // タイトル入力をクリア
-            
+
             // 成功したら分割モードに切り替えてプレビュー表示
             setTimeout(() => {
                 setViewMode('split')
@@ -442,14 +492,14 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                             {/* キーボードショートカット説明 */}
                             <div className="mt-4 pt-4 border-t border-gray-200">
                                 <p className="text-xs text-gray-500">
-                                    <kbd className="px-2 py-1 bg-gray-100 border border-gray-300 rounded text-xs font-mono">Enter</kbd> 確定 / 
+                                    <kbd className="px-2 py-1 bg-gray-100 border border-gray-300 rounded text-xs font-mono">Enter</kbd> 確定 /
                                     <kbd className="px-2 py-1 bg-gray-100 border border-gray-300 rounded text-xs font-mono ml-2">Esc</kbd> キャンセル
                                 </p>
                             </div>
                         </div>
                     </div>
                 )}
-                
+
                 {/* ヘッダー */}
                 <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-200">
                     <h3 className="text-sm font-semibold text-gray-800">数学テキスト入力</h3>
@@ -467,9 +517,9 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                 disabled={isGenerating}
                                 className={`px-3 py-2 text-xs font-medium rounded transition-all flex items-center gap-1.5 ${
                                     viewMode === 'edit'
-                                        ? 'bg-white text-blue-600 shadow-sm'
-                                        : 'text-gray-600 hover:text-gray-900'
-                                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                    ? 'bg-white text-blue-600 shadow-sm'
+                                    : 'text-gray-600 hover:text-gray-900'
+                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <title>編集</title>
@@ -483,9 +533,9 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                 disabled={isGenerating || !text.trim()}
                                 className={`px-3 py-2 text-xs font-medium rounded transition-all flex items-center gap-1.5 ${
                                     viewMode === 'split'
-                                        ? 'bg-white text-blue-600 shadow-sm'
-                                        : 'text-gray-600 hover:text-gray-900'
-                                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                    ? 'bg-white text-blue-600 shadow-sm'
+                                    : 'text-gray-600 hover:text-gray-900'
+                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <title>分割</title>
@@ -499,9 +549,9 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                 disabled={isGenerating || !text.trim()}
                                 className={`px-3 py-2 text-xs font-medium rounded transition-all flex items-center gap-1.5 ${
                                     viewMode === 'preview'
-                                        ? 'bg-white text-blue-600 shadow-sm'
-                                        : 'text-gray-600 hover:text-gray-900'
-                                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                    ? 'bg-white text-blue-600 shadow-sm'
+                                    : 'text-gray-600 hover:text-gray-900'
+                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <title>プレビュー</title>
@@ -511,7 +561,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                 プレビューのみ
                             </button>
                         </div>
-                        
+
                         {/* ツールバー */}
                         <div className="flex gap-2">
                             <button
@@ -539,56 +589,56 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                 </svg>
                                 数式を挿入
                             </button>
-                    </div>
+                        </div>
 
                         {/* メインエディタエリア（flex-1で残りスペースを占有） */}
-                        <div className="flex-1 min-h-0 overflow-auto">{/* 左側は内部スクロール */}
-                    {/* 編集モード */}
-                    {viewMode === 'edit' && (
-                        <textarea
-                                    ref={textAreaRef}
-                            id="math-text"
-                            value={text}
-                            onChange={handleTextAreaChange}
-                            onClick={handleTextAreaClick}
-                                    onKeyDown={handleTextAreaKeyDown}
-                                    placeholder={placeholderText}
-                                    className="w-full h-full p-4 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm resize-none"
-                            disabled={isGenerating}
-                        />
-                    )}
-
-                    {/* プレビューモード */}
-                    {viewMode === 'preview' && (
-                                <PreviewPanel text={text} className="h-full" />
-                    )}
-
-                    {/* 分割モード */}
-                    {viewMode === 'split' && (
-                                <div className="flex gap-3 h-full">
-                            {/* 左側: 編集エリア */}
-                            <div className="flex-1">
+                        <div className="flex-1 min-h-0">{/* 左側は内部スクロール */}
+                            {/* 編集モード */}
+                            {viewMode === 'edit' && (
                                 <textarea
-                                    id="math-text-split"
-                                            ref={textAreaRef}
+                                    ref={textAreaRef}
+                                    id="math-text"
                                     value={text}
                                     onChange={handleTextAreaChange}
                                     onClick={handleTextAreaClick}
+                                    onKeyDown={handleTextAreaKeyDown}
+                                    placeholder={placeholderText}
+                                    className="w-full h-full p-4 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm resize-none"
+                                    disabled={isGenerating}
+                                />
+                            )}
+
+                            {/* プレビューモード */}
+                            {viewMode === 'preview' && (
+                                <PreviewPanel text={text} className="h-full" />
+                            )}
+
+                            {/* 分割モード */}
+                            {viewMode === 'split' && (
+                                <div className="flex gap-3 h-full">
+                                    {/* 左側: 編集エリア */}
+                                    <div className="flex-1">
+                                        <textarea
+                                            id="math-text-split"
+                                            ref={textAreaRef}
+                                            value={text}
+                                            onChange={handleTextAreaChange}
+                                            onClick={handleTextAreaClick}
                                             onKeyDown={handleTextAreaKeyDown}
                                             placeholder={placeholderText}
                                             className="w-full h-full p-4 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm resize-none"
-                                    disabled={isGenerating}
-                                />
-                            </div>
-                            {/* 右側: プレビューエリア */}
-                            <div className="flex-1">
+                                            disabled={isGenerating}
+                                        />
+                                    </div>
+                                    {/* 右側: プレビューエリア */}
+                                    <div className="flex-1">
                                         <PreviewPanel text={text} className="h-full" />
-                            </div>
-                        </div>
-                    )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
-                    {/* ヘルプテキスト */}
+                        {/* ヘルプテキスト */}
                         <p className="text-xs text-gray-500">
                             {viewMode === 'split' ? (
                                 <>左側で編集すると右側にリアルタイムでプレビューが表示されます</>
@@ -596,9 +646,9 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                 <>数式とMarkdownのレンダリング結果</>
                             ) : (
                                 <>数式は $...$ または $$...$$ で囲んでください</>
-                        )}
-                    </p>
-                </div>
+                            )}
+                        </p>
+                    </div>
 
                     {/* 右側: 操作エリア */}
                     <div className="flex flex-col min-h-0 min-w-0">
@@ -635,10 +685,10 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                     {generationError && (
                                         <p className="mt-2 text-xs text-red-600">{generationError}</p>
                                     )}
-                        <p className="mt-2 text-xs text-gray-600">
+                                    <p className="mt-2 text-xs text-gray-600">
                                         トピックのタイトルを入力すると、Markdown + LaTeX形式の解説を生成します
-                        </p>
-                    </div>
+                                    </p>
+                                </div>
 
                                 {/* 動画への追加指示 */}
                                 <div className="bg-gray-50 border border-gray-200 rounded p-3">
@@ -649,14 +699,14 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                         </svg>
                                         動画への追加指示（任意）
                                     </h5>
-                            <textarea
-                                id="video-prompt"
-                                value={videoPrompt}
-                                onChange={(e) => setVideoPrompt(e.target.value)}
+                                    <textarea
+                                        id="video-prompt"
+                                        value={videoPrompt}
+                                        onChange={(e) => setVideoPrompt(e.target.value)}
                                         placeholder="例: 積分記号を赤色で強調、文字サイズを大きく"
                                         className="w-full p-3 text-sm border border-gray-300 rounded h-24 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                                disabled={isGenerating}
-                            />
+                                        disabled={isGenerating}
+                                    />
                                     <p className="mt-1 text-xs text-gray-500">
                                         動画の見た目や演出について具体的に指示できます
                                     </p>
@@ -669,24 +719,24 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                         disabled={!text.trim() || isGenerating}
                                         className="w-full bg-blue-600 text-white py-4 px-6 rounded text-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-sm flex items-center justify-center gap-2"
                                     >
-                                {isGenerating ? (
-                                    <>
-                                        <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                                            <title>生成中</title>
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                        </svg>
-                                        プロンプト生成中...
-                                    </>
-                                ) : (
-                                    <>
-                                        プロンプトを生成して次へ
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <title>次へ</title>
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                        </svg>
-                                    </>
-                                )}
+                                        {isGenerating ? (
+                                            <>
+                                                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                                    <title>生成中</title>
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                                </svg>
+                                                プロンプト生成中...
+                                            </>
+                                        ) : (
+                                            <>
+                                                プロンプトを生成して次へ
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <title>次へ</title>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                                </svg>
+                                            </>
+                                        )}
                                     </button>
                                 </div>
                             </div>

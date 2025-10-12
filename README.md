@@ -27,7 +27,8 @@
 
 #### 生成可能な動画
 
-[![生成可能な動画](https://img.youtube.com/vi/XEERMwexpYI/maxresdefault.jpg)](https://www.youtube.com/watch?v=XEERMwexpYI "YouTubeで再生")
+[![生成可能な動画](https://img.youtube.com/vi/XEERMwexpYI/maxresdefault.jpg)](
+https://youtu.be/XEERMwexpYI "YouTubeで再生")
 
  
 #### 課題の裏付け

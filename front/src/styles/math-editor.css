@@ -1,7 +1,7 @@
 /* MathEditor component styles */
 .math-editor {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 8px;
     padding: 8px;
     background: #ffffff;
@@ -117,6 +117,7 @@
     display: flex;
     gap: 4px;
     flex-shrink: 0;
+    margin-top: 12px;
 }
 
 .math-editor-btn {
@@ -479,4 +480,3 @@
         font-size: 19px;
     }
 }
-

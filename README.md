@@ -1,8 +1,10 @@
-# SUDO - AI駆動の数式解説動画自動生成システム
+# SUDO - スウガクドウガ -
 
-[![IMAGE ALT TEXT HERE](https://jphacks.com/wp-content/uploads/2025/05/JPHACKS2025_ogp.jpg)](https://www.youtube.com/watch?v=lA9EluZugD8)
+[![SUDO - スウガクドウガ -](./banner.png)](https://www.youtube.com/watch?v=lA9EluZugD8)
 
 ## 製品概要
+
+**数学教育 X Tech**: 生徒に数式の"動き"を伝えたい数学講師が、即座にオリジナル解説動画を作れる動画ジェネレーター
 
 ### 背景(製品開発のきっかけ、課題等）
 

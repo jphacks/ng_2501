@@ -9,6 +9,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel 
 
 from app.service.agent import ManimAnimationService
+from app.service.rag_agent import ManimAnimationOnRAGService
 
 load_dotenv()
 
@@ -76,14 +77,14 @@ def get_animation(video_id: str):
 
 
 @router.post("/api/animation", response_model=SuccessResponse, summary="動画の生成")
-def generate_animation(initial_prompt: InitialPrompt):
+async def generate_animation(initial_prompt: InitialPrompt):
     """
     LLMエージェント経由で Manim 動画を生成する。
     """
     try:
         is_success = service.generate_videos(
             video_id=initial_prompt.video_id,
-            content=initial_prompt.content,            # ← 修正：content を正しく渡す
+            content=initial_prompt.content,           
             enhance_prompt=initial_prompt.enhance_prompt or "",
         )
     except Exception as e:
@@ -91,12 +92,45 @@ def generate_animation(initial_prompt: InitialPrompt):
         raise HTTPException(status_code=500, detail=str(e))
 
     if is_success == "Success":
-        latest = find_latest_video(initial_prompt.video_id)
         return SuccessResponse(
             ok=True,
             video_id=initial_prompt.video_id,
             message="done",
-            path=str(latest) if latest else None,
+        )
+    elif is_success=="bad_request":
+        return SuccessResponse(
+            ok=False,
+            video_id=initial_prompt.video_id,
+            message="bad"
+        )
+    else:
+        return SuccessResponse(
+            ok=False,
+            video_id=initial_prompt.video_id,
+            message="failed",
+        )
+
+@router.post("/api/animation_agent_rag_model")
+async def generate_rag_animation(initial_prompt: InitialPrompt):
+    """
+    LLMエージェント経由で Manim 動画を生成する。
+    """
+    rag_service = ManimAnimationOnRAGService()
+    try:
+        is_success = rag_service.generate_videos(
+            video_id=initial_prompt.video_id,
+            content=initial_prompt.content,           
+            enhance_prompt=initial_prompt.enhance_prompt or "",
+        )
+    except Exception as e:
+        # サービス内例外は 500 で返却
+        raise HTTPException(status_code=500, detail=str(e))
+
+    if is_success == "Success":
+        return SuccessResponse(
+            ok=True,
+            video_id=initial_prompt.video_id,
+            message="done",
         )
     elif is_success=="bad_request":
         return SuccessResponse(

@@ -25,9 +25,9 @@
 [![紹介動画](https://img.youtube.com/vi/iyhTQFKciaY/maxresdefault.jpg)](https://youtu.be/iyhTQFKciaY "YouTubeで再生")
 
 
-#### 生成可能な動画
+#### 生成された動画
 
-[![生成可能な動画](https://img.youtube.com/vi/XEERMwexpYI/maxresdefault.jpg)](
+[![生成可能な動画](https://youtu.be/XEERMwexpYI)](
 https://youtu.be/XEERMwexpYI "YouTubeで再生")
 
  

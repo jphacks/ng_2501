@@ -51,37 +51,18 @@ function PreviewPanel({ text, className = '' }: { text: string; className?: stri
                     remarkPlugins={[remarkMath, remarkGfm]}
                     rehypePlugins={[rehypeKatex]}
                     components={{
-                        // カスタムスタイリング
-                        h1: ({ node, ...props }) => (
-                            <h1 className="text-2xl font-bold mb-4 text-gray-900" {...props} />
-                        ),
-                        h2: ({ node, ...props }) => (
-                            <h2 className="text-xl font-bold mb-3 text-gray-900" {...props} />
-                        ),
-                        h3: ({ node, ...props }) => (
-                            <h3 className="text-lg font-bold mb-2 text-gray-900" {...props} />
-                        ),
-                        p: ({ node, ...props }) => (
-                            <p className="mb-3 text-gray-700 leading-relaxed" {...props} />
-                        ),
-                        ul: ({ node, ...props }) => (
-                            <ul className="list-disc list-inside mb-3 text-gray-700" {...props} />
-                        ),
-                        ol: ({ node, ...props }) => (
-                            <ol className="list-decimal list-inside mb-3 text-gray-700" {...props} />
-                        ),
+                        h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mb-4 text-gray-900" {...props} />,
+                        h2: ({ node, ...props }) => <h2 className="text-xl font-bold mb-3 text-gray-900" {...props} />,
+                        h3: ({ node, ...props }) => <h3 className="text-lg font-bold mb-2 text-gray-900" {...props} />,
+                        p: ({ node, ...props }) => <p className="mb-3 text-gray-700 leading-relaxed" {...props} />,
+                        ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-3 text-gray-700" {...props} />,
+                        ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-3 text-gray-700" {...props} />,
                         code: ({ node, className, ...props }) => {
                             const isInline = !className || !className.startsWith('language-')
                             return isInline ? (
-                                <code
-                                    className="px-1 py-0.5 bg-gray-100 text-pink-600 rounded text-sm font-mono"
-                                    {...props}
-                                />
+                                <code className="px-1 py-0.5 bg-gray-100 text-pink-600 rounded text-sm font-mono" {...props} />
                             ) : (
-                                <code
-                                    className="block p-3 bg-gray-100 rounded text-sm font-mono overflow-x-auto"
-                                    {...props}
-                                />
+                                <code className="block p-3 bg-gray-100 rounded text-sm font-mono overflow-x-auto" {...props} />
                             )
                         },
                     }}
@@ -115,6 +96,7 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
     const [showInlinePopup, setShowInlinePopup] = useState(false)
 
     const isDeleteOperationRef = useRef(false)
+    const openedByDollarKeyRef = useRef(false) // 「$」キーで開いたかどうか
 
     // カーソル位置からのポップアップの座標を計算
     const calculatePopupPosition = useCallback(() => {
@@ -141,8 +123,8 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
 
         // カーソルの概算位置を計算
         const charWidth = fontSize * 0.6
-        const cursorTop = rect.top + paddingTop + (currentLine * lineHeight)
-        const cursorLeft = rect.left + paddingLeft + (currentColumn * charWidth)
+        const cursorTop = rect.top + paddingTop + currentLine * lineHeight
+        const cursorLeft = rect.left + paddingLeft + currentColumn * charWidth
 
         const verticalOffset = 240 // keep popup slightly further away from the detected math
         return {
@@ -158,23 +140,10 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
     }
 
     const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        var input = e.target.value
-        var cursorPos = e.target.selectionStart
+        // 自動で「$」や「$$」を追加するロジックは削除（手入力 + ポップアップオープンに統一）
+        const input = e.target.value
+        const cursorPos = e.target.selectionStart
 
-        if (input.length > 1) {
-            const currentText = input.slice(-1)
-            const previousText = input.slice(-2,-1)
-            if (!isDeleteOperationRef.current) {
-                if (previousText === "$") {
-                    if (currentText === "$") {
-                        input += " $$ "
-                        cursorPos += 1
-                    } else {
-                        input += "$ "
-                    }
-                }
-            }
-        }
         setText(input)
         setCursorPosition(cursorPos)
 
@@ -200,6 +169,7 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
             setPopupPosition(position)
             setShowInlinePopup(true)
             setShowMathEditor(true)
+            openedByDollarKeyRef.current = false
             return
         }
 
@@ -210,29 +180,90 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
         setPopupPosition(null)
     }
 
+    // ぶら下がった $$ を削除（カーソルの直前/直後が $ で挟まれているケース）
+    const cleanupDanglingDollars = (baseCursorPos?: number) => {
+        let pos = baseCursorPos ?? cursorPosition
+        if (pos < 0) pos = 0
+        if (pos > text.length) pos = text.length
+
+        if (pos > 0 && pos < text.length && text[pos - 1] === '$' && text[pos] === '$') {
+            const before = text.slice(0, pos - 1)
+            const after = text.slice(pos + 1)
+            const newText = before + after
+            const newCursor = pos - 1
+            setText(newText)
+            setCursorPosition(newCursor)
+            setTimeout(() => {
+                const ta = textAreaRef.current
+                if (ta) {
+                    ta.focus({ preventScroll: true })
+                    ta.setSelectionRange(newCursor, newCursor)
+                }
+            }, 0)
+        }
+    }
+
+    // 数式（$...$ / $$...$$）全体を削除し、前後のスペース重複を詰める
+    const removeActiveMathExpression = (expr: MathExpression) => {
+        const start = expr.start
+        const end = expr.end
+        const before = text.slice(0, start)
+        const after = text.slice(end)
+
+        let newText: string
+        if (before.endsWith(' ') && after.startsWith(' ')) {
+            newText = before.slice(0, -1) + after // スペースを1つに詰める
+        } else {
+            newText = before + after
+        }
+
+        setText(newText)
+        setCursorPosition(start)
+
+        setTimeout(() => {
+            const ta = textAreaRef.current
+            if (ta) {
+                ta.focus({ preventScroll: true })
+                ta.setSelectionRange(start, start)
+            }
+        }, 0)
+    }
+
     const handleTextAreaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         // Delete, Backspace, Cut操作を検出
-        console.log("Key pressed:", e.key)
-        if (e.key === 'Delete' || e.key === 'Backspace' || (e.ctrlKey && e.key === 'x')) {
+        if (e.key === 'Delete' || e.key === 'Backspace' || (e.ctrlKey && e.key.toLowerCase() === 'x')) {
             isDeleteOperationRef.current = true
         } else {
             isDeleteOperationRef.current = false
         }
 
+        // 「$」が押されたら、その場で数式エディタを開く（文字入力は阻止）
+        if (e.key === '$' && viewMode !== 'preview' && !isGenerating) {
+            e.preventDefault()
+
+            const target = e.target as HTMLTextAreaElement
+            const pos = target.selectionStart
+            setCursorPosition(pos)
+
+            setCurrentMathValue('')
+            setActiveMathExpression(null)
+
+            const position = calculatePopupPosition()
+            setPopupPosition(position)
+            setShowInlinePopup(true)
+            setShowMathEditor(true)
+            openedByDollarKeyRef.current = true
+            return
+        }
+
+        // 矢印等でカーソル移動
         if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown'].includes(e.key)) {
-            // キーイベント後にカーソル位置が更新されるまで少し待つ
             setTimeout(() => {
                 const target = e.target as HTMLTextAreaElement
                 const newCursorPosition = target.selectionStart
-                console.log("Cursor moved to:", newCursorPosition)
-
-                // カーソル位置の状態を更新
                 setCursorPosition(newCursorPosition)
-
-                // ポップアップの判定を実行
                 judgeShowPopup(text, newCursorPosition)
 
-                // ポップアップが表示されている場合は位置を更新
                 if (showInlinePopup) {
                     const position = calculatePopupPosition()
                     setPopupPosition(position)
@@ -244,15 +275,6 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
     const handleTextAreaClick = (e: React.MouseEvent<HTMLTextAreaElement>) => {
         const target = e.target as HTMLTextAreaElement
         setCursorPosition(target.selectionStart)
-
-        // // ポップアップの位置を更新
-        // if (showInlinePopup) {
-        //     const position = calculatePopupPosition()
-        //     setPopupPosition(position)
-        // } else {
-        //     judgeShowPopup(text, target.selectionStart)
-        // }
-
         judgeShowPopup(text, target.selectionStart)
     }
 
@@ -262,22 +284,47 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
         setCurrentMathValue('')
         setActiveMathExpression(null)
 
-        // インライン数式エディタを表示
         const position = calculatePopupPosition()
         setPopupPosition(position)
         setShowInlinePopup(true)
         setShowMathEditor(true)
+        openedByDollarKeyRef.current = false
     }
 
     const handleMathComplete = (latex: string) => {
+        // ===== 空で確定：囲み削除 or ぶら下がり $$ の掃除 =====
         if (!latex.trim()) {
+            const textArea = textAreaRef.current
+            const prevTop = textArea?.scrollTop ?? 0
+            const prevLeft = textArea?.scrollLeft ?? 0
+
+            if (activeMathExpression) {
+                // 既存の数式を編集中 → `$...$`（または `$$...$$`）ごと削除
+                removeActiveMathExpression(activeMathExpression)
+            } else {
+                // 「$」起点などで空確定 → もし $$ が残っていれば削除
+                cleanupDanglingDollars()
+            }
+
+            // 共通でポップアップを閉じる
             setShowMathEditor(false)
             setShowInlinePopup(false)
             setCurrentMathValue('')
             setActiveMathExpression(null)
             setPopupPosition(null)
+
+            // フォーカス・スクロール復元
+            setTimeout(() => {
+                const ta = textAreaRef.current
+                if (ta) {
+                    ta.focus({ preventScroll: true })
+                    ta.scrollTop = prevTop
+                    ta.scrollLeft = prevLeft
+                }
+            }, 0)
             return
         }
+        // ===== 空でない：通常の確定フロー =====
 
         const textArea = textAreaRef.current
         const previousScrollTop = textArea?.scrollTop ?? 0
@@ -291,25 +338,19 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
 
         if (activeMathExpression) {
             newText = replaceMathExpression(text, activeMathExpression, latex)
-            const updatedExpression = getMathExpressionAtPosition(
-                newText,
-                activeMathExpression.start + 1
-            )
+            const updatedExpression = getMathExpressionAtPosition(newText, activeMathExpression.start + 1)
             newCursorPosition = updatedExpression ? updatedExpression.end : activeMathExpression.start + latex.length
         } else {
-            // Insert the LaTeX formula at cursor position
+            // 新規挿入：$...$
             const mathFormula = `$${latex}$`
             const before = text.slice(0, cursorPosition)
             const after = text.slice(cursorPosition)
 
-            // Add spacing if needed
             const needSpaceBefore = before.length > 0 && !before.endsWith(' ') && !before.endsWith('\n')
             const needSpaceAfter = after.length > 0 && !after.startsWith(' ') && !after.startsWith('\n')
 
             const textToInsert = (needSpaceBefore ? ' ' : '') + mathFormula + (needSpaceAfter ? ' ' : '')
             newText = before + textToInsert + after
-
-            // Calculate the new cursor position to be right after the inserted formula
             newCursorPosition = cursorPosition + (needSpaceBefore ? 1 : 0) + mathFormula.length
         }
 
@@ -321,14 +362,11 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
         setCurrentMathValue('')
         setActiveMathExpression(null)
         setPopupPosition(null)
+        openedByDollarKeyRef.current = false
 
-        // 数式挿入後のカーソル位置を戻す
         const restoreFocusAndSelection = () => {
             const target = textAreaRef.current
-            if (!target) {
-                return
-            }
-
+            if (!target) return
             target.focus({ preventScroll: true })
             target.setSelectionRange(newCursorPosition, newCursorPosition)
             target.scrollTop = previousScrollTop
@@ -355,7 +393,9 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
         setActiveMathExpression(null)
         setPopupPosition(null)
 
-        // フォーカスをテキストエリアに戻す
+        // 「$」で開いて空のままキャンセル等で $$ が残る可能性に備え、掃除
+        cleanupDanglingDollars()
+
         setTimeout(() => {
             textAreaRef.current?.focus()
         }, 100)
@@ -376,7 +416,6 @@ $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
 判別式 $D = b^2 - 4ac$ の値によって、解の個数が決まります。`
 
     const loadSampleText = () => {
-        // 編集中のテキストがある場合は確認
         if (text.trim() && !window.confirm('現在の入力内容が削除されます。サンプルを読み込みますか？')) {
             return
         }
@@ -427,18 +466,16 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
 
         setIsGeneratingContent(true)
         setGenerationError(null)
-        setViewMode('edit') // 生成時は編集モードに切り替え
+        setViewMode('edit')
 
         try {
             const result = await generateMathNoteFromTitle(titleInput)
 
-            // 生成された内容を挿入
             const generatedText = `# ${titleInput}\n\n${result.content}`
             setText(generatedText)
             setCursorPosition(generatedText.length)
-            setTitleInput('') // タイトル入力をクリア
+            setTitleInput('')
 
-            // 成功したら分割モードに切り替えてプレビュー表示
             setTimeout(() => {
                 setViewMode('split')
             }, 100)
@@ -463,10 +500,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                 {showInlinePopup && showMathEditor && popupPosition && (
                     <div
                         className="fixed z-50 bg-white border border-gray-300 rounded shadow-xl w-[500px]"
-                        style={{
-                            top: `${popupPosition.top}px`,
-                            left: `${popupPosition.left}px`,
-                        }}
+                        style={{ top: `${popupPosition.top}px`, left: `${popupPosition.left}px` }}
                     >
                         {/* ヘッダー */}
                         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50">
@@ -494,7 +528,6 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                 isVisible={true}
                             />
 
-                            {/* キーボードショートカット説明 */}
                             <div className="mt-4 pt-4 border-t border-gray-200">
                                 <p className="text-xs text-gray-500">
                                     <kbd className="px-2 py-1 bg-gray-100 border border-gray-300 rounded text-xs font-mono">Enter</kbd> 確定 /
@@ -510,9 +543,8 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                     <h3 className="text-sm font-semibold text-gray-800">数学テキスト入力</h3>
                 </div>
 
-                {/* メインコンテンツ: 2カラムレイアウト */}
+                {/* メイン */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0 min-w-0">
-                    {/* 左側: 編集・プレビューエリア（メイン） */}
                     <div className="lg:col-span-2 flex flex-col space-y-3 min-h-0 min-w-0">
                         {/* 表示モード切り替え */}
                         <div className="flex gap-1 bg-gray-100 p-1 rounded">
@@ -520,10 +552,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                 type="button"
                                 onClick={() => setViewMode('edit')}
                                 disabled={isGenerating}
-                                className={`px-3 py-2 text-xs font-medium rounded transition-all flex items-center gap-1.5 ${
-                                    viewMode === 'edit'
-                                    ? 'bg-white text-blue-600 shadow-sm'
-                                    : 'text-gray-600 hover:text-gray-900'
+                                className={`px-3 py-2 text-xs font-medium rounded transition-all flex items-center gap-1.5 ${viewMode === 'edit' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
                                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -536,10 +565,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                 type="button"
                                 onClick={() => setViewMode('split')}
                                 disabled={isGenerating || !text.trim()}
-                                className={`px-3 py-2 text-xs font-medium rounded transition-all flex items-center gap-1.5 ${
-                                    viewMode === 'split'
-                                    ? 'bg-white text-blue-600 shadow-sm'
-                                    : 'text-gray-600 hover:text-gray-900'
+                                className={`px-3 py-2 text-xs font-medium rounded transition-all flex items-center gap-1.5 ${viewMode === 'split' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
                                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -552,10 +578,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                 type="button"
                                 onClick={() => setViewMode('preview')}
                                 disabled={isGenerating || !text.trim()}
-                                className={`px-3 py-2 text-xs font-medium rounded transition-all flex items-center gap-1.5 ${
-                                    viewMode === 'preview'
-                                    ? 'bg-white text-blue-600 shadow-sm'
-                                    : 'text-gray-600 hover:text-gray-900'
+                                className={`px-3 py-2 text-xs font-medium rounded transition-all flex items-center gap-1.5 ${viewMode === 'preview' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
                                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -596,9 +619,8 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                             </button>
                         </div>
 
-                        {/* メインエディタエリア（flex-1で残りスペースを占有） */}
-                        <div className="flex-1 min-h-0">{/* 左側は内部スクロール */}
-                            {/* 編集モード */}
+                        {/* メインエディタエリア */}
+                        <div className="flex-1 min-h-0">
                             {viewMode === 'edit' && (
                                 <textarea
                                     ref={textAreaRef}
@@ -613,15 +635,10 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                 />
                             )}
 
-                            {/* プレビューモード */}
-                            {viewMode === 'preview' && (
-                                <PreviewPanel text={text} className="h-full" />
-                            )}
+                            {viewMode === 'preview' && <PreviewPanel text={text} className="h-full" />}
 
-                            {/* 分割モード */}
                             {viewMode === 'split' && (
                                 <div className="flex gap-3 h-full">
-                                    {/* 左側: 編集エリア */}
                                     <div className="flex-1">
                                         <textarea
                                             id="math-text-split"
@@ -635,7 +652,6 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                             disabled={isGenerating}
                                         />
                                     </div>
-                                    {/* 右側: プレビューエリア */}
                                     <div className="flex-1">
                                         <PreviewPanel text={text} className="h-full" />
                                     </div>
@@ -643,7 +659,6 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                             )}
                         </div>
 
-                        {/* ヘルプテキスト */}
                         <p className="text-xs text-gray-500">
                             {viewMode === 'split' ? (
                                 <>左側で編集すると右側にリアルタイムでプレビューが表示されます</>
@@ -657,8 +672,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
 
                     {/* 右側: 操作エリア */}
                     <div className="flex flex-col min-h-0 min-w-0">
-                        {/* オプション機能エリア（スクロール可能） */}
-                        <div className="overflow-y-auto flex-1 min-h-0 pr-2">{/* 右側も内部スクロール */}
+                        <div className="overflow-y-auto flex-1 min-h-0 pr-2">
                             <div className="space-y-3">
                                 {/* AIで文章のひな形を生成 */}
                                 <div className="bg-gray-50 border border-gray-200 rounded p-3">
@@ -687,12 +701,8 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                             {isGeneratingContent ? '生成中...' : '生成'}
                                         </button>
                                     </div>
-                                    {generationError && (
-                                        <p className="mt-2 text-xs text-red-600">{generationError}</p>
-                                    )}
-                                    <p className="mt-2 text-xs text-gray-600">
-                                        トピックのタイトルを入力すると、Markdown + LaTeX形式の解説を生成します
-                                    </p>
+                                    {generationError && <p className="mt-2 text-xs text-red-600">{generationError}</p>}
+                                    <p className="mt-2 text-xs text-gray-600">トピックのタイトルを入力すると、Markdown + LaTeX形式の解説を生成します</p>
                                 </div>
 
                                 {/* 動画への追加指示 */}
@@ -712,9 +722,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                         className="w-full p-3 text-sm border border-gray-300 rounded h-24 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                                         disabled={isGenerating}
                                     />
-                                    <p className="mt-1 text-xs text-gray-500">
-                                        動画の見た目や演出について具体的に指示できます
-                                    </p>
+                                    <p className="mt-1 text-xs text-gray-500">動画の見た目や演出について具体的に指示できます</p>
                                 </div>
 
                                 {/* プロンプト生成ボタン */}
@@ -729,7 +737,11 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                                 <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
                                                     <title>生成中</title>
                                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                                    <path
+                                                        className="opacity-75"
+                                                        fill="currentColor"
+                                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                    />
                                                 </svg>
                                                 プロンプト生成中...
                                             </>

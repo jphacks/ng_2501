@@ -27,10 +27,8 @@
 
 #### 生成された動画
 
-[![生成可能な動画](https://youtu.be/XEERMwexpYI)](
-https://youtu.be/XEERMwexpYI "YouTubeで再生")
+[![生成可能な動画](https://img.youtube.com/vi/nVMm8Ll4QYU/maxresdefault.jpg)](https://youtu.be/nVMm8Ll4QYU "YouTubeで再生")
 
- 
 #### 課題の裏付け
 
 - **生徒の課題**

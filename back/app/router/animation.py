@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from app.service.agent import ManimAnimationService
 from app.service.rag_agent import ManimAnimationOnRAGService
+from app.service.regacy_agent import RegacyManimAnimationService
 
 load_dotenv()
 
@@ -120,6 +121,38 @@ async def generate_rag_animation(initial_prompt: InitialPrompt):
         is_success = rag_service.generate_videos(
             video_id=initial_prompt.video_id,
             content=initial_prompt.content,           
+            enhance_prompt=initial_prompt.enhance_prompt or "",
+        )
+    except Exception as e:
+        # サービス内例外は 500 で返却
+        raise HTTPException(status_code=500, detail=str(e))
+
+    if is_success == "Success":
+        return SuccessResponse(
+            ok=True,
+            video_id=initial_prompt.video_id,
+            message="done",
+        )
+    elif is_success=="bad_request":
+        return SuccessResponse(
+            ok=False,
+            video_id=initial_prompt.video_id,
+            message="bad"
+        )
+    else:
+        return SuccessResponse(
+            ok=False,
+            video_id=initial_prompt.video_id,
+            message="failed",
+        )
+
+@router.post("/api/regacy_animation_angent")
+async def generate_regacy_animation(initial_prompt:InitialPrompt):
+    service = RegacyManimAnimationService()
+    try:
+        is_success = service.generate_animation_with_error_handling(
+            file_name=initial_prompt.video_id,
+            user_prompt=initial_prompt.content,           
             enhance_prompt=initial_prompt.enhance_prompt or "",
         )
     except Exception as e:

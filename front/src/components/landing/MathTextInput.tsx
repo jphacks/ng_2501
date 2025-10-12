@@ -6,6 +6,7 @@ import remarkMath from 'remark-math'
 import remarkGfm from 'remark-gfm'
 import rehypeKatex from 'rehype-katex'
 import { MathEditor } from '@/components/math/MathEditor'
+import { MathExpression, getMathExpressionAtPosition, replaceMathExpression } from '@/app/datas/MathExpression'
 import { ErrorProvider } from '@/app/contexts/ErrorContext'
 import { generateMathNoteFromTitle } from '@/app/hooks/useGeminiAPI'
 import { GeminiError } from '@/app/datas/GeminiConfig'
@@ -102,6 +103,7 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
     const [videoPrompt, setVideoPrompt] = useState('')
     const [showMathEditor, setShowMathEditor] = useState(false)
     const [currentMathValue, setCurrentMathValue] = useState('')
+    const [activeMathExpression, setActiveMathExpression] = useState<MathExpression | null>(null)
     const [viewMode, setViewMode] = useState<ViewMode>('edit')
     const [cursorPosition, setCursorPosition] = useState<number>(0)
     const [titleInput, setTitleInput] = useState('')
@@ -142,8 +144,9 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
         const cursorTop = rect.top + paddingTop + (currentLine * lineHeight)
         const cursorLeft = rect.left + paddingLeft + (currentColumn * charWidth)
 
+        const verticalOffset = 240 // keep popup slightly further away from the detected math
         return {
-            top: Math.min(cursorTop, rect.bottom - 20) - 150,
+            top: Math.min(cursorTop, rect.bottom - 20) - verticalOffset,
             left: Math.max(rect.left, Math.min(cursorLeft, rect.right - 300)) - 40,
         }
     }, [])
@@ -188,37 +191,23 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
     }
 
     const judgeShowPopup = (input: string, cursorPos: number) => {
-        let indentList = Array(input.length).fill(0);
-        let currentIndent = 1;
-        for (let i = 0; i < input.length; i++) {
-            if (input[i] === '$') {
-                if (i > 1 && indentList[i - 1] === currentIndent) {
-                    currentIndent -= 1;
-                    indentList[i] = currentIndent;
-                }
-                if (indentList[i] === 0) {
-                    indentList[i] = currentIndent;
-                }
-                currentIndent += 1;
+        const expression = getMathExpressionAtPosition(input, cursorPos)
 
-                if (i >= cursorPos && indentList[i] !== 0) {
-
-                    if (indentList[i] % 2 === 0) {
-                        setCurrentMathValue('')
-                        const position = calculatePopupPosition()
-                        setPopupPosition(position)
-                        setShowInlinePopup(true)
-                        setShowMathEditor(true)
-                    } else {
-                        setShowMathEditor(false)
-                        setShowInlinePopup(false)
-                        setCurrentMathValue('')
-                        setPopupPosition(null)
-                    }
-                    break
-                }
-            }
+        if (expression) {
+            setActiveMathExpression(expression)
+            setCurrentMathValue(expression.latex)
+            const position = calculatePopupPosition()
+            setPopupPosition(position)
+            setShowInlinePopup(true)
+            setShowMathEditor(true)
+            return
         }
+
+        setActiveMathExpression(null)
+        setShowMathEditor(false)
+        setShowInlinePopup(false)
+        setCurrentMathValue('')
+        setPopupPosition(null)
     }
 
     const handleTextAreaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -271,6 +260,7 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
         if (viewMode === 'preview') return
 
         setCurrentMathValue('')
+        setActiveMathExpression(null)
 
         // インライン数式エディタを表示
         const position = calculatePopupPosition()
@@ -284,6 +274,7 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
             setShowMathEditor(false)
             setShowInlinePopup(false)
             setCurrentMathValue('')
+            setActiveMathExpression(null)
             setPopupPosition(null)
             return
         }
@@ -295,20 +286,32 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
         const parentScrollTop = scrollableParent?.scrollTop ?? 0
         const parentScrollLeft = scrollableParent?.scrollLeft ?? 0
 
-        // Insert the LaTeX formula at cursor position
-        const mathFormula = `$${latex}$`
-        const before = text.slice(0, cursorPosition)
-        const after = text.slice(cursorPosition)
+        let newText = text
+        let newCursorPosition = cursorPosition
 
-        // Add spacing if needed
-        const needSpaceBefore = before.length > 0 && !before.endsWith(' ') && !before.endsWith('\n')
-        const needSpaceAfter = after.length > 0 && !after.startsWith(' ') && !after.startsWith('\n')
+        if (activeMathExpression) {
+            newText = replaceMathExpression(text, activeMathExpression, latex)
+            const updatedExpression = getMathExpressionAtPosition(
+                newText,
+                activeMathExpression.start + 1
+            )
+            newCursorPosition = updatedExpression ? updatedExpression.end : activeMathExpression.start + latex.length
+        } else {
+            // Insert the LaTeX formula at cursor position
+            const mathFormula = `$${latex}$`
+            const before = text.slice(0, cursorPosition)
+            const after = text.slice(cursorPosition)
 
-        const textToInsert = (needSpaceBefore ? ' ' : '') + mathFormula + (needSpaceAfter ? ' ' : '');
-        const newText = before + textToInsert + after
+            // Add spacing if needed
+            const needSpaceBefore = before.length > 0 && !before.endsWith(' ') && !before.endsWith('\n')
+            const needSpaceAfter = after.length > 0 && !after.startsWith(' ') && !after.startsWith('\n')
 
-        // Calculate the new cursor position to be right after the inserted formula
-        const newCursorPosition = cursorPosition + (needSpaceBefore ? 1 : 0) + mathFormula.length;
+            const textToInsert = (needSpaceBefore ? ' ' : '') + mathFormula + (needSpaceAfter ? ' ' : '')
+            newText = before + textToInsert + after
+
+            // Calculate the new cursor position to be right after the inserted formula
+            newCursorPosition = cursorPosition + (needSpaceBefore ? 1 : 0) + mathFormula.length
+        }
 
         setText(newText)
         setCursorPosition(newCursorPosition)
@@ -316,6 +319,7 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
         setShowMathEditor(false)
         setShowInlinePopup(false)
         setCurrentMathValue('')
+        setActiveMathExpression(null)
         setPopupPosition(null)
 
         // 数式挿入後のカーソル位置を戻す
@@ -348,6 +352,7 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
         setShowMathEditor(false)
         setShowInlinePopup(false)
         setCurrentMathValue('')
+        setActiveMathExpression(null)
         setPopupPosition(null)
 
         // フォーカスをテキストエリアに戻す

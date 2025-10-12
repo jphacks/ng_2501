@@ -21,7 +21,7 @@ export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
 
     const handleEdit = async () => {
         if (!editPrompt.trim()) return
-        await onEdit(result.videoUrl, editPrompt)
+        await onEdit(result.videoId, editPrompt)
         setEditPrompt('')
         setShowEditPanel(false)
     }

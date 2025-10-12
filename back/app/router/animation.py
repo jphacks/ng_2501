@@ -76,7 +76,7 @@ def get_animation(video_id: str):
 
 
 @router.post("/api/animation", response_model=SuccessResponse, summary="動画の生成")
-def generate_animation(initial_prompt: InitialPrompt):
+async def generate_animation(initial_prompt: InitialPrompt):
     """
     LLMエージェント経由で Manim 動画を生成する。
     """
@@ -91,12 +91,10 @@ def generate_animation(initial_prompt: InitialPrompt):
         raise HTTPException(status_code=500, detail=str(e))
 
     if is_success == "Success":
-        latest = find_latest_video(initial_prompt.video_id)
         return SuccessResponse(
             ok=True,
             video_id=initial_prompt.video_id,
             message="done",
-            path=str(latest) if latest else None,
         )
     elif is_success=="bad_request":
         return SuccessResponse(

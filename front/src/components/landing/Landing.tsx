@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { MathTextInput } from './MathTextInput'
 
 interface LandingProps {

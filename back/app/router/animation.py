@@ -77,7 +77,7 @@ def get_animation(video_id: str):
     return JSONResponse(status_code=404, content={"message": "Video not found"})
 
 
-@router.post("/api/animation", response_model=SuccessResponse, summary="動画の生成")
+@router.post("/api/animation_new", response_model=SuccessResponse, summary="動画の生成")
 async def generate_animation(initial_prompt: InitialPrompt):
     """
     LLMエージェント経由で Manim 動画を生成する。
@@ -146,7 +146,7 @@ async def generate_rag_animation(initial_prompt: InitialPrompt):
             message="failed",
         )
 
-@router.post("/api/regacy_animation_angent")
+@router.post("/api/animation")
 async def generate_regacy_animation(initial_prompt:InitialPrompt):
     service = RegacyManimAnimationService()
     try:

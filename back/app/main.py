@@ -19,6 +19,9 @@ app.add_middleware(
 )
 
 
+@app.get("/")
+def root():
+    return {"message": "FastAPI server is running 🚀"}
 # ルーター登録
 app.include_router(animation.router)
 

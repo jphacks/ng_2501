@@ -3,7 +3,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: .devcontainer/Dockerfile # 開発用Dockerfileを流用（本番用推奨）
+      dockerfile: Dockerfile # 開発用Dockerfileを流用（本番用推奨）
     container_name: ai_agent_prod
     command: bash -c "bash /workspaces/ai_agent/.devcontainer/setup.sh && cd back && uv run uvicorn app.main:app --host 0.0.0.0 --port 8000"
     environment:

@@ -1,21 +1,18 @@
-# デプロイ用
+version: '3.8'
+
 services:
   app:
     build:
       context: .
-      dockerfile: .devcontainer/Dockerfile
-    container_name: ai_agent
-    volumes:
-      - .:/workspaces/ai_agent:cached
+      dockerfile: .devcontainer/Dockerfile # 開発用Dockerfileを流用（本番用推奨）
+    container_name: ai_agent_prod
     command: bash -c "bash /workspaces/ai_agent/.devcontainer/setup.sh && cd back && uv run uvicorn app.main:app --host 0.0.0.0 --port 8000"
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/devdb
       - PYTHONPATH=/workspaces/ai_agent
-    ports:
-      - "8000:8000"
-      - "3000:3000"
     depends_on:
       - db
+    restart: unless-stopped
 
   db:
     image: postgres:16-alpine
@@ -25,9 +22,36 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: devdb
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_data_prod:/var/lib/postgresql/data
+
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: nginx_prod
     ports:
-      - "5432:5432"
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Nginx設定ファイル
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      # Let's Encrypt 証明書
+      - ./certbot/conf:/etc/letsencrypt
+      # Certbot チャレンジ用 (ACME challenge)
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - app
+    restart: always
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot_prod
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    # 証明書の自動更新 (1日2回チェック)
+    command: renew --quiet --deploy-hook "docker-compose -f /workspaces/ai_agent/docker-compose.prod.yml exec nginx nginx -s reload"
+    # (例: /home/ubuntu/YOUR_REPO/docker-compose.prod.yml)
+    # もしくは、init-letsencrypt.sh で cron ジョブとしてホストに登録する方が確実です。
 
 volumes:
-  db_data:
+  db_data_prod:

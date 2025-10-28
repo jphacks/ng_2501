@@ -1,0 +1,29 @@
+# Dockerビルドコンテキストに含めないファイルを指定します
+
+# Git
+
+.git/
+
+# Nginx と Certbot (appイメージには不要)
+
+nginx/
+certbot/
+
+# VSCode / IDE
+
+.vscode/
+.idea/
+
+# Python
+
+*.pyc
+pycache/
+
+# Node.js
+
+front/node_modules/
+
+# OS
+
+.DS_Store
+Thumbs.db

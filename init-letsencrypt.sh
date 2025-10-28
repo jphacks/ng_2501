@@ -13,7 +13,7 @@ fi
 
 # v1 (docker-compose) ではなく v2 (docker compose) を使うように変数を設定
 COMPOSE_COMMAND="docker compose"
-COMPOSE_FILE="docker-compose.prod.yml"
+COMPOSE_FILE="docker-compose.yml"
 NGINX_TEMPLATE="nginx/app.conf.template"
 NGINX_CONF="nginx/conf.d/app.conf"
 APP_SERVICE_NAME="app" # docker-compose.prod.yml 内のサービス名

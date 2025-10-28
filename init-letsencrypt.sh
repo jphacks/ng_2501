@@ -28,7 +28,7 @@ mkdir -p certbot/www
 if [ -f "$NGINX_CONF" ]; then
   echo ">>> Nginx設定ファイル ($NGINX_CONF) が既に存在します。"
   # 既存のコンテナを起動する
-  docker-compose -f $COMPOSE_FILE up -d
+  $COMPOSE_COMMAND -f $COMPOSE_FILE up -d
   echo ">>> 既存のコンテナを起動しました。"
   exit 0
 fi
@@ -127,4 +127,5 @@ $COMPOSE_COMMAND -f $COMPOSE_FILE up -d --remove-orphans
 # (crontab -l 2>/dev/null; echo "0 3,15 * * * /usr/bin/docker-compose -f /path/to/docker-compose.prod.yml run --rm certbot renew --quiet && /usr/bin/docker-compose -f /path/to/docker-compose.prod.yml exec nginx nginx -s reload") | crontab -
 echo ">>> セットアップ完了！"
 echo ">>> Certbotの自動更新を設定してください (README参照)。"
+
 

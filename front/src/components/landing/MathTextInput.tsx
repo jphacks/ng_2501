@@ -559,7 +559,9 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                     <title>編集</title>
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
-                                編集のみ
+                                <div className="flex flex-col sm:flex-row">
+                                    <span className="text-xxs min-[360px]:text-xs">編集</span><span className="text-xxs min-[360px]:text-xs">のみ</span>
+                                </div>
                             </button>
                             <button
                                 type="button"
@@ -572,7 +574,10 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                     <title>分割</title>
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7" />
                                 </svg>
-                                編集+プレビュー
+                                
+                                <div className="flex flex-col sm:flex-row">
+                                    <span className="text-xxs min-[360px]:text-xs">編集+</span><span className="text-xxs min-[360px]:text-xs">プレビュー</span>
+                                </div>
                             </button>
                             <button
                                 type="button"
@@ -586,7 +591,10 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                 </svg>
-                                プレビューのみ
+                                <div className="flex flex-col sm:flex-row">
+                                    <span className="text-xxs min-[360px]:text-xs">プレビュー</span><span className="text-xxs min-[360px]:text-xs">のみ</span>
+                                </div>
+                                
                             </button>
                         </div>
 
@@ -602,7 +610,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                     <title>サンプル</title>
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
-                                サンプルを読み込む
+                                <span className="text-[0.675rem] min-[330px]:text-xs">サンプルを読み込む</span>
                             </button>
                             <button
                                 type="button"
@@ -615,7 +623,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                     <title>数式</title>
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                 </svg>
-                                数式を挿入
+                                <span className="text-[0.675rem] min-[330px]:text-xs">数式を挿入</span>
                             </button>
                         </div>
 

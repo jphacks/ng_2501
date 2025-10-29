@@ -245,9 +245,3 @@ class RegacyManimAnimationService:
     
     
     
-    
-
-if __name__ == "__main__":
-    describe = ManimAnimationService()
-    print(describe.generate_detail_prompt("半径3の円を書いてください",1))
-    

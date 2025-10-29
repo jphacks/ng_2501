@@ -1,0 +1,13 @@
+{
+  "pythonVersion": "3.10",
+  "venvPath": ".",
+  "venv": ".venv",
+  
+  // "reportArgumentType" がノイズの主な原因
+//   "reportArgumentType": "warning", // "error" から "warning" に格下げする
+  // または、完全に無効化する
+  "reportArgumentType": "none", 
+
+  "reportMissingImports": "warning",
+  "reportUnknownMemberType": "warning"
+}

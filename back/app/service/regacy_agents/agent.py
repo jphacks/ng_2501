@@ -25,7 +25,7 @@ class ManimAnimationService:
         self.think_llm = self._load_llm("gemini-2.5-flash")
         self.pro_llm   = self._load_llm("gemini-2.5-pro")
         self.flash_llm = self._load_llm("gemini-2.5-flash")
-        self.lite_llm  = self._load_llm("gemini-2.5-flash-lite")
+        self.lite_llmgenerate_script_with_prompt  = self._load_llm("gemini-2.5-flash-lite")
     def _load_llm(self, model_type: str):
         return ChatGoogleGenerativeAI(model=model_type, google_api_key=os.getenv('GEMINI_API_KEY'))
     

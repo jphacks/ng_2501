@@ -538,6 +538,6 @@ if __name__ == "__main__":
         円と点の移動をアニメーションし、最後に cos^2 θ + sin^2 θ = 1 を MathTex で表示。
         日本語テキストは Text で表示（フォント明示）。
         """,
-        enhance_prompt="",
+        enhance_prompt="高1向け。単位円と角度θ、点P(x=cosθ, y=sinθ)を可視化。円と点の移動をアニメーションし、最後に cos^2 θ + sin^2 θ = 1 を MathTex で表示。日本語テキストは Text で表示（フォント明示）。",
     )
     print(is_success)

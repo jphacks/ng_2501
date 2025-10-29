@@ -1,0 +1,464 @@
+2025-10-26 16:11:11,766 - INFO - ManimAnimationService initialized.
+2025-10-26 16:12:00,923 - INFO - ManimAnimationService initialized.
+2025-10-26 16:12:00,923 - INFO - ManimAnimationService initialized.
+2025-10-26 16:12:00,923 - INFO - --- Starting Graph for Video ID: string (Max Retries: 3) ---
+2025-10-26 16:12:00,923 - INFO - --- Starting Graph for Video ID: string (Max Retries: 3) ---
+2025-10-26 16:12:00,924 - INFO - --- 1. [Node] Generating Initial Script ---
+2025-10-26 16:12:00,924 - INFO - --- 1. [Node] Generating Initial Script ---
+2025-10-26 16:12:00,925 - DEBUG - STATE at entry of [ _generate_initial_script ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "",
+  "last_error": "",
+  "error_type": "",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 0
+}
+2025-10-26 16:12:00,925 - DEBUG - STATE at entry of [ _generate_initial_script ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "",
+  "last_error": "",
+  "error_type": "",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 0
+}
+2025-10-26 16:12:38,604 - INFO - ManimAnimationService initialized.
+2025-10-26 16:13:20,942 - INFO - ManimAnimationService initialized.
+2025-10-26 16:13:23,694 - INFO - ManimAnimationService initialized.
+2025-10-26 16:13:23,694 - INFO - ManimAnimationService initialized.
+2025-10-26 16:13:23,694 - INFO - --- Starting Graph for Video ID: string (Max Retries: 3) ---
+2025-10-26 16:13:23,694 - INFO - --- Starting Graph for Video ID: string (Max Retries: 3) ---
+2025-10-26 16:13:23,695 - INFO - --- 1. [Node] Generating Initial Script ---
+2025-10-26 16:13:23,695 - INFO - --- 1. [Node] Generating Initial Script ---
+2025-10-26 16:13:23,695 - DEBUG - STATE at entry of [ _generate_initial_script ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "",
+  "last_error": "",
+  "error_type": "",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 0
+}
+2025-10-26 16:13:23,695 - DEBUG - STATE at entry of [ _generate_initial_script ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "",
+  "last_error": "",
+  "error_type": "",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 0
+}
+2025-10-26 16:15:44,827 - DEBUG -    [+] Initial script generated (length: 9971)
+2025-10-26 16:15:44,827 - DEBUG -    [+] Initial script generated (length: 9971)
+2025-10-26 16:15:44,828 - INFO - --- 2. [Node] Checking Security ---
+2025-10-26 16:15:44,828 - INFO - --- 2. [Node] Checking Security ---
+2025-10-26 16:15:44,828 - DEBUG - STATE at entry of [ _check_bad_request ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "\nfrom manim import *\nimport numpy as my_np\n\nclass GeneratedScene(Scene):\n    def construct(self):\n        # 日本語フォントを指定してください。環境にインストールされているフォントを選択します。\n        # 例: \"Hiragino Sans\", \"MS Gothic\", \"Noto ... (Total: 9971 chars)",
+  "last_error": "",
+  "error_type": "",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 0
+}
+2025-10-26 16:15:44,828 - DEBUG - STATE at entry of [ _check_bad_request ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "\nfrom manim import *\nimport numpy as my_np\n\nclass GeneratedScene(Scene):\n    def construct(self):\n        # 日本語フォントを指定してください。環境にインストールされているフォントを選択します。\n        # 例: \"Hiragino Sans\", \"MS Gothic\", \"Noto ... (Total: 9971 chars)",
+  "last_error": "",
+  "error_type": "",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 0
+}
+2025-10-26 16:15:44,831 - INFO -    [+] Secure.
+2025-10-26 16:15:44,831 - INFO -    [+] Secure.
+2025-10-26 16:15:44,831 - DEBUG - --- [Branch] Secure. Proceeding to Lint. ---
+2025-10-26 16:15:44,831 - DEBUG - --- [Branch] Secure. Proceeding to Lint. ---
+2025-10-26 16:15:44,831 - INFO - --- 3. [Node] Running Linter (format_and_linter) ---
+2025-10-26 16:15:44,831 - INFO - --- 3. [Node] Running Linter (format_and_linter) ---
+2025-10-26 16:15:44,832 - DEBUG - STATE at entry of [ _lint_check ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "\nfrom manim import *\nimport numpy as my_np\n\nclass GeneratedScene(Scene):\n    def construct(self):\n        # 日本語フォントを指定してください。環境にインストールされているフォントを選択します。\n        # 例: \"Hiragino Sans\", \"MS Gothic\", \"Noto ... (Total: 9971 chars)",
+  "last_error": "",
+  "error_type": "",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 0
+}
+2025-10-26 16:15:44,832 - DEBUG - STATE at entry of [ _lint_check ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "\nfrom manim import *\nimport numpy as my_np\n\nclass GeneratedScene(Scene):\n    def construct(self):\n        # 日本語フォントを指定してください。環境にインストールされているフォントを選択します。\n        # 例: \"Hiragino Sans\", \"MS Gothic\", \"Noto ... (Total: 9971 chars)",
+  "last_error": "",
+  "error_type": "",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 0
+}
+2025-10-26 16:15:46,914 - WARNING -    [!] Linter Failed.
+2025-10-26 16:15:46,914 - WARNING -    [!] Linter Failed.
+2025-10-26 16:15:46,915 - INFO -    [+] Linter error details saved to linter_errors.log
+2025-10-26 16:15:46,915 - INFO -    [+] Linter error details saved to linter_errors.log
+2025-10-26 16:15:46,915 - INFO - --- [Branch] Linter Failed. Proceeding to Refine. ---
+2025-10-26 16:15:46,915 - INFO - --- [Branch] Linter Failed. Proceeding to Refine. ---
+2025-10-26 16:15:46,916 - INFO - --- 5. [Node] Refining Script (Attempt 1) ---
+2025-10-26 16:15:46,916 - INFO - --- 5. [Node] Refining Script (Attempt 1) ---
+2025-10-26 16:15:46,916 - DEBUG - STATE at entry of [ _refine_script_on_error ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "\nfrom manim import *\nimport numpy as my_np\n\nclass GeneratedScene(Scene):\n    def construct(self):\n        # 日本語フォントを指定してください。環境にインストールされているフォントを選択します。\n        # 例: \"Hiragino Sans\", \"MS Gothic\", \"Noto ... (Total: 9971 chars)",
+  "last_error": "[Error 1]\nfile: /workspaces/ai_agent/back/tmp/string.py\nrule: reportArgumentType\nseverity: error\nline: 32\nmessage: Argument of type \"Vector3D\" cannot be assigned to parameter \"edge\" of type \"Sequence[float]\" in function \"get_x_axis_label\"   \"ndarray[_AnyShape, dtype[PointDType]]\" is not assignable t... (Total: 6416 chars)",
+  "error_type": "lint",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 0
+}
+2025-10-26 16:15:46,916 - DEBUG - STATE at entry of [ _refine_script_on_error ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "\nfrom manim import *\nimport numpy as my_np\n\nclass GeneratedScene(Scene):\n    def construct(self):\n        # 日本語フォントを指定してください。環境にインストールされているフォントを選択します。\n        # 例: \"Hiragino Sans\", \"MS Gothic\", \"Noto ... (Total: 9971 chars)",
+  "last_error": "[Error 1]\nfile: /workspaces/ai_agent/back/tmp/string.py\nrule: reportArgumentType\nseverity: error\nline: 32\nmessage: Argument of type \"Vector3D\" cannot be assigned to parameter \"edge\" of type \"Sequence[float]\" in function \"get_x_axis_label\"   \"ndarray[_AnyShape, dtype[PointDType]]\" is not assignable t... (Total: 6416 chars)",
+  "error_type": "lint",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 0
+}
+2025-10-26 16:16:47,417 - DEBUG -    [+] Script refined (length: 10036)
+2025-10-26 16:16:47,417 - DEBUG -    [+] Script refined (length: 10036)
+2025-10-26 16:16:47,418 - INFO - --- 2. [Node] Checking Security ---
+2025-10-26 16:16:47,418 - INFO - --- 2. [Node] Checking Security ---
+2025-10-26 16:16:47,418 - DEBUG - STATE at entry of [ _check_bad_request ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "\nfrom manim import *\nimport numpy as my_np\n\nclass GeneratedScene(Scene):\n    def construct(self):\n        # 日本語フォントを指定してください。環境にインストールされているフォントを選択します。\n        # 例: \"Hiragino Sans\", \"MS Gothic\", \"Noto ... (Total: 10036 chars)",
+  "last_error": "",
+  "error_type": "",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 1
+}
+2025-10-26 16:16:47,418 - DEBUG - STATE at entry of [ _check_bad_request ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "\nfrom manim import *\nimport numpy as my_np\n\nclass GeneratedScene(Scene):\n    def construct(self):\n        # 日本語フォントを指定してください。環境にインストールされているフォントを選択します。\n        # 例: \"Hiragino Sans\", \"MS Gothic\", \"Noto ... (Total: 10036 chars)",
+  "last_error": "",
+  "error_type": "",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 1
+}
+2025-10-26 16:16:47,421 - INFO -    [+] Secure.
+2025-10-26 16:16:47,421 - INFO -    [+] Secure.
+2025-10-26 16:16:47,421 - DEBUG - --- [Branch] Secure. Proceeding to Lint. ---
+2025-10-26 16:16:47,421 - DEBUG - --- [Branch] Secure. Proceeding to Lint. ---
+2025-10-26 16:16:47,421 - INFO - --- 3. [Node] Running Linter (format_and_linter) ---
+2025-10-26 16:16:47,421 - INFO - --- 3. [Node] Running Linter (format_and_linter) ---
+2025-10-26 16:16:47,421 - DEBUG - STATE at entry of [ _lint_check ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "\nfrom manim import *\nimport numpy as my_np\n\nclass GeneratedScene(Scene):\n    def construct(self):\n        # 日本語フォントを指定してください。環境にインストールされているフォントを選択します。\n        # 例: \"Hiragino Sans\", \"MS Gothic\", \"Noto ... (Total: 10036 chars)",
+  "last_error": "",
+  "error_type": "",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 1
+}
+2025-10-26 16:16:47,421 - DEBUG - STATE at entry of [ _lint_check ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "\nfrom manim import *\nimport numpy as my_np\n\nclass GeneratedScene(Scene):\n    def construct(self):\n        # 日本語フォントを指定してください。環境にインストールされているフォントを選択します。\n        # 例: \"Hiragino Sans\", \"MS Gothic\", \"Noto ... (Total: 10036 chars)",
+  "last_error": "",
+  "error_type": "",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 1
+}
+2025-10-26 16:16:49,485 - WARNING -    [!] Linter Failed.
+2025-10-26 16:16:49,485 - WARNING -    [!] Linter Failed.
+2025-10-26 16:16:49,485 - INFO -    [+] Linter error details saved to linter_errors.log
+2025-10-26 16:16:49,485 - INFO -    [+] Linter error details saved to linter_errors.log
+2025-10-26 16:16:49,486 - INFO - --- [Branch] Linter Failed. Proceeding to Refine. ---
+2025-10-26 16:16:49,486 - INFO - --- [Branch] Linter Failed. Proceeding to Refine. ---
+2025-10-26 16:16:49,486 - INFO - --- 5. [Node] Refining Script (Attempt 2) ---
+2025-10-26 16:16:49,486 - INFO - --- 5. [Node] Refining Script (Attempt 2) ---
+2025-10-26 16:16:49,486 - DEBUG - STATE at entry of [ _refine_script_on_error ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "\nfrom manim import *\nimport numpy as my_np\n\nclass GeneratedScene(Scene):\n    def construct(self):\n        # 日本語フォントを指定してください。環境にインストールされているフォントを選択します。\n        # 例: \"Hiragino Sans\", \"MS Gothic\", \"Noto ... (Total: 10036 chars)",
+  "last_error": "[Error 1]\nfile: /workspaces/ai_agent/back/tmp/string.py\nrule: reportAttributeAccessIssue\nseverity: error\nline: 11\nmessage: Cannot access attribute \"hex\" for class \"ManimColor\"   Attribute \"hex\" is unknown\n\n[Error 2]\nfile: /workspaces/ai_agent/back/tmp/string.py\nrule: reportAttributeAccessIssue\nsever... (Total: 3456 chars)",
+  "error_type": "lint",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 1
+}
+2025-10-26 16:16:49,486 - DEBUG - STATE at entry of [ _refine_script_on_error ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "\nfrom manim import *\nimport numpy as my_np\n\nclass GeneratedScene(Scene):\n    def construct(self):\n        # 日本語フォントを指定してください。環境にインストールされているフォントを選択します。\n        # 例: \"Hiragino Sans\", \"MS Gothic\", \"Noto ... (Total: 10036 chars)",
+  "last_error": "[Error 1]\nfile: /workspaces/ai_agent/back/tmp/string.py\nrule: reportAttributeAccessIssue\nseverity: error\nline: 11\nmessage: Cannot access attribute \"hex\" for class \"ManimColor\"   Attribute \"hex\" is unknown\n\n[Error 2]\nfile: /workspaces/ai_agent/back/tmp/string.py\nrule: reportAttributeAccessIssue\nsever... (Total: 3456 chars)",
+  "error_type": "lint",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 1
+}
+2025-10-26 16:17:48,284 - DEBUG -    [+] Script refined (length: 10219)
+2025-10-26 16:17:48,284 - DEBUG -    [+] Script refined (length: 10219)
+2025-10-26 16:17:48,285 - INFO - --- 2. [Node] Checking Security ---
+2025-10-26 16:17:48,285 - INFO - --- 2. [Node] Checking Security ---
+2025-10-26 16:17:48,285 - DEBUG - STATE at entry of [ _check_bad_request ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "\nfrom manim import *\nimport numpy as my_np\n\nclass GeneratedScene(Scene):\n    def construct(self):\n        # 日本語フォントを指定してください。環境にインストールされているフォントを選択します。\n        # 例: \"Hiragino Sans\", \"MS Gothic\", \"Noto ... (Total: 10219 chars)",
+  "last_error": "",
+  "error_type": "",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 2
+}
+2025-10-26 16:17:48,285 - DEBUG - STATE at entry of [ _check_bad_request ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "\nfrom manim import *\nimport numpy as my_np\n\nclass GeneratedScene(Scene):\n    def construct(self):\n        # 日本語フォントを指定してください。環境にインストールされているフォントを選択します。\n        # 例: \"Hiragino Sans\", \"MS Gothic\", \"Noto ... (Total: 10219 chars)",
+  "last_error": "",
+  "error_type": "",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 2
+}
+2025-10-26 16:17:48,288 - INFO -    [+] Secure.
+2025-10-26 16:17:48,288 - INFO -    [+] Secure.
+2025-10-26 16:17:48,288 - DEBUG - --- [Branch] Secure. Proceeding to Lint. ---
+2025-10-26 16:17:48,288 - DEBUG - --- [Branch] Secure. Proceeding to Lint. ---
+2025-10-26 16:17:48,288 - INFO - --- 3. [Node] Running Linter (format_and_linter) ---
+2025-10-26 16:17:48,288 - INFO - --- 3. [Node] Running Linter (format_and_linter) ---
+2025-10-26 16:17:48,288 - DEBUG - STATE at entry of [ _lint_check ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "\nfrom manim import *\nimport numpy as my_np\n\nclass GeneratedScene(Scene):\n    def construct(self):\n        # 日本語フォントを指定してください。環境にインストールされているフォントを選択します。\n        # 例: \"Hiragino Sans\", \"MS Gothic\", \"Noto ... (Total: 10219 chars)",
+  "last_error": "",
+  "error_type": "",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 2
+}
+2025-10-26 16:17:48,288 - DEBUG - STATE at entry of [ _lint_check ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "\nfrom manim import *\nimport numpy as my_np\n\nclass GeneratedScene(Scene):\n    def construct(self):\n        # 日本語フォントを指定してください。環境にインストールされているフォントを選択します。\n        # 例: \"Hiragino Sans\", \"MS Gothic\", \"Noto ... (Total: 10219 chars)",
+  "last_error": "",
+  "error_type": "",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 2
+}
+2025-10-26 16:17:50,303 - WARNING -    [!] Linter Failed.
+2025-10-26 16:17:50,303 - WARNING -    [!] Linter Failed.
+2025-10-26 16:17:50,304 - INFO -    [+] Linter error details saved to linter_errors.log
+2025-10-26 16:17:50,304 - INFO -    [+] Linter error details saved to linter_errors.log
+2025-10-26 16:17:50,304 - INFO - --- [Branch] Linter Failed. Proceeding to Refine. ---
+2025-10-26 16:17:50,304 - INFO - --- [Branch] Linter Failed. Proceeding to Refine. ---
+2025-10-26 16:17:50,305 - INFO - --- 5. [Node] Refining Script (Attempt 3) ---
+2025-10-26 16:17:50,305 - INFO - --- 5. [Node] Refining Script (Attempt 3) ---
+2025-10-26 16:17:50,305 - DEBUG - STATE at entry of [ _refine_script_on_error ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "\nfrom manim import *\nimport numpy as my_np\n\nclass GeneratedScene(Scene):\n    def construct(self):\n        # 日本語フォントを指定してください。環境にインストールされているフォントを選択します。\n        # 例: \"Hiragino Sans\", \"MS Gothic\", \"Noto ... (Total: 10219 chars)",
+  "last_error": "[Error 1]\nfile: /workspaces/ai_agent/back/tmp/string.py\nrule: reportArgumentType\nseverity: error\nline: 35\nmessage: Argument of type \"NDArray[PointDType]\" cannot be assigned to parameter \"edge\" of type \"Sequence[float]\" in function \"get_x_axis_label\"   \"ndarray[_AnyShape, dtype[PointDType]]\" is not a... (Total: 3784 chars)",
+  "error_type": "lint",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 2
+}
+2025-10-26 16:17:50,305 - DEBUG - STATE at entry of [ _refine_script_on_error ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "\nfrom manim import *\nimport numpy as my_np\n\nclass GeneratedScene(Scene):\n    def construct(self):\n        # 日本語フォントを指定してください。環境にインストールされているフォントを選択します。\n        # 例: \"Hiragino Sans\", \"MS Gothic\", \"Noto ... (Total: 10219 chars)",
+  "last_error": "[Error 1]\nfile: /workspaces/ai_agent/back/tmp/string.py\nrule: reportArgumentType\nseverity: error\nline: 35\nmessage: Argument of type \"NDArray[PointDType]\" cannot be assigned to parameter \"edge\" of type \"Sequence[float]\" in function \"get_x_axis_label\"   \"ndarray[_AnyShape, dtype[PointDType]]\" is not a... (Total: 3784 chars)",
+  "error_type": "lint",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 2
+}
+2025-10-26 16:19:27,984 - DEBUG -    [+] Script refined (length: 10229)
+2025-10-26 16:19:27,984 - DEBUG -    [+] Script refined (length: 10229)
+2025-10-26 16:19:27,985 - INFO - --- 2. [Node] Checking Security ---
+2025-10-26 16:19:27,985 - INFO - --- 2. [Node] Checking Security ---
+2025-10-26 16:19:27,985 - DEBUG - STATE at entry of [ _check_bad_request ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "\nfrom manim import *\nimport numpy as my_np\n\nclass GeneratedScene(Scene):\n    def construct(self):\n        # 日本語フォントを指定してください。環境にインストールされているフォントを選択します。\n        # 例: \"Hiragino Sans\", \"MS Gothic\", \"Noto ... (Total: 10229 chars)",
+  "last_error": "",
+  "error_type": "",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 3
+}
+2025-10-26 16:19:27,985 - DEBUG - STATE at entry of [ _check_bad_request ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "\nfrom manim import *\nimport numpy as my_np\n\nclass GeneratedScene(Scene):\n    def construct(self):\n        # 日本語フォントを指定してください。環境にインストールされているフォントを選択します。\n        # 例: \"Hiragino Sans\", \"MS Gothic\", \"Noto ... (Total: 10229 chars)",
+  "last_error": "",
+  "error_type": "",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 3
+}
+2025-10-26 16:19:27,988 - INFO -    [+] Secure.
+2025-10-26 16:19:27,988 - INFO -    [+] Secure.
+2025-10-26 16:19:27,988 - DEBUG - --- [Branch] Secure. Proceeding to Lint. ---
+2025-10-26 16:19:27,988 - DEBUG - --- [Branch] Secure. Proceeding to Lint. ---
+2025-10-26 16:19:27,988 - INFO - --- 3. [Node] Running Linter (format_and_linter) ---
+2025-10-26 16:19:27,988 - INFO - --- 3. [Node] Running Linter (format_and_linter) ---
+2025-10-26 16:19:27,988 - DEBUG - STATE at entry of [ _lint_check ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "\nfrom manim import *\nimport numpy as my_np\n\nclass GeneratedScene(Scene):\n    def construct(self):\n        # 日本語フォントを指定してください。環境にインストールされているフォントを選択します。\n        # 例: \"Hiragino Sans\", \"MS Gothic\", \"Noto ... (Total: 10229 chars)",
+  "last_error": "",
+  "error_type": "",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 3
+}
+2025-10-26 16:19:27,988 - DEBUG - STATE at entry of [ _lint_check ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "\nfrom manim import *\nimport numpy as my_np\n\nclass GeneratedScene(Scene):\n    def construct(self):\n        # 日本語フォントを指定してください。環境にインストールされているフォントを選択します。\n        # 例: \"Hiragino Sans\", \"MS Gothic\", \"Noto ... (Total: 10229 chars)",
+  "last_error": "",
+  "error_type": "",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 3
+}
+2025-10-26 16:19:30,015 - WARNING -    [!] Linter Failed.
+2025-10-26 16:19:30,015 - WARNING -    [!] Linter Failed.
+2025-10-26 16:19:30,016 - INFO -    [+] Linter error details saved to linter_errors.log
+2025-10-26 16:19:30,016 - INFO -    [+] Linter error details saved to linter_errors.log
+2025-10-26 16:19:30,016 - WARNING - --- [Branch] Max Retries Reached (Lint Error). Ending. ---
+2025-10-26 16:19:30,016 - WARNING - --- [Branch] Max Retries Reached (Lint Error). Ending. ---
+2025-10-26 16:19:30,017 - ERROR - --- Graph Finished: Error (Max Retries Reached) ---
+2025-10-26 16:19:30,017 - ERROR - --- Graph Finished: Error (Max Retries Reached) ---
+2025-10-26 16:22:21,388 - INFO - ManimAnimationService initialized.
+2025-10-26 16:22:25,020 - INFO - ManimAnimationService initialized.
+2025-10-26 16:22:25,020 - INFO - ManimAnimationService initialized.
+2025-10-26 16:22:25,020 - INFO - --- Starting Graph for Video ID: string (Max Retries: 3) ---
+2025-10-26 16:22:25,020 - INFO - --- Starting Graph for Video ID: string (Max Retries: 3) ---
+2025-10-26 16:22:25,021 - INFO - --- 1. [Node] Generating Initial Script ---
+2025-10-26 16:22:25,021 - INFO - --- 1. [Node] Generating Initial Script ---
+2025-10-26 16:22:25,021 - DEBUG - STATE at entry of [ _generate_initial_script ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "",
+  "last_error": "",
+  "error_type": "",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 0
+}
+2025-10-26 16:22:25,021 - DEBUG - STATE at entry of [ _generate_initial_script ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "",
+  "last_error": "",
+  "error_type": "",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 0
+}
+2025-10-26 16:24:43,263 - DEBUG -    [+] Initial script generated (length: 9668)
+2025-10-26 16:24:43,263 - DEBUG -    [+] Initial script generated (length: 9668)
+2025-10-26 16:24:43,263 - INFO - --- 2. [Node] Checking Security ---
+2025-10-26 16:24:43,263 - INFO - --- 2. [Node] Checking Security ---
+2025-10-26 16:24:43,264 - DEBUG - STATE at entry of [ _check_bad_request ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "\nfrom manim import *\nimport numpy as np\n\nclass GeneratedScene(Scene):\n    def construct(self):\n        # NOTE: You may need to change this font to one available on your system.\n        # 使用する日本語フォントをシ... (Total: 9668 chars)",
+  "last_error": "",
+  "error_type": "",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 0
+}
+2025-10-26 16:24:43,264 - DEBUG - STATE at entry of [ _check_bad_request ]:
+{
+  "user_request": "三角関数のグラフと単位円の関係... (Total: 15 chars)",
+  "generation_instructions": "",
+  "video_id": "string",
+  "current_script": "\nfrom manim import *\nimport numpy as np\n\nclass GeneratedScene(Scene):\n    def construct(self):\n        # NOTE: You may need to change this font to one available on your system.\n        # 使用する日本語フォントをシ... (Total: 9668 chars)",
+  "last_error": "",
+  "error_type": "",
+  "is_bad_request": false,
+  "max_retries": 3,
+  "current_retry": 0
+}
+2025-10-26 16:24:43,267 - WARNING -    [!] Bad Request Detected.
+2025-10-26 16:24:43,267 - WARNING -    [!] Bad Request Detected.
+2025-10-26 16:24:43,267 - ERROR - --- [Branch] Bad Request. Ending Graph. ---
+2025-10-26 16:24:43,267 - ERROR - --- [Branch] Bad Request. Ending Graph. ---
+2025-10-26 16:24:43,267 - ERROR - --- Graph Finished: Bad Request ---
+2025-10-26 16:24:43,267 - ERROR - --- Graph Finished: Bad Request ---

@@ -240,6 +240,49 @@ export const useVideoGeneration = () => {
     }
 
     /**
+     * ⚠️ テスト用（Issue#56）
+     * 
+     * 既存の動画を読み込む
+     * 
+     * 目的：
+     * - バックエンドで新規に動画を生成せずにダウンロード機能をテストする
+     * 
+     * 削除方法：
+     * 1. この関数全体を削除
+     * 2. return文から `loadExistingVideo` を削除
+     * 3. VideoGenerationFlow.tsx から呼び出しを削除
+     */
+    const loadExistingVideo = async (videoId: string, promptText: string = '既存の動画') => {
+        try {
+            setIsGenerating(true)
+            setError(null)
+
+            const videoUrl = await replaceVideoUrl(videoId)
+            
+            const prompt: VideoGenerationPrompt = {
+                prompt: promptText,
+                originalText: promptText,
+            }
+
+            const loadedResult: VideoResult = {
+                videoId,
+                videoUrl,
+                prompt,
+                generatedAt: new Date(),
+            }
+
+            setPrompt(prompt)
+            setResult(loadedResult)
+            return loadedResult
+        } catch (err) {
+            setHandledError(err, '動画の読み込み中にエラーが発生しました')
+            throw err
+        } finally {
+            setIsGenerating(false)
+        }
+    }
+
+    /**
      * 結果をクリア
      */
     const clearResult = () => {
@@ -263,6 +306,7 @@ export const useVideoGeneration = () => {
         generatePrompt,
         generateVideo,
         editVideo,
+        loadExistingVideo, // ⚠️ テスト用（Issue#56）
         clearResult,
     }
 }

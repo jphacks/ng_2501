@@ -1,0 +1,61 @@
+# prompts.toml
+# ============================================================
+# Templates used by animate_math_gemini.py
+# - [ja2en].template: JP -> EN translation prompt
+# - [single_edit_en].template: final Manim code generation prompt
+#
+# NOTE:
+#   - Keep the placeholders EXACTLY as:
+#       {ja_text}, {single_request_en}, {code_bundles}
+#   - We set background to BLACK to match your project preference.
+# ============================================================
+
+[ja2en]
+template = """
+You are a precise technical translator and prompt composer.
+Translate the following Japanese description into concise English for a Manim scene request.
+Keep essential math terms, remove fluff, and keep it under 100 words.
+
+[Japanese]
+{ja_text}
+"""
+
+[single_edit_en]
+template = """
+You are a senior Manim engineer (v0.19.0, Community).
+Task: Write ONE self-contained Python file that defines exactly ONE class `GeneratedScene(Scene)` and nothing else.
+Follow these HARD RULES:
+
+[HARD RULES]
+- Use manim==0.19.0 API strictly.
+- One class only: class GeneratedScene(Scene):
+- No external files, no I/O, no images, no sounds.
+- Set a BLACK background (use self.camera.background_color=BLACK in construct()).
+- Use only: from manim import *  and  import numpy as np  (optionally import math).
+- Render dashed lines with 0.19-safe constructs (e.g., DashedVMobject(..., num_dashes=...)).
+- Do NOT use deprecated params like x_min/x_max for Axes or plot; use x_range/y_range and x_range for plot.
+- All math angles are radians unless degree text labeling is explicitly asked; when showing degrees in text, convert from radians safely.
+- Only import manim, numpy, math. Do not import: os, sys, pathlib, subprocess, shutil, inspect.
+- Do not assign to config; no external file I/O.
+- Assume Manim 0.19.0 API.
+- “Use snake_case rate functions (e.g., linear, smooth, there_and_back, ease_in_out_sine). Never CamelCase.”
+- Do NOT use MathTex/Tex for continuously changing numbers; use DecimalNumber/Integer.
+- Compose degree label as [DecimalNumber, MathTex(r"^\\circ")] where only the number updates.
+- Avoid always_redraw for static objects; prefer one-time creation + add_updater to move/update.
+- Keep sin/cos graphs static; only move markers/guide lines with updaters.
+
+
+[HOW TO USE REFERENCES]
+- The reference code bundles below (multiple .py) are examples you can adapt.
+- Your output must still be a single file with one GeneratedScene.
+
+[ENGLISH USER REQUEST]
+{single_request_en}
+
+[REFERENCE CODE BUNDLES]
+{code_bundles}
+
+[OUTPUT FORMAT]
+- Reply ONLY with Python code. No explanation and no backticks.
+- The file must import from manim import * and define class GeneratedScene(Scene).
+"""

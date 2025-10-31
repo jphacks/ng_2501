@@ -26,6 +26,15 @@ export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
         setShowEditPanel(false)
     }
 
+    const handleDownload = () => {
+        const a = document.createElement('a')
+        a.href = result.videoUrl
+        a.download = `${result.videoId}.mp4`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+    }
+
     return (
         <div className="flex flex-col h-full">
             {/* ヘッダー */}
@@ -51,8 +60,17 @@ export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
             {/* メインコンテンツ: 2カラムレイアウト */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0 min-w-0">
                 {/* 左側: 動画プレイヤー（メイン） */}
-                <div className="lg:col-span-2 flex flex-col min-h-0 min-w-0 w-full">
+                <div className="lg:col-span-2 flex flex-col min-h-0 min-w-0 w-full gap-2">
                     <VideoPlayer videoUrl={result.videoUrl} />
+                    
+                    {/* 動画ダウンロードボタン */}
+                    <button
+                        type="button"
+                        onClick={handleDownload}
+                        className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm rounded"
+                    >
+                        動画をダウンロード
+                    </button>
                 </div>
 
                 {/* 右側: 編集エリア */}

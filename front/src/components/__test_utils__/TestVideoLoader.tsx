@@ -1,10 +1,11 @@
 /**
  * ⚠️ テスト用コンポーネント ⚠️
  * 
- * このファイルは動画生成機能のレビュー・動作確認のための一時的なものです。
+ * このファイルは動画ダウンロード機能のレビュー・動作確認のための一時的なものです。
+ * レビュー完了後、このファイルごと削除してください。
  * 
  * 目的：
- * - 既存の動画を読み込んでPrompt確認画面から動画生成までのフローをテストする
+ * - 既存の動画を読み込んでダウンロード機能をテストする
  * - バックエンドで新規に動画を生成せずに動作確認できるようにする
  * 
  * 削除時の影響：
@@ -38,7 +39,7 @@ export function TestVideoLoader({ onLoadVideo, isLoading }: TestVideoLoaderProps
                 <p className="text-xs font-semibold text-yellow-800">テスト用機能</p>
             </div>
             <p className="text-xs text-gray-600 mb-2">
-                既存の動画を読み込んでPrompt確認画面からのフローをテストします
+                既存の動画を読み込んでダウンロード機能をテストします
             </p>
             <p className="text-xs text-gray-500 mb-2">
                 動画ID: <code className="bg-gray-100 px-1 rounded">{TEST_VIDEO_ID}</code>
@@ -49,7 +50,7 @@ export function TestVideoLoader({ onLoadVideo, isLoading }: TestVideoLoaderProps
                 disabled={isLoading}
                 className="px-4 py-2 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
-                {isLoading ? '読み込み中...' : 'テスト動画を読み込む'}
+                {isLoading ? '読み込み中...' : '動画を読み込む'}
             </button>
         </div>
     )

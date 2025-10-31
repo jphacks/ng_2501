@@ -10,6 +10,9 @@ import {
 } from '../datas/Video'
 import fetchVideo from './fetchVideo'
 
+// ⚠️ テスト用import（開発環境のみ）
+import { useTestVideoGeneration } from './__test_utils__/useTestVideoGeneration'
+
 type AnimationResponse = {
     ok?: boolean
     video_id?: string
@@ -55,6 +58,9 @@ const createVideoGenerationPrompt = (request: VideoGenerationRequest, enhancePro
  * UseCase層: 動画生成のビジネスロジックとAPI処理
  */
 export const useVideoGeneration = () => {
+    // ⚠️ 開発環境: テスト用hookも初期化（本番環境では null）
+    const testHook = process.env.NODE_ENV === 'development' ? useTestVideoGeneration() : null
+
     const [isGenerating, setIsGenerating] = useState(false)
     const [prompt, setPrompt] = useState<VideoGenerationPrompt | null>(null)
     const [result, setResult] = useState<VideoResult | null>(null)
@@ -194,6 +200,11 @@ export const useVideoGeneration = () => {
      * 動画を生成（プロンプト確認画面から呼ばれる）
      */
     const generateVideo = async (editedPrompt: VideoGenerationPrompt) => {
+        // ⚠️ テストモード判定：testHookにpromptがある場合はテストフロー
+        if (testHook?.prompt) {
+            return await testHook.generateVideo(editedPrompt)
+        }
+
         const videoId = createVideoId()
         
         setIsGenerating(true)
@@ -222,6 +233,16 @@ export const useVideoGeneration = () => {
         } finally {
             setIsGenerating(false)
         }
+    }
+
+    /**
+     * ⚠️ テスト用：既存の動画を読み込む（開発環境のみ）
+     */
+    const loadExistingVideo = async (videoId: string, promptText: string) => {
+        if (testHook) {
+            return await testHook.loadExistingVideo(videoId, promptText)
+        }
+        throw new Error('テストモードは開発環境でのみ利用可能です')
     }
 
     /**
@@ -279,17 +300,26 @@ export const useVideoGeneration = () => {
         setResult(null)
         setError(null)
         lastRequestRef.current = null
+        
+        // ⚠️ テストhookもクリア
+        testHook?.clearResult()
     }
 
+    // ⚠️ テストhookが動いている場合はそちらの状態を優先
+    const activePrompt = testHook?.prompt || prompt
+    const activeResult = testHook?.result || result
+    const activeIsGenerating = testHook?.isGenerating || isGenerating
+
     return {
-        isGenerating,
-        prompt,
-        result,
+        isGenerating: activeIsGenerating,
+        prompt: activePrompt,
+        result: activeResult,
         error,
         startVideoGeneration,
         generatePrompt,
         generateVideo,
         editVideo,
+        loadExistingVideo,  // ⚠️ テスト用
         clearResult,
     }
 }

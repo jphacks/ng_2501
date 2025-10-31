@@ -52,6 +52,33 @@ const createVideoGenerationPrompt = (request: VideoGenerationRequest, enhancePro
 }
 
 /**
+ * ⚠️ テスト用: サンプルのmanimコードを生成
+ */
+const createSampleManimCode = (promptText: string): string => {
+    const truncatedText = promptText.length > 50 ? `${promptText.substring(0, 50)}...` : promptText
+    return `from manim import *
+
+class MathAnimation(Scene):
+    def construct(self):
+        # テスト用動画: ${truncatedText}
+        
+        # タイトル
+        title = Text("数式アニメーション", font_size=48)
+        self.play(Write(title))
+        self.wait(1)
+        self.play(FadeOut(title))
+        
+        # 数式の表示（例）
+        equation = MathTex(r"\\\\int_0^1 x^2 dx = \\\\frac{1}{3}")
+        self.play(Write(equation))
+        self.wait(2)
+        
+        # フェードアウト
+        self.play(FadeOut(equation))
+        self.wait(1)`
+}
+
+/**
  * UseCase層: 動画生成のビジネスロジックとAPI処理
  */
 export const useVideoGeneration = () => {
@@ -294,49 +321,27 @@ export const useVideoGeneration = () => {
      */
     const loadExistingVideo = async (videoId: string, promptText: string = '既存の動画') => {
         try {
-            setIsGenerating(true)
-            setError(null)
-            setPrompt(null)
-            setResult(null)
-
             // ⚠️ テスト用: videoIdを保持（generateVideo で使用）
             testVideoIdRef.current = videoId
 
             // サンプルのmanimCodeを生成
-            const sampleManimCode = `from manim import *
-
-class MathAnimation(Scene):
-    def construct(self):
-        # テスト用動画: ${promptText.substring(0, 50)}${promptText.length > 50 ? '...' : ''}
-        
-        # タイトル
-        title = Text("数式アニメーション", font_size=48)
-        self.play(Write(title))
-        self.wait(1)
-        self.play(FadeOut(title))
-        
-        # 数式の表示（例）
-        equation = MathTex(r"\\\\int_0^1 x^2 dx = \\\\frac{1}{3}")
-        self.play(Write(equation))
-        self.wait(2)
-        
-        # フェードアウト
-        self.play(FadeOut(equation))
-        self.wait(1)`
+            const sampleManimCode = createSampleManimCode(promptText)
             
-            const prompt: VideoGenerationPrompt = {
+            const generatedPrompt: VideoGenerationPrompt = {
                 prompt: promptText,
                 originalText: promptText,
                 manimCode: sampleManimCode,
             }
 
-            setPrompt(prompt)
-            return prompt
+            // 状態をまとめて更新（レンダリングを最小化）
+            setPrompt(generatedPrompt)
+            setResult(null)
+            setError(null)
+            
+            return generatedPrompt
         } catch (err) {
             setHandledError(err, 'プロンプト生成中にエラーが発生しました')
             throw err
-        } finally {
-            setIsGenerating(false)
         }
     }
 

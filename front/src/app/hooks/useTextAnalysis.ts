@@ -8,7 +8,7 @@ import {
     type VideoResult,
     validateVideoGeneration,
 } from '../datas/Video'
-import fetchVideo from '../services/fetchVideo'
+import fetchVideo from './fetchVideo'
 
 type AnimationResponse = {
     ok?: boolean
@@ -194,7 +194,34 @@ export const useVideoGeneration = () => {
      * 動画を生成
      */
     const generateVideo = async (editedPrompt: VideoGenerationPrompt) => {
-        return startVideoGeneration(editedPrompt.originalText, editedPrompt.prompt)
+        const videoId = createVideoId()
+        
+        setIsGenerating(true)
+        setError(null)
+
+        try {
+            // バックエンドに動画生成をリクエスト
+            await requestAnimation(videoId, editedPrompt.originalText, editedPrompt.prompt)
+            
+            // 生成された動画を取得
+            const videoUrl = await replaceVideoUrl(videoId)
+            
+            const generatedResult: VideoResult = {
+                videoId,
+                videoUrl,
+                prompt: editedPrompt,
+                generatedAt: new Date(),
+            }
+
+            setPrompt(editedPrompt)
+            setResult(generatedResult)
+            return generatedResult
+        } catch (err) {
+            setHandledError(err, '動画生成中にエラーが発生しました')
+            throw err
+        } finally {
+            setIsGenerating(false)
+        }
     }
 
     /**

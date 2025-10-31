@@ -5,7 +5,7 @@
 #   Right: stable readout panel (a, b, c, and Vertex) with non-overlapping
 #   numbers that stay anchored next to their labels while values update.
 #
-# COMPAT NOTES (Manim Community v0.19)
+# COMPAT NOTES (Manim Community v0.18.1)
 #   - Use x_range / y_range (no x_min/x_max).
 #   - Prefer MathTex for math content to avoid “Missing $” errors.
 #   - Keep DecimalNumber sizes via constructor (font_size=...) or set(...).

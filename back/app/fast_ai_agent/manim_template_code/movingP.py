@@ -3,7 +3,7 @@
 #   Point P moves A->B->C->D at 1 cm/s across rectangle edges. Left: geometry.
 #   Right: area(△ADP) vs time with guide lines and a prefix curve.
 #
-# 0.19-SAFE NOTES
+# 0.18.1 NOTES
 #   - Background via self.camera.background_color
 #   - Axes without tips; text colors tuned for black bg
 # -----------------------------------------------------------------------------

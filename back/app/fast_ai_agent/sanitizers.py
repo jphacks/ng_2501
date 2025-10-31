@@ -126,9 +126,9 @@ def _fix_axes_minmax(args: str) -> str:
     return out
 
 
-def patch_manim_019_compat(code: str) -> tuple[str, List[str]]:
+def patch_manim_018_compat(code: str) -> tuple[str, List[str]]:
     """
-    Heuristically rewrite common pre-0.19 / non-0.19 patterns to be safer for manim==0.19.0,
+    Heuristically rewrite common patterns to be safer for manim==0.18.1,
     and inject safe helpers for Angle + angle labels.
 
     Returns:
@@ -151,7 +151,7 @@ def patch_manim_019_compat(code: str) -> tuple[str, List[str]]:
         log.append("Axes(): *_min/*_max -> *_range patched")
     code = new_code
 
-    # --- HGroup -> VGroup (HGroup doesn't exist in 0.19) ---
+    # --- HGroup -> VGroup (HGroup is not available in 0.18.1) ---
     before = code
     code = re.sub(r"\bHGroup\s*\(", "VGroup(", code)
     if code != before:
@@ -175,18 +175,6 @@ def patch_manim_019_compat(code: str) -> tuple[str, List[str]]:
     if code != before:
         log.append("rate_func: CamelCase -> snake_case patched (sine easings)")
 
-    # --- aligned_edge=CENTER is gone in arrange() etc. Just strip it. ---
-    before = code
-    code = re.sub(r",\s*aligned_edge\s*=\s*CENTER\b", "", code)
-    if code != before:
-        log.append("arrange(..., aligned_edge=CENTER) removed")
-
-    # --- align_to(..., CENTER) -> align_to(..., ORIGIN) ---
-    before = code
-    code = re.sub(r"(\balign_to\([^,]+,\s*)CENTER\b", r"\1ORIGIN", code)
-    if code != before:
-        log.append("align_to(..., CENTER) -> align_to(..., ORIGIN) patched")
-
     # --- Inject _safe_Angle / _safe_angle_label if Angle() is used ---
     # IMPORTANT:
     # 1. We FIRST rewrite user code Angle(...) -> _safe_Angle(...),
@@ -200,7 +188,7 @@ def patch_manim_019_compat(code: str) -> tuple[str, List[str]]:
         helper = (
             textwrap.dedent(
                 r"""
-            # --- injected: safe Angle wrapper & label helper (manim 0.19.0) ---
+            # --- injected: safe Angle wrapper & label helper (manim 0.18.1) ---
             _safe_Angle_injected = True
 
             def _safe_Angle(obj1, obj2, **kwargs):

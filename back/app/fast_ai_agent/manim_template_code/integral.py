@@ -3,7 +3,7 @@
 #   Riemann rectangles (midpoint rule) for f(x)=0.5x^2+1 on [0,3],
 #   increase n, then morph into filled area and show n→∞.
 #
-# 0.19-SAFE NOTES
+# 0.18.1 NOTES
 #   - x_range/y_range usage
 #   - background via self.camera.background_color
 #   - avoid flicker by pre-creating filled area, then fade

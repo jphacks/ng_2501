@@ -12,7 +12,7 @@ prompt2 = """
 You are an excellent expart for generating Manim code.
 Please output executable Python code for Manim based on the following instructions.
 Do not include any unnecessary explanations other than the code.
-manim version is 0.18.0. our python runtime enviroment is only installed manim and numpy and matplotlib. 
+manim version is 0.18.1. our python runtime enviroment is only installed manim and numpy and matplotlib. 
 You not use any other library.
 It is dengeous to use numpy and matplotlib defult function variable
 If you write latex code, you should use r"" for raw string. for example r"\\frac{{a}}{{b}}"
@@ -36,7 +36,7 @@ class GeneratedScene(Scene):
 prompt1 = """
 You are a expert Manim script fixer. Based on the following error message, please provide a fix for the Manim script.
 You had to provide how to instruction to fix the script.
-manim version is 0.18.0. our python runtime enviroment is only installed manim and numpy and matplotlib. 
+manim version is 0.18.1. our python runtime enviroment is only installed manim and numpy and matplotlib. 
 You not use any other library.
 You shold maintain the same structure of the script and same content
 Script : 
@@ -51,7 +51,7 @@ You are an excellent assistant for generating Manim code.
 Please output executable Python code for Manim based on the following instructions and instructions.
 Do not include any unnecessary explanations other than the code because you are manim expert.
 Always use from manim import * and class GeneratedScene(Scene): to create the scene.
-manim version is 0.18.0. our python runtime enviroment is only installed manim and numpy and matplotlib. 
+manim version is 0.18.1. our python runtime enviroment is only installed manim and numpy and matplotlib. 
 You not use any other library.
 
 Instructions:
@@ -106,4 +106,3 @@ ja_to_en = """
 translate the following text from Japanese to English. You only need to provide the translation of the text.
 text: {user_prompt}
 """
-

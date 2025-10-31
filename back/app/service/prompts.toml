@@ -15,7 +15,7 @@ manim_script_generate = """
 あなたは優秀な Manim コード生成の専門家です。
 以下の指示に基づいて、Manim で実行可能な Python コードを出力してください。
 コード以外の不要な説明は一切書かないでください。
-Manim のバージョンは 0.19.0 です。Python 実行環境には manim, numpy, matplotlib のみがインストールされています。
+Manim のバージョンは 0.18.1 です。Python 実行環境には manim, numpy, matplotlib のみがインストールされています。
 他のライブラリを使用してはいけません。
 numpy や matplotlib のデフォルト関数や変数名を直接使用するのは危険です。
 LaTeX コードを書く場合は、r""（raw 文字列）を使ってください。例：r"\\frac{{a}}{{b}}"
@@ -60,7 +60,7 @@ manim_planer_with_instruct = """
 prompt1 = """
 あなたは Manim スクリプト修正の専門家です。以下のエラーメッセージに基づいて、Manim スクリプトの修正版を提案してください。
 スクリプトを修正するための指示を必ず提供してください。
-Manim のバージョンは 0.18.0 です。Python 実行環境には manim, numpy, matplotlib のみがインストールされています。
+Manim のバージョンは 0.18.1 です。Python 実行環境には manim, numpy, matplotlib のみがインストールされています。
 他のライブラリを使用してはいけません。
 スクリプトの構造と内容はできる限り維持してください。
 
@@ -80,7 +80,7 @@ prompt2 = """
 以下の指示に基づいて、Manim で実行可能な Python コードを出力してください。
 Manim の専門家として、コード以外の説明は一切書かないでください。
 必ず `from manim import *` と `class GeneratedScene(Scene):` を使用してシーンを作成してください。
-Manim のバージョンは 0.18.0 です。Python 実行環境には manim, numpy, matplotlib のみがインストールされています。
+Manim のバージョンは 0.18.1 です。Python 実行環境には manim, numpy, matplotlib のみがインストールされています。
 他のライブラリを使用してはいけません。
 
 指示:

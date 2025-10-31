@@ -3,7 +3,7 @@
 #   Discriminant D = b^2 - 4ac (a=1,b=0) controls x-axis intersections of
 #   y = x^2 + c. Animate c: 2 -> 0 -> -3, show cases D<0, D=0, D>0 clearly.
 #
-# 0.19-SAFE NOTES
+# 0.18.1 NOTES
 #   - x_range/y_range usage
 #   - background via self.camera.background_color
 #   - labels auto-fit into a rounded box; no overlaps

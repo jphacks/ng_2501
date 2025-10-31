@@ -3,7 +3,7 @@
 #   θ from 0° to 360° in 30° steps. Left: unit circle + right triangle marker.
 #   Right: text readouts (θ, sinθ, cosθ) updated with TransformMatchingTex.
 #
-# 0.19-SAFE NOTES
+# 0.18.1 NOTES
 #   - Radians internally, degrees for labels via np.deg2rad/np.degrees
 #   - Background via self.camera.background_color (BLACK)
 # -----------------------------------------------------------------------------

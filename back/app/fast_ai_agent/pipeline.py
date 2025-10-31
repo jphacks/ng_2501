@@ -12,7 +12,7 @@ from .prompts import PromptStore, load_prompt_store
 from .sanitizers import (
     ban_tex_usage,
     force_class_name,
-    patch_manim_019_compat,
+    patch_manim_018_compat,
     py_compile_check,
     sanitize,
     strict_guard_check,
@@ -98,7 +98,7 @@ class FastAIPipeline:
         writer.write("raw_code.txt", response)
         code = _normalize_generated_code(response)
         code = sanitize(code)
-        code, compat_log = patch_manim_019_compat(code)
+        code, compat_log = patch_manim_018_compat(code)
         if compat_log:
             writer.write("compat_patches.log", "\n".join(compat_log))
         return code

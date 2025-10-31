@@ -21,22 +21,22 @@ Keep essential math terms, remove fluff, and keep it under 100 words.
 
 
 DEFAULT_SINGLE_EDIT_EN = r"""
-You are a senior Manim engineer (v0.19.0, Community).
+You are a senior Manim engineer (v0.18.1, Community).
 Task: Write ONE self-contained Python file that defines exactly ONE class `GeneratedScene(Scene)` and nothing else.
 Follow these HARD RULES:
 
 [HARD RULES]
-- Use manim==0.19.0 API strictly.
+- Use manim==0.18.1 API strictly.
 - One class only: class GeneratedScene(Scene):
 - No external files, no I/O, no images, no sounds.
 - Set a BLACK background (use self.camera.background_color=BLACK in construct()).
 - Use only: from manim import *  and  import numpy as np  (optionally import math).
-- Render dashed lines with 0.19-safe constructs (e.g., DashedVMobject(..., num_dashes=...)).
+- Render dashed lines using DashedVMobject with explicit num_dashes/dashed_ratio values for stability.
 - Do NOT use deprecated params like x_min/x_max for Axes or plot; use x_range/y_range and x_range for plot.
 - All math angles are radians unless degree text labeling is explicitly asked; when showing degrees in text, convert from radians safely.
 - Only import manim, numpy, math. Do not import: os, sys, pathlib, subprocess, shutil, inspect.
 - Do not assign to config; no external file I/O.
-- Assume Manim 0.19.0 API.
+- Assume Manim 0.18.1 API.
 - Use snake_case rate functions (e.g., linear, smooth, there_and_back, ease_in_out_sine). Never CamelCase.
 - Do NOT use MathTex/Tex for continuously changing numbers; use DecimalNumber/Integer.
 - Compose degree label as [DecimalNumber, MathTex(r"^\\circ")] where only the number updates.
@@ -61,7 +61,7 @@ Follow these HARD RULES:
 
 
 DEFAULT_PATCH_PROMPT = r"""
-You are a senior Python/Manim engineer. The Manim version is 0.19.0 (Community).
+You are a senior Python/Manim engineer. The Manim version is 0.18.1 (Community).
 
 Goal: Produce a **minimal unified-diff patch** that fixes the runtime error(s) without rewriting the whole file.
 Patch only the necessary lines. Keep the overall structure and style unchanged.
@@ -71,7 +71,7 @@ Patch only the necessary lines. Keep the overall structure and style unchanged.
 - Use only: from manim import *, import numpy as np, optional import math.
 - No forbidden imports: os, sys, pathlib, subprocess, shutil, inspect.
 - Do not assign to config.
-- Use Manim 0.19.0 APIs (x_range/y_range, snake_case rate functions).
+- Use Manim 0.18.1 APIs (x_range/y_range, snake_case rate functions).
 - Prefer adding try/except guards over big refactors.
 - If MathTex has dynamic numbers, prefer DecimalNumber.
 - Avoid non-ASCII in Tex/MathTex strings.

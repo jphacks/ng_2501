@@ -3,8 +3,8 @@
 #   Parallelogram rule: show A, B, A+B with robust dashed guides and
 #   stable numeric readouts (A=(ax,ay), B=(bx,by), A+B=(...)).
 #
-# 0.19-SAFE NOTES
-#   - DashedVMobject(..., num_dashes=...) helper for 0.19 compatibility
+# 0.18.1 NOTES
+#   - DashedVMobject(..., num_dashes=...) helper for 0.18.1 compatibility
 #   - Background via self.camera.background_color (BLACK)
 #   - Right readout panel pinned at DR to avoid overlaps with the plane
 # -----------------------------------------------------------------------------
@@ -82,7 +82,7 @@ class GeneratedScene(Scene):
             )
         )
 
-        # === Dashed helpers (v0.19: use num_dashes) ===
+        # === Dashed helpers (v0.18.1: explicit num_dashes) ===
         def dashed_line(p1, p2, color=WHITE, width=2, dashed_ratio=0.55, density=8, z=5):
             base = Line(p1, p2)
             n = max(2, int(base.get_length() * density))

@@ -3,7 +3,7 @@
 #   Synchronize a moving point on the unit circle with graphs of sin and cos.
 #   π-ticks on the right; projections and arc on the left.
 #
-# 0.19-SAFE NOTES
+# 0.18.1 NOTES
 #   - Radians throughout (TAU)
 #   - Background via self.camera.background_color (BLACK)
 #   - Dynamic vertical alignment so y=0 aligns across panels

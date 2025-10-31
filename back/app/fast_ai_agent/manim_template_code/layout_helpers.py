@@ -1,6 +1,6 @@
 # -----------------------------------------------------------------------------
 # PURPOSE
-#   Small utility helpers for layout and clipping that are 0.19-safe.
+#   Small utility helpers for layout and clipping that are 0.18.1-ready.
 #   NOTE: For code generation, prefer copying these functions into the output
 #   file (no external imports). Keep this file only as a human-readable source.
 # -----------------------------------------------------------------------------

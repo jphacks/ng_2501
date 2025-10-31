@@ -2,7 +2,7 @@
 # PURPOSE
 #   Tangent line to y=x^2 at a moving point A. Right panel shows x and slope.
 #
-# 0.19-SAFE NOTES
+# 0.18.1 NOTES
 #   - Use x_range/y_range (not x_min/x_max)
 #   - Background set via self.camera.background_color
 #   - No external imports besides manim/numpy/math

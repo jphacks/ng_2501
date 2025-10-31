@@ -13,6 +13,7 @@ from manim import *
 import numpy as np
 import math
 
+
 # ---- Helper snippets (copy if needed) ---------------------------------------
 def fit_to_frame(mobj: Mobject, margins=(0.6, 0.4)) -> Mobject:
     """Scale+center mobj to fit into the frame with given (x,y) margins."""
@@ -23,6 +24,7 @@ def fit_to_frame(mobj: Mobject, margins=(0.6, 0.4)) -> Mobject:
     scale = min(max_w / mobj.width, max_h / mobj.height, 1.0)
     mobj.scale(scale).move_to(ORIGIN)
     return mobj
+
 
 def clip_line_to_box(m: float, b: float, xmin: float, xmax: float, ymin: float, ymax: float):
     """Return two points of y=mx+b clipped to the box; None if no visible segment."""
@@ -57,6 +59,7 @@ def clip_line_to_box(m: float, b: float, xmin: float, xmax: float, ymin: float, 
                 best_d = d2
                 best = (uniq[i], uniq[j])
     return best
+
 
 class GeneratedScene(Scene):
     def construct(self):
@@ -94,14 +97,9 @@ class GeneratedScene(Scene):
         x_tracker = ValueTracker(START_X)
 
         point_A = always_redraw(
-            lambda: Dot(
-                axes.c2p(x_tracker.get_value(), f(x_tracker.get_value())),
-                color=WHITE
-            ).scale(0.9)
+            lambda: Dot(axes.c2p(x_tracker.get_value(), f(x_tracker.get_value())), color=WHITE).scale(0.9)
         )
-        label_A = always_redraw(
-            lambda: Text("A", font_size=28, color=WHITE).next_to(point_A, UR, buff=0.1)
-        )
+        label_A = always_redraw(lambda: Text("A", font_size=28, color=WHITE).next_to(point_A, UR, buff=0.1))
 
         def create_tangent_line():
             x_val = x_tracker.get_value()
@@ -112,10 +110,7 @@ class GeneratedScene(Scene):
             if pts:
                 (x1, y1), (x2, y2) = pts
                 color = RED if slope > EPS else (BLUE if slope < -EPS else GRAY_B)
-                return Line(
-                    axes.c2p(x1, y1), axes.c2p(x2, y2),
-                    color=color, stroke_width=4
-                )
+                return Line(axes.c2p(x1, y1), axes.c2p(x2, y2), color=color, stroke_width=4)
             return VGroup()
 
         tangent_line = always_redraw(create_tangent_line)
@@ -138,7 +133,7 @@ class GeneratedScene(Scene):
 
         # ------------------------- DRAW & ANIMATE ----------------------------
         self.play(Create(axes), Write(x_label), Write(y_label), run_time=1.2)
-        self.play(Create(parabola), FadeIn(parabola_label, shift=UP*0.1), run_time=1.0)
+        self.play(Create(parabola), FadeIn(parabola_label, shift=UP * 0.1), run_time=1.0)
         self.add(point_A, label_A, tangent_line)
         self.play(FadeIn(right_panel, shift=LEFT), run_time=0.6)
         self.play(x_tracker.animate.set_value(END_X), run_time=6, rate_func=linear)

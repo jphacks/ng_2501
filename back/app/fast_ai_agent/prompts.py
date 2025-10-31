@@ -1,17 +1,16 @@
-# prompts.toml
-# ============================================================
-# Templates used by animate_math_gemini.py
-# - [ja2en].template: JP -> EN translation prompt
-# - [single_edit_en].template: final Manim code generation prompt
-#
-# NOTE:
-#   - Keep the placeholders EXACTLY as:
-#       {ja_text}, {single_request_en}, {code_bundles}
-#   - We set background to BLACK to match your project preference.
-# ============================================================
+from __future__ import annotations
 
-[ja2en]
-template = """
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict
+
+try:
+    import tomllib  # Python 3.11+
+except ModuleNotFoundError:  # pragma: no cover - fallback for <3.11
+    import tomli as tomllib  # type: ignore
+
+
+DEFAULT_JA2EN_PROMPT = """
 You are a precise technical translator and prompt composer.
 Translate the following Japanese description into concise English for a Manim scene request.
 Keep essential math terms, remove fluff, and keep it under 100 words.
@@ -20,8 +19,8 @@ Keep essential math terms, remove fluff, and keep it under 100 words.
 {ja_text}
 """
 
-[single_edit_en]
-template = """
+
+DEFAULT_SINGLE_EDIT_EN = r"""
 You are a senior Manim engineer (v0.19.0, Community).
 Task: Write ONE self-contained Python file that defines exactly ONE class `GeneratedScene(Scene)` and nothing else.
 Follow these HARD RULES:
@@ -38,13 +37,12 @@ Follow these HARD RULES:
 - Only import manim, numpy, math. Do not import: os, sys, pathlib, subprocess, shutil, inspect.
 - Do not assign to config; no external file I/O.
 - Assume Manim 0.19.0 API.
-- “Use snake_case rate functions (e.g., linear, smooth, there_and_back, ease_in_out_sine). Never CamelCase.”
+- Use snake_case rate functions (e.g., linear, smooth, there_and_back, ease_in_out_sine). Never CamelCase.
 - Do NOT use MathTex/Tex for continuously changing numbers; use DecimalNumber/Integer.
 - Compose degree label as [DecimalNumber, MathTex(r"^\\circ")] where only the number updates.
 - Avoid always_redraw for static objects; prefer one-time creation + add_updater to move/update.
 - Keep sin/cos graphs static; only move markers/guide lines with updaters.
 - Restrict color constants to: BLACK, WHITE, BLUE, BLUE_A, BLUE_C, GREEN, GREEN_C, ORANGE, RED, RED_C, TEAL, YELLOW.
-
 
 [HOW TO USE REFERENCES]
 - The reference code bundles below (multiple .py) are examples you can adapt.
@@ -61,8 +59,8 @@ Follow these HARD RULES:
 - The file must import from manim import * and define class GeneratedScene(Scene).
 """
 
-[patch]
-template = """
+
+DEFAULT_PATCH_PROMPT = r"""
 You are a senior Python/Manim engineer. The Manim version is 0.19.0 (Community).
 
 Goal: Produce a **minimal unified-diff patch** that fixes the runtime error(s) without rewriting the whole file.
@@ -93,3 +91,45 @@ Patch only the necessary lines. Keep the overall structure and style unchanged.
   @@ ...
 - Keep the patch as small as possible. Do not reformat unrelated lines.
 """
+
+
+def _load_prompts_file(path: Path | None) -> Dict[str, Any]:
+    if path is None or not path.exists():
+        return {}
+    try:
+        with path.open("rb") as fp:
+            return tomllib.load(fp)
+    except Exception:
+        return {}
+
+
+@dataclass
+class PromptStore:
+    ja2en: str
+    single_edit_en: str
+    patch: str
+
+    def build(self, template: str, **kwargs: Any) -> str:
+        try:
+            return template.format(**kwargs)
+        except KeyError as exc:
+            placeholder = "{" + str(exc) + "}"
+            return template.replace(placeholder, f"<missing:{exc}>")
+
+
+def load_prompt_store(prompts_path: Path | None) -> PromptStore:
+    raw = _load_prompts_file(prompts_path)
+
+    def _fetch(key: str, default: str) -> str:
+        value = raw.get(key, {})
+        if isinstance(value, dict):
+            template = value.get("template")
+            if isinstance(template, str) and template.strip():
+                return template
+        return default
+
+    return PromptStore(
+        ja2en=_fetch("ja2en", DEFAULT_JA2EN_PROMPT),
+        single_edit_en=_fetch("single_edit_en", DEFAULT_SINGLE_EDIT_EN),
+        patch=_fetch("patch", DEFAULT_PATCH_PROMPT),
+    )

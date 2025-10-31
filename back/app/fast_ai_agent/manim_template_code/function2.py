@@ -117,9 +117,7 @@ class GeneratedScene(Scene):
         """
         # Title + frame
         title = Text("Parameters & Vertex", font_size=30)
-        box = RoundedRectangle(
-            corner_radius=0.2, width=5.5, height=4.2, stroke_width=2, color=WHITE
-        )
+        box = RoundedRectangle(corner_radius=0.2, width=5.5, height=4.2, stroke_width=2, color=WHITE)
 
         # Equation line (1 size up as requested)
         eq_line = MathTex(r"y = a x^2 + b x + c", font_size=32)
@@ -165,17 +163,13 @@ class GeneratedScene(Scene):
 
         # Stack lines under the title and place inside the box
         title.next_to(box.get_top(), DOWN, buff=0.3)
-        body = VGroup(eq_line, a_line, b_line, c_line, vertex_line).arrange(
-            DOWN, aligned_edge=LEFT, buff=0.3
-        )
+        body = VGroup(eq_line, a_line, b_line, c_line, vertex_line).arrange(DOWN, aligned_edge=LEFT, buff=0.3)
         body.next_to(title, DOWN, aligned_edge=LEFT, buff=0.4)
         body.shift(RIGHT * 0.2)  # inner left padding
 
         return VGroup(box, title, body)
 
-    def _name_value_row(
-        self, name_tex: str, tracker: ValueTracker, font_size: int = 28
-    ) -> VGroup:
+    def _name_value_row(self, name_tex: str, tracker: ValueTracker, font_size: int = 28) -> VGroup:
         """
         Build a single row like:  a = 1.23
         The DecimalNumber is updated every frame and kept anchored to the label.

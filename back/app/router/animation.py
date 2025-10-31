@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, JSONResponse 
 from pydantic import BaseModel 
 
+from app.fast_ai_agent import FastAIAgentService
 from app.service.agent import ManimAnimationService
 from app.service.rag_agent import ManimAnimationOnRAGService
 from app.service.regacy_agent import RegacyManimAnimationService
@@ -38,6 +39,7 @@ class SuccessResponse(BaseModel):
 
 # ---------- Service ----------
 service = ManimAnimationService()
+fast_ai_service = FastAIAgentService()
 
 
 # ---------- Helpers ----------
@@ -147,12 +149,12 @@ async def generate_rag_animation(initial_prompt: InitialPrompt):
         )
 
 @router.post("/api/animation")
-async def generate_regacy_animation(initial_prompt:InitialPrompt):
+async def generate_regacy_animation(initial_prompt: InitialPrompt):
     service = RegacyManimAnimationService()
     try:
         is_success = service.generate_animation_with_error_handling(
             file_name=initial_prompt.video_id,
-            user_prompt=initial_prompt.content,           
+            user_prompt=initial_prompt.content,
             enhance_prompt=initial_prompt.enhance_prompt or "",
         )
     except Exception as e:
@@ -165,15 +167,44 @@ async def generate_regacy_animation(initial_prompt:InitialPrompt):
             video_id=initial_prompt.video_id,
             message="done",
         )
-    elif is_success=="bad_request":
+    if is_success == "bad_request":
         return SuccessResponse(
             ok=False,
             video_id=initial_prompt.video_id,
-            message="bad"
+            message="bad",
         )
-    else:
+    return SuccessResponse(
+        ok=False,
+        video_id=initial_prompt.video_id,
+        message="failed",
+    )
+
+
+@router.post("/api/animation_fast_ai", response_model=SuccessResponse, summary="高速ジェミニエージェントで動画生成")
+async def generate_fast_ai_animation(initial_prompt: InitialPrompt):
+    try:
+        is_success = fast_ai_service.generate_videos(
+            video_id=initial_prompt.video_id,
+            content=initial_prompt.content,
+            enhance_prompt=initial_prompt.enhance_prompt or "",
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    if is_success == "Success":
+        return SuccessResponse(
+            ok=True,
+            video_id=initial_prompt.video_id,
+            message="done",
+        )
+    if is_success == "bad_request":
         return SuccessResponse(
             ok=False,
             video_id=initial_prompt.video_id,
-            message="failed",
+            message="bad",
         )
+    return SuccessResponse(
+        ok=False,
+        video_id=initial_prompt.video_id,
+        message="failed",
+    )

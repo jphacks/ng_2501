@@ -33,7 +33,7 @@ RUN wget https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-amd64-static.tar.xz 
 
 # TeX Live（必要最小限）
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    texlive-base texlive-latex-base texlive-latex-extra texlive-fonts-recommended latexmk && \
+    texlive-full texlive-lang-cjk && \
     rm -rf /var/lib/apt/lists/*
 
 # uv を導入（root の ~/.local/bin/uv に入る）

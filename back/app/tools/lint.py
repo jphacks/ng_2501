@@ -53,13 +53,13 @@ def run_pyright(path: str | Path):
         if "Wildcard import" not in d["message"]
     ]
 
-    print(f"✅ Pyright finished: {summary.get('filesAnalyzed', 0)} files analyzed.")
-    print(f"❌ {len([d for d in filtered_diagnostics if d['severity']=='error'])} errors "
-          f"| ⚠️ {len([d for d in filtered_diagnostics if d['severity']=='warning'])} warnings\n")
+    print(f" Pyright finished: {summary.get('filesAnalyzed', 0)} files analyzed.")
+    print(f" {len([d for d in filtered_diagnostics if d['severity']=='error'])} errors "
+          f"|  {len([d for d in filtered_diagnostics if d['severity']=='warning'])} warnings\n")
 
     # --- 詳細なエラー出力 ---
     if filtered_diagnostics:
-        print("=== ⚠️ Pyright Diagnostics (filtered) ===")
+        print("===  Pyright Diagnostics (filtered) ===")
         for diag in filtered_diagnostics:
             file = Path(diag["file"]).name
             line = diag["range"]["start"]["line"] + 1
@@ -67,7 +67,7 @@ def run_pyright(path: str | Path):
             msg = diag["message"].split("\n")[0]
             print(f"{file}:{line} [{severity}] → {msg}")
     else:
-        print("🎉 No issues found by Pyright!")
+        print("No issues found by Pyright!")
 
     data["generalDiagnostics"] = filtered_diagnostics
     return data

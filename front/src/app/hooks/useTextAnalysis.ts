@@ -52,33 +52,6 @@ const createVideoGenerationPrompt = (request: VideoGenerationRequest, enhancePro
 }
 
 /**
- * ⚠️ テスト用: サンプルのmanimコードを生成
- */
-const createSampleManimCode = (promptText: string): string => {
-    const truncatedText = promptText.length > 50 ? `${promptText.substring(0, 50)}...` : promptText
-    return `from manim import *
-
-class MathAnimation(Scene):
-    def construct(self):
-        # テスト用動画: ${truncatedText}
-        
-        # タイトル
-        title = Text("数式アニメーション", font_size=48)
-        self.play(Write(title))
-        self.wait(1)
-        self.play(FadeOut(title))
-        
-        # 数式の表示（例）
-        equation = MathTex(r"\\\\int_0^1 x^2 dx = \\\\frac{1}{3}")
-        self.play(Write(equation))
-        self.wait(2)
-        
-        # フェードアウト
-        self.play(FadeOut(equation))
-        self.wait(1)`
-}
-
-/**
  * UseCase層: 動画生成のビジネスロジックとAPI処理
  */
 export const useVideoGeneration = () => {
@@ -88,7 +61,6 @@ export const useVideoGeneration = () => {
     const [error, setError] = useState<string | null>(null)
     const lastRequestRef = useRef<VideoGenerationRequest | null>(null)
     const videoUrlRef = useRef<string | null>(null)
-    const testVideoIdRef = useRef<string | null>(null) // ⚠️ テスト用: 既存動画のID
 
     useEffect(() => {
         return () => {
@@ -220,28 +192,19 @@ export const useVideoGeneration = () => {
 
     /**
      * 動画を生成（プロンプト確認画面から呼ばれる）
-     * テストフロー: testVideoIdRefがある場合は既存動画をfetch
-     * 通常フロー: バックエンドで新規生成
      */
     const generateVideo = async (editedPrompt: VideoGenerationPrompt) => {
+        const videoId = createVideoId()
+        
         setIsGenerating(true)
         setError(null)
 
         try {
-            let videoId: string
-            let videoUrl: string
-
-            // ⚠️ テストフロー: 既存動画のIDがある場合は、そのまま使用
-            if (testVideoIdRef.current) {
-                videoId = testVideoIdRef.current
-                videoUrl = await replaceVideoUrl(videoId)
-                testVideoIdRef.current = null // 使用後はクリア
-            } else {
-                // 通常フロー: バックエンドで新規生成
-                videoId = createVideoId()
-                await requestAnimation(videoId, editedPrompt.originalText, editedPrompt.prompt)
-                videoUrl = await replaceVideoUrl(videoId)
-            }
+            // バックエンドに動画生成をリクエスト
+            await requestAnimation(videoId, editedPrompt.originalText, editedPrompt.prompt)
+            
+            // 生成された動画を取得
+            const videoUrl = await replaceVideoUrl(videoId)
             
             const generatedResult: VideoResult = {
                 videoId,
@@ -304,48 +267,6 @@ export const useVideoGeneration = () => {
     }
 
     /**
-     * ⚠️ テスト用（Issue#56）
-     * 
-     * 既存の動画IDを保持してPrompt確認画面から始める
-     * 
-     * 目的：
-     * - バックエンドで新規に動画を生成せずにPrompt→Generating→Resultフローをテストする
-     * - Prompt画面で「動画を生成」ボタンを押すと、保持したvideoIdの既存動画をfetchする
-     * 
-     * 削除方法：
-     * 1. この関数全体を削除
-     * 2. return文から `loadExistingVideo` を削除
-     * 3. VideoGenerationFlow.tsx から呼び出しを削除
-     * 4. testVideoIdRef の定義を削除
-     * 5. generateVideo 内のテストフロー分岐を削除
-     */
-    const loadExistingVideo = async (videoId: string, promptText: string = '既存の動画') => {
-        try {
-            // ⚠️ テスト用: videoIdを保持（generateVideo で使用）
-            testVideoIdRef.current = videoId
-
-            // サンプルのmanimCodeを生成
-            const sampleManimCode = createSampleManimCode(promptText)
-            
-            const generatedPrompt: VideoGenerationPrompt = {
-                prompt: promptText,
-                originalText: promptText,
-                manimCode: sampleManimCode,
-            }
-
-            // 状態をまとめて更新（レンダリングを最小化）
-            setPrompt(generatedPrompt)
-            setResult(null)
-            setError(null)
-            
-            return generatedPrompt
-        } catch (err) {
-            setHandledError(err, 'プロンプト生成中にエラーが発生しました')
-            throw err
-        }
-    }
-
-    /**
      * 結果をクリア
      */
     const clearResult = () => {
@@ -358,7 +279,6 @@ export const useVideoGeneration = () => {
         setResult(null)
         setError(null)
         lastRequestRef.current = null
-        testVideoIdRef.current = null // ⚠️ テスト用IDもクリア
     }
 
     return {
@@ -370,7 +290,6 @@ export const useVideoGeneration = () => {
         generatePrompt,
         generateVideo,
         editVideo,
-        loadExistingVideo, // ⚠️ テスト用（Issue#56）
         clearResult,
     }
 }

@@ -6,7 +6,7 @@ import { Landing } from './landing/Landing'
 import { Prompt } from './prompt/Prompt'
 import { Result } from './result/Result'
 
-// ⚠️ テスト用import（Issue#56）
+// ⚠️ テスト用import（Issue#58）
 // この import を削除すると、テスト用ボタンが表示されなくなります
 import { TestVideoLoader } from './__test_utils__/TestVideoLoader'
 
@@ -28,7 +28,7 @@ export function VideoGenerationFlow() {
         return await generateVideo(editedPrompt)
     }
 
-    // ⚠️ テスト用（Issue#56）
+    // ⚠️ テスト用（Issue#58）
     const handleLoadExistingVideo = async (videoId: string, promptText: string) => {
         await loadExistingVideo(videoId, promptText)
     }
@@ -44,7 +44,7 @@ export function VideoGenerationFlow() {
             {/* 状態1: ランディング（テキスト入力） */}
             {isLanding && (
                 <Landing onSubmit={handleLandingSubmit} isGenerating={isGenerating} error={error}>
-                    {/* ⚠️ テスト用（Issue#56） */}
+                    {/* ⚠️ テスト用（Issue#58） */}
                     <TestVideoLoader onLoadVideo={handleLoadExistingVideo} isLoading={isGenerating} />
                 </Landing>
             )}

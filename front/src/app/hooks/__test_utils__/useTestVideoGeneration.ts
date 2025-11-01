@@ -77,6 +77,7 @@ export const useTestVideoGeneration = () => {
             const sampleManimCode = createSampleManimCode(promptText)
             
             const generatedPrompt: VideoGenerationPrompt = {
+                videoId,  // セッションIDとして使用
                 prompt: promptText,
                 originalText: promptText,
                 manimCode: sampleManimCode,

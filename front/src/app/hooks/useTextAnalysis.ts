@@ -37,7 +37,7 @@ const createVideoId = () => {
     return `video-${Date.now()}`
 }
 
-const createVideoGenerationPrompt = (request: VideoGenerationRequest, enhancePrompt?: string): VideoGenerationPrompt => {
+const createVideoGenerationPrompt = (videoId: string, request: VideoGenerationRequest, enhancePrompt?: string): VideoGenerationPrompt => {
     const sections: string[] = [request.text]
 
     if (request.videoPrompt && request.videoPrompt.trim().length > 0) {
@@ -49,8 +49,10 @@ const createVideoGenerationPrompt = (request: VideoGenerationRequest, enhancePro
     }
 
     return {
+        videoId,
         prompt: sections.join('\n\n'),
         originalText: request.text,
+        videoPrompt: request.videoPrompt,
     }
 }
 
@@ -149,7 +151,7 @@ export const useVideoGeneration = () => {
             setPrompt(null)
             setResult(null)
 
-            const nextPrompt = createVideoGenerationPrompt(request)
+            const nextPrompt = createVideoGenerationPrompt(videoId, request)
 
             await requestAnimation(videoId, request.text, request.videoPrompt)
             const videoUrl = await replaceVideoUrl(videoId)
@@ -175,16 +177,35 @@ export const useVideoGeneration = () => {
 
     /**
      * プロンプトを生成
+     * Landing画面で「動画生成」ボタンを押したときに呼ばれる
+     * - 動画ID発行
+     * - DB登録（教材作成セッション開始）
+     * - バックエンドがprompt.jsonを生成
+     * - prompt.jsonを取得してPrompt画面に表示
      */
     const generatePrompt = async (text: string, videoPrompt?: string) => {
         const request: VideoGenerationRequest = { text, videoPrompt }
         validateRequestOrThrow(request)
 
+        // ① 動画ID発行
+        const videoId = createVideoId()
+        
         setIsGenerating(true)
         setError(null)
 
         try {
-            const generatedPrompt = createVideoGenerationPrompt(request)
+            // TODO: バックエンドにDB登録リクエスト（教材作成セッション開始）
+            // この時点でバックエンドが tmp/{videoId}/prompt.json を生成する想定
+            // await createLearningMaterialSession(videoId, request)
+            
+            // TODO: prompt.jsonを取得して使用
+            // バックエンドAPI実装後: GET /api/prompt/{videoId} で prompt.json を取得
+            // 取得内容: { prompt, originalText, videoPrompt, manimCode }
+            // const generatedPrompt = await fetchPromptJson(videoId)
+            
+            // 暫定実装: prompt.jsonが生成されるまでの間はローカルで生成
+            const generatedPrompt = createVideoGenerationPrompt(videoId, request)
+            
             setPrompt(generatedPrompt)
             lastRequestRef.current = request
             return generatedPrompt
@@ -198,6 +219,9 @@ export const useVideoGeneration = () => {
 
     /**
      * 動画を生成（プロンプト確認画面から呼ばれる）
+     * - prompt.jsonに保存
+     * - 動画生成リクエスト
+     * - 生成された動画をパスに保存
      */
     const generateVideo = async (editedPrompt: VideoGenerationPrompt) => {
         // ⚠️ テストモード判定：testHookにpromptがある場合はテストフロー
@@ -205,16 +229,24 @@ export const useVideoGeneration = () => {
             return await testHook.generateVideo(editedPrompt)
         }
 
-        const videoId = createVideoId()
+        const videoId = editedPrompt.videoId
         
         setIsGenerating(true)
         setError(null)
 
         try {
-            // バックエンドに動画生成をリクエスト
+            // TODO: ① prompt.jsonに保存
+            // prompt.jsonの中身：
+            //   - プロンプト（manim生成用のプロンプト）
+            //   - 教材（originalText：Landingページの入力テキスト）
+            //   - 動画への追加指示（videoPrompt：任意）
+            // 保存場所: tmp/{videoId}/prompt.json
+            // await savePromptJson(videoId, editedPrompt)
+            
+            // ② バックエンドに動画生成をリクエスト
             await requestAnimation(videoId, editedPrompt.originalText, editedPrompt.prompt)
             
-            // 生成された動画を取得
+            // ③ 生成された動画を取得（パスに保存されたものを取得）
             const videoUrl = await replaceVideoUrl(videoId)
             
             const generatedResult: VideoResult = {
@@ -267,7 +299,7 @@ export const useVideoGeneration = () => {
         try {
             await requestAnimation(videoId, baseRequest.text, enhancePrompt)
             const videoUrl = await replaceVideoUrl(videoId)
-            const updatedPrompt = createVideoGenerationPrompt(baseRequest, enhancePrompt)
+            const updatedPrompt = createVideoGenerationPrompt(videoId, baseRequest, enhancePrompt)
 
             const updatedResult: VideoResult = {
                 videoId,

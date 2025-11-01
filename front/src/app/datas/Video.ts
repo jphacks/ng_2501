@@ -14,9 +14,11 @@ export interface VideoGenerationRequest {
  * AIが生成した中間プロンプト
  */
 export interface VideoGenerationPrompt {
-    prompt: string // 編集可能なプロンプト
+    videoId: string // 動画生成セッションID（Landingで生成、以降の処理で紐づけ）
+    prompt: string // 編集可能なプロンプト（manim生成用のプロンプト）
     manimCode?: string // manim原文（トグルで表示）
-    originalText: string // 原文
+    originalText: string // 原文（教材：Landingページの入力テキスト）
+    videoPrompt?: string // 動画への追加指示（任意）
 }
 
 /**

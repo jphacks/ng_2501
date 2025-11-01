@@ -8,7 +8,10 @@ import {
     type VideoResult,
     validateVideoGeneration,
 } from '../datas/Video'
-import fetchVideo from '../services/fetchVideo'
+import fetchVideo from './fetchVideo'
+
+// ⚠️ テスト用import（開発環境のみ）
+import { useTestVideoGeneration } from './__test_utils__/useTestVideoGeneration'
 
 type AnimationResponse = {
     ok?: boolean
@@ -34,7 +37,7 @@ const createVideoId = () => {
     return `video-${Date.now()}`
 }
 
-const createVideoGenerationPrompt = (request: VideoGenerationRequest, enhancePrompt?: string): VideoGenerationPrompt => {
+const createVideoGenerationPrompt = (videoId: string, request: VideoGenerationRequest, enhancePrompt?: string): VideoGenerationPrompt => {
     const sections: string[] = [request.text]
 
     if (request.videoPrompt && request.videoPrompt.trim().length > 0) {
@@ -46,8 +49,10 @@ const createVideoGenerationPrompt = (request: VideoGenerationRequest, enhancePro
     }
 
     return {
+        videoId,
         prompt: sections.join('\n\n'),
         originalText: request.text,
+        videoPrompt: request.videoPrompt,
     }
 }
 
@@ -55,6 +60,9 @@ const createVideoGenerationPrompt = (request: VideoGenerationRequest, enhancePro
  * UseCase層: 動画生成のビジネスロジックとAPI処理
  */
 export const useVideoGeneration = () => {
+    // ⚠️ 開発環境: テスト用hookも初期化（本番環境では null）
+    const testHook = process.env.NODE_ENV === 'development' ? useTestVideoGeneration() : null
+
     const [isGenerating, setIsGenerating] = useState(false)
     const [prompt, setPrompt] = useState<VideoGenerationPrompt | null>(null)
     const [result, setResult] = useState<VideoResult | null>(null)
@@ -143,7 +151,7 @@ export const useVideoGeneration = () => {
             setPrompt(null)
             setResult(null)
 
-            const nextPrompt = createVideoGenerationPrompt(request)
+            const nextPrompt = createVideoGenerationPrompt(videoId, request)
 
             await requestAnimation(videoId, request.text, request.videoPrompt)
             const videoUrl = await replaceVideoUrl(videoId)
@@ -169,16 +177,35 @@ export const useVideoGeneration = () => {
 
     /**
      * プロンプトを生成
+     * Landing画面で「動画生成」ボタンを押したときに呼ばれる
+     * - 動画ID発行
+     * - DB登録（教材作成セッション開始）
+     * - バックエンドがprompt.jsonを生成
+     * - prompt.jsonを取得してPrompt画面に表示
      */
     const generatePrompt = async (text: string, videoPrompt?: string) => {
         const request: VideoGenerationRequest = { text, videoPrompt }
         validateRequestOrThrow(request)
 
+        // ① 動画ID発行
+        const videoId = createVideoId()
+        
         setIsGenerating(true)
         setError(null)
 
         try {
-            const generatedPrompt = createVideoGenerationPrompt(request)
+            // TODO: バックエンドにDB登録リクエスト（教材作成セッション開始）
+            // この時点でバックエンドが tmp/{videoId}/prompt.json を生成する想定
+            // await createLearningMaterialSession(videoId, request)
+            
+            // TODO: prompt.jsonを取得して使用
+            // バックエンドAPI実装後: GET /api/prompt/{videoId} で prompt.json を取得
+            // 取得内容: { prompt, originalText, videoPrompt, manimCode }
+            // const generatedPrompt = await fetchPromptJson(videoId)
+            
+            // 暫定実装: prompt.jsonが生成されるまでの間はローカルで生成
+            const generatedPrompt = createVideoGenerationPrompt(videoId, request)
+            
             setPrompt(generatedPrompt)
             lastRequestRef.current = request
             return generatedPrompt
@@ -191,10 +218,63 @@ export const useVideoGeneration = () => {
     }
 
     /**
-     * 動画を生成
+     * 動画を生成（プロンプト確認画面から呼ばれる）
+     * - prompt.jsonに保存
+     * - 動画生成リクエスト
+     * - 生成された動画をパスに保存
      */
     const generateVideo = async (editedPrompt: VideoGenerationPrompt) => {
-        return startVideoGeneration(editedPrompt.originalText, editedPrompt.prompt)
+        // ⚠️ テストモード判定：testHookにpromptがある場合はテストフロー
+        if (testHook?.prompt) {
+            return await testHook.generateVideo(editedPrompt)
+        }
+
+        const videoId = editedPrompt.videoId
+        
+        setIsGenerating(true)
+        setError(null)
+
+        try {
+            // TODO: ① prompt.jsonに保存
+            // prompt.jsonの中身：
+            //   - プロンプト（manim生成用のプロンプト）
+            //   - 教材（originalText：Landingページの入力テキスト）
+            //   - 動画への追加指示（videoPrompt：任意）
+            // 保存場所: tmp/{videoId}/prompt.json
+            // await savePromptJson(videoId, editedPrompt)
+            
+            // ② バックエンドに動画生成をリクエスト
+            await requestAnimation(videoId, editedPrompt.originalText, editedPrompt.prompt)
+            
+            // ③ 生成された動画を取得（パスに保存されたものを取得）
+            const videoUrl = await replaceVideoUrl(videoId)
+            
+            const generatedResult: VideoResult = {
+                videoId,
+                videoUrl,
+                prompt: editedPrompt,
+                generatedAt: new Date(),
+            }
+
+            setPrompt(editedPrompt)
+            setResult(generatedResult)
+            return generatedResult
+        } catch (err) {
+            setHandledError(err, '動画生成中にエラーが発生しました')
+            throw err
+        } finally {
+            setIsGenerating(false)
+        }
+    }
+
+    /**
+     * ⚠️ テスト用：既存の動画を読み込む（開発環境のみ）
+     */
+    const loadExistingVideo = async (videoId: string, promptText: string) => {
+        if (testHook) {
+            return await testHook.loadExistingVideo(videoId, promptText)
+        }
+        throw new Error('テストモードは開発環境でのみ利用可能です')
     }
 
     /**
@@ -219,7 +299,7 @@ export const useVideoGeneration = () => {
         try {
             await requestAnimation(videoId, baseRequest.text, enhancePrompt)
             const videoUrl = await replaceVideoUrl(videoId)
-            const updatedPrompt = createVideoGenerationPrompt(baseRequest, enhancePrompt)
+            const updatedPrompt = createVideoGenerationPrompt(videoId, baseRequest, enhancePrompt)
 
             const updatedResult: VideoResult = {
                 videoId,
@@ -240,49 +320,6 @@ export const useVideoGeneration = () => {
     }
 
     /**
-     * ⚠️ テスト用（Issue#56）
-     * 
-     * 既存の動画を読み込む
-     * 
-     * 目的：
-     * - バックエンドで新規に動画を生成せずにダウンロード機能をテストする
-     * 
-     * 削除方法：
-     * 1. この関数全体を削除
-     * 2. return文から `loadExistingVideo` を削除
-     * 3. VideoGenerationFlow.tsx から呼び出しを削除
-     */
-    const loadExistingVideo = async (videoId: string, promptText: string = '既存の動画') => {
-        try {
-            setIsGenerating(true)
-            setError(null)
-
-            const videoUrl = await replaceVideoUrl(videoId)
-            
-            const prompt: VideoGenerationPrompt = {
-                prompt: promptText,
-                originalText: promptText,
-            }
-
-            const loadedResult: VideoResult = {
-                videoId,
-                videoUrl,
-                prompt,
-                generatedAt: new Date(),
-            }
-
-            setPrompt(prompt)
-            setResult(loadedResult)
-            return loadedResult
-        } catch (err) {
-            setHandledError(err, '動画の読み込み中にエラーが発生しました')
-            throw err
-        } finally {
-            setIsGenerating(false)
-        }
-    }
-
-    /**
      * 結果をクリア
      */
     const clearResult = () => {
@@ -295,18 +332,26 @@ export const useVideoGeneration = () => {
         setResult(null)
         setError(null)
         lastRequestRef.current = null
+        
+        // ⚠️ テストhookもクリア
+        testHook?.clearResult()
     }
 
+    // ⚠️ テストhookが動いている場合はそちらの状態を優先
+    const activePrompt = testHook?.prompt || prompt
+    const activeResult = testHook?.result || result
+    const activeIsGenerating = testHook?.isGenerating || isGenerating
+
     return {
-        isGenerating,
-        prompt,
-        result,
+        isGenerating: activeIsGenerating,
+        prompt: activePrompt,
+        result: activeResult,
         error,
         startVideoGeneration,
         generatePrompt,
         generateVideo,
         editVideo,
-        loadExistingVideo, // ⚠️ テスト用（Issue#56）
+        loadExistingVideo,  // ⚠️ テスト用
         clearResult,
     }
 }

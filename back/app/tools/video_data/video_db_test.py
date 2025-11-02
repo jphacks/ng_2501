@@ -34,13 +34,15 @@ class TestVideoDatabase(unittest.TestCase):
         # プロンプト確認画面への遷移時の動作
         self.video_db.generate_prompt()
 
+        video_id = self.video_db.generate_video_seq()
+
         # 動画生成処理のテスト
-        video_id = self.video_db.generate_video('test_data/video.mp4', 'test_data/prompt.json', 'test_data/manim_code.json')
+        video_id_check = self.video_db.generate_video(video_id, 'test_data/video.mp4', 'test_data/prompt.json', 'test_data/manim_code.json')
 
         # DBに正しく保存されたか確認
         conn = self.get_connection()
         cur = conn.cursor()
-        cur.execute('SELECT * FROM video WHERE video_id = ?', (video_id,))
+        cur.execute('SELECT * FROM video WHERE video_id = ?', (video_id_check,))
         row = cur.fetchone()
         conn.close()
 
@@ -67,19 +69,23 @@ class TestVideoDatabase(unittest.TestCase):
             'edit_time': None,      # 動的に生成されるためNoneで比較対象から除外
             'edit_count': 1
         }
+
+        # 初回動画のセットアップ
         self.video_db.generate_prompt()
-        self.video_db.generate_video('test_data/video.mp4', 'test_data/prompt.json', 'test_data/manim_code.json')
+        video_id_first = self.video_db.generate_video_seq()
+        self.video_db.generate_video(video_id_first, 'test_data/video.mp4', 'test_data/prompt.json', 'test_data/manim_code.json')
 
         # プロンプト確認画面への遷移時の動作
         generate_id = self.video_db.generate_prompt()
+        video_id_second = self.video_db.generate_video_seq()
 
         # 動画生成処理のテスト
-        video_id = self.video_db.generate_video('test_data/video.mp4', 'test_data/prompt.json', 'test_data/manim_code.json')
+        video_id_check = self.video_db.generate_video(video_id_second, 'test_data/video.mp4', 'test_data/prompt.json', 'test_data/manim_code.json')
 
         # DBに正しく保存されたか確認
         conn = self.get_connection()
         cur = conn.cursor()
-        cur.execute('SELECT * FROM video WHERE video_id = ?', (video_id,))
+        cur.execute('SELECT * FROM video WHERE video_id = ?', (video_id_check,))
         row = cur.fetchone()
         conn.close()
 
@@ -106,7 +112,8 @@ class TestVideoDatabase(unittest.TestCase):
             'edit_count': 2
         }
         self.video_db.generate_prompt()
-        self.video_db.generate_video('test_data/video.mp4', 'test_data/prompt.json', 'test_data/manim_code.json')
+        video_id_first = self.video_db.generate_video_seq()
+        self.video_db.generate_video(video_id_first, 'test_data/video.mp4', 'test_data/prompt.json', 'test_data/manim_code.json')
 
         # 動画編集処理のテスト
         new_video_id = self.video_db.edit_video(prior_video_id, new_video_path)

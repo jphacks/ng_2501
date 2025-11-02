@@ -25,7 +25,7 @@ class VideoDatabase:
             
             cur.execute('''
                 CREATE TABLE video (
-                    video_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    video_id INTEGER PRIMARY KEY,
                     generate_id INTEGER,
                     video_path TEXT,
                     prompt_id INTEGER,
@@ -44,7 +44,14 @@ class VideoDatabase:
                     generate_time TIMESTAMP
                 )
             ''')
-            
+
+            cur.execute('''
+                CREATE TABLE video_seq (
+                    seq_video_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    create_time TIMESTAMP
+                )
+            ''')
+
             conn.commit()
             conn.close()
         else:
@@ -69,15 +76,34 @@ class VideoDatabase:
 
         return generate_id
 
-    def generate_video(self, video_path, prompt_path, manim_code_path):
+    def generate_video_seq(self):
+        '''動画生成シーケンスIDを新規作成する処理
+        
+        動画生成シーケンスIDを新規作成する。
+
+        Example:
+            video_db = VideoDatabase()
+            video_id = video_db.generate_video_seq()
+        '''
+
+        conn = sql.connect('/workspaces/ai_agent/back/app/tools/video_data/video_data.db')
+        cur = conn.cursor()
+        cur.execute('INSERT INTO video_seq (create_time) VALUES (CURRENT_TIMESTAMP)')
+        seq_video_id = cur.lastrowid
+        conn.commit()
+        conn.close()
+
+        return seq_video_id
+
+    def generate_video(self, video_id, video_path, prompt_path, manim_code_path):
         '''生成された動画とそれに紐づくプロンプト、manimコードをDBに保存する処理
 
-        生成された動画ファイルのパス、プロンプトファイルのパス、manimコードファイルのパスを受け取り、DBに保存する。
+        生成された動画id、動画ファイルのパス、プロンプトファイルのパス、manimコードファイルのパスを受け取り、DBに保存する。
         プロンプト、Manimコードは制約条件を課しているため、commitを同時に行う。
 
         Example:
             video_db = VideoDatabase()
-            video_db.generate_video('path/to/video.mp4', 'path/to/prompt.json', 'path/to/manim_code.json')
+            video_db.generate_video(1, 'path/to/video.mp4', 'path/to/prompt.json', 'path/to/manim_code.json')
         '''
 
         create_time = datetime.datetime.now()
@@ -89,7 +115,7 @@ class VideoDatabase:
         prompt_id = cur.lastrowid
         cur.execute('INSERT INTO manim_code (manim_code_path) VALUES (?)', (manim_code_path,))
         manim_code_id = cur.lastrowid
-        cur.execute('INSERT INTO video (generate_id, video_path, prompt_id, manim_code_id, generate_time) VALUES (?,?,?,?,?)', (generate_id, video_path, prompt_id, manim_code_id, create_time))
+        cur.execute('INSERT INTO video (video_id, generate_id, video_path, prompt_id, manim_code_id, generate_time) VALUES (?,?,?,?,?,?)', (video_id, generate_id, video_path, prompt_id, manim_code_id, create_time))
         video_id = cur.lastrowid
         conn.commit()
         conn.close()

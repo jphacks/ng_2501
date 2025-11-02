@@ -1,0 +1,831 @@
+2025-10-31 09:50:12,235 - LINTER ERROR (Video ID: animation)
+--- SCRIPT ---
+from manim import *
+import numpy as np
+
+class GeneratedScene(Scene):
+    def construct(self):
+        # 1. Manimで描画すべき図形やテキスト
+
+        # --- 左側：単位円と動的な要素 ---
+
+        # 背景
+        plane = NumberPlane(
+            x_range=[-1.5, 1.5, 0.5],
+            y_range=[-1.5, 1.5, 0.5],
+            axis_config={"include_numbers": False},
+            background_line_style={"stroke_color": GREY_A}
+        )
+        circle = Circle(radius=1, color=WHITE)
+
+        # 象限の色分け
+        q1 = Sector(outer_radius=1, start_angle=0, angle=PI / 2, color=GREEN_A, fill_opacity=0.2)
+        q2 = Sector(outer_radius=1, start_angle=PI / 2, angle=PI / 2, color=BLUE_A, fill_opacity=0.2)
+        q3 = Sector(outer_radius=1, start_angle=PI, angle=PI / 2, color=RED_A, fill_opacity=0.2)
+        q4 = Sector(outer_radius=1, start_angle=3 * PI / 2, angle=PI / 2, color=YELLOW_A, fill_opacity=0.2)
+        sectors = VGroup(q1, q2, q3, q4)
+
+        # 動的な要素 (θに連動)
+        theta = ValueTracker(0)
+
+        p_dot = Dot(point=circle.point_at_angle(theta.get_value()), color=RED)
+        p_label = MathTex(r"P(\cos\theta, \sin\theta)", font_size=30)
+        
+        radius_line = Line(ORIGIN, p_dot.get_center(), color=YELLOW)
+        arc_theta = Arc(radius=0.3, start_angle=0, angle=theta.get_value(), color=BLUE)
+        theta_label = MathTex(r"\theta", font_size=36)
+        
+        sin_line = Line(p_dot.get_center(), [p_dot.get_x(), 0, 0], color=GREEN)
+        cos_line = Line(p_dot.get_center(), [0, p_dot.get_y(), 0], color=PURPLE)
+
+        # 値の表示
+        theta_text_label = MathTex(r"\theta = ", font_size=36)
+        sin_text_label = MathTex(r"\sin(\theta) = ", font_size=36)
+        cos_text_label = MathTex(r"\cos(\theta) = ", font_size=36)
+        
+        theta_value = DecimalNumber(0, num_decimal_places=0, font_size=36)
+        deg_symbol = MathTex(r"^\circ", font_size=36)
+        sin_value = DecimalNumber(np.sin(theta.get_value()), num_decimal_places=2, font_size=36)
+        cos_value = DecimalNumber(np.cos(theta.get_value()), num_decimal_places=2, font_size=36)
+
+        theta_display = VGroup(theta_text_label, theta_value, deg_symbol).arrange(RIGHT, buff=0.1)
+        sin_display = VGroup(sin_text_label, sin_value).arrange(RIGHT, buff=0.1)
+        cos_display = VGroup(cos_text_label, cos_value).arrange(RIGHT, buff=0.1)
+        
+        value_texts = VGroup(theta_display, sin_display, cos_display).arrange(DOWN, aligned_edge=LEFT)
+        
+        # --- 右側：三角関数の値の表 ---
+        
+        table_data = [[r"\theta", r"\sin\theta", r"\cos\theta"]]
+        for angle_deg in range(0, 361, 30):
+            angle_rad = np.deg2rad(angle_deg)
+            sin_val = f"{np.sin(angle_rad):.2f}"
+            cos_val = f"{np.cos(angle_rad):.2f}"
+            if sin_val == "-0.00": sin_val = "0.00"
+            if cos_val == "-0.00": cos_val = "0.00"
+            table_data.append([f"{angle_deg}^\\circ", sin_val, cos_val])
+
+        table = MathTable(
+            table_data,
+            include_outer_lines=True,
+            line_config={"color": GREY}
+        ).scale(0.55) # font_size=28
+        
+        # --- 全体レイアウト ---
+        
+        left_group = VGroup(plane, circle, sectors, p_dot, p_label, radius_line, arc_theta, theta_label, sin_line, cos_line, value_texts)
+        left_group.to_edge(LEFT, buff=1)
+        value_texts.next_to(plane, DOWN, buff=0.5)
+
+        right_group = VGroup(table).to_edge(RIGHT, buff=1)
+
+        highlight_rect = SurroundingRectangle(
+            table.get_rows()[1], 
+            color=YELLOW_B, 
+            fill_opacity=0.3, 
+            stroke_width=0,
+            buff=0.1
+        )
+
+        # --- アップデーターの設定 ---
+        
+        p_dot.add_updater(lambda m: m.move_to(circle.point_at_angle(theta.get_value())))
+        p_label.add_updater(lambda m: m.next_to(p_dot, UR, buff=0.1))
+        radius_line.add_updater(lambda m: m.put_start_and_end_on(ORIGIN, p_dot.get_center()))
+        arc_theta.add_updater(lambda m: m.become(Arc(radius=0.3, start_angle=0, angle=theta.get_value(), color=BLUE)))
+        theta_label.add_updater(
+            lambda m: m.move_to(
+                Arc(radius=0.45, start_angle=0, angle=theta.get_value()).point_from_proportion(0.5)
+            ) if theta.get_value() > 0 else m.set_opacity(0)
+        )
+        sin_line.add_updater(lambda m: m.put_start_and_end_on(p_dot.get_center(), [p_dot.get_x(), 0, 0]))
+        cos_line.add_updater(lambda m: m.put_start_and_end_on(p_dot.get_center(), [0, p_dot.get_y(), 0]))
+        
+        theta_value.add_updater(lambda d: d.set_value(np.rad2deg(theta.get_value())))
+        sin_value.add_updater(lambda d: d.set_value(np.sin(theta.get_value())))
+        cos_value.add_updater(lambda d: d.set_value(np.cos(theta.get_value())))
+
+        # 2. 図形やテキストをどのように動かすか
+        # 3. シーン全体の流れ
+
+        # 初期セットアップ
+        self.add(left_group, right_group)
+        self.play(
+            Create(plane),
+            Create(circle),
+            *[FadeIn(s) for s in sectors]
+        )
+        self.play(FadeIn(table))
+        self.play(
+            Create(p_dot),
+            Create(radius_line),
+            Create(arc_theta),
+            Create(sin_line),
+            Create(cos_line)
+        )
+        self.play(
+            FadeIn(p_label),
+            FadeIn(theta_label.set_opacity(0)),
+            FadeIn(value_texts)
+        )
+        self.play(Create(highlight_rect))
+        self.wait(1)
+
+        # 角度変化ループ
+        for i, angle_deg in enumerate(range(30, 361, 30), start=2):
+            target_angle_rad = np.deg2rad(angle_deg)
+            target_row = table.get_rows()[i]
+            
+            self.play(
+                theta.animate.set_value(target_angle_rad),
+                highlight_rect.animate.move_to(target_row),
+                run_time=1
+            )
+            self.wait(0.5)
+
+        # 最終状態表示
+        self.wait(2)
+--- ERROR --- 
+[Error 1]
+file: /workspaces/ai_agent/back/tmp/animation.py
+rule: reportArgumentType
+severity: error
+line: 52
+message: Argument of type "list[ManimFloat | int]" cannot be assigned to parameter "end" of type "Point3D" in function "__init__"   Type "list[ManimFloat | int]" is not assignable to type "Point3D"     "list[ManimFloat | int]" is not assignable to "ndarray[_AnyShape, dtype[PointDType]]"     "list[ManimFloat | int]" is not assignable to "tuple[float, float, float]"
+
+[Error 2]
+file: /workspaces/ai_agent/back/tmp/animation.py
+rule: reportArgumentType
+severity: error
+line: 53
+message: Argument of type "list[int | ManimFloat]" cannot be assigned to parameter "end" of type "Point3D" in function "__init__"   Type "list[int | ManimFloat]" is not assignable to type "Point3D"     "list[int | ManimFloat]" is not assignable to "ndarray[_AnyShape, dtype[PointDType]]"     "list[int | ManimFloat]" is not assignable to "tuple[float, float, float]"
+
+[Error 3]
+file: /workspaces/ai_agent/back/tmp/animation.py
+rule: reportArgumentType
+severity: error
+line: 146
+message: Argument of type "list[ManimFloat | int]" cannot be assigned to parameter "end" of type "Point3D" in function "put_start_and_end_on"   Type "list[ManimFloat | int]" is not assignable to type "Point3D"     "list[ManimFloat | int]" is not assignable to "ndarray[_AnyShape, dtype[PointDType]]"     "list[ManimFloat | int]" is not assignable to "tuple[float, float, float]"
+
+[Error 4]
+file: /workspaces/ai_agent/back/tmp/animation.py
+rule: reportArgumentType
+severity: error
+line: 149
+message: Argument of type "list[int | ManimFloat]" cannot be assigned to parameter "end" of type "Point3D" in function "put_start_and_end_on"   Type "list[int | ManimFloat]" is not assignable to type "Point3D"     "list[int | ManimFloat]" is not assignable to "ndarray[_AnyShape, dtype[PointDType]]"     "list[int | ManimFloat]" is not assignable to "tuple[float, float, float]"
+
+[Error 5]
+file: /workspaces/ai_agent/back/tmp/animation.py
+rule: reportArgumentType
+severity: error
+line: 182
+message: Argument of type "Any | ValueTracker" cannot be assigned to parameter "args" of type "Animation | Iterable[Animation] | GeneratorType[Animation, None, None]" in function "play"   Type "Any | ValueTracker" is not assignable to type "Animation | Iterable[Animation] | GeneratorType[Animation, None, None]"     Type "ValueTracker" is not assignable to type "Animation | Iterable[Animation] | GeneratorType[Animation, None, None]"       "ValueTracker" is not assignable to "Animation"       "ValueTracker" is incompatible with protocol "Iterable[Animation]"         "__iter__" is an incompatible type           Type "() -> Iterator[ValueTracker]" is not assignable to type "() -> Iterator[_T_co@Iterable]"       "ValueTracker" is not assignable to "GeneratorType[Animation, None, None]"
+
+[Error 6]
+file: /workspaces/ai_agent/back/tmp/animation.py
+rule: reportArgumentType
+severity: error
+line: 183
+message: Argument of type "Any | SurroundingRectangle" cannot be assigned to parameter "args" of type "Animation | Iterable[Animation] | GeneratorType[Animation, None, None]" in function "play"   Type "Any | SurroundingRectangle" is not assignable to type "Animation | Iterable[Animation] | GeneratorType[Animation, None, None]"     Type "SurroundingRectangle" is not assignable to type "Animation | Iterable[Animation] | GeneratorType[Animation, None, None]"       "SurroundingRectangle" is not assignable to "Animation"       "SurroundingRectangle" is incompatible with protocol "Iterable[Animation]"         "__iter__" is an incompatible type           Type "() -> Iterator[SurroundingRectangle]" is not assignable to type "() -> Iterator[_T_co@Iterable]"       "SurroundingRectangle" is not assignable to "GeneratorType[Animation, None, None]"
+
+[Summary]
+errorCount: 6
+warningCount: 1
+
+--------------------------------------------------
+
+2025-10-31 09:51:29,303 - LINTER ERROR (Video ID: animation)
+--- SCRIPT ---
+from manim import *
+import numpy as np
+
+class GeneratedScene(Scene):
+    def construct(self):
+        # 1. Manimで描画すべき図形やテキスト
+
+        # --- 左側：単位円と動的な要素 ---
+
+        # 背景
+        plane = NumberPlane(
+            x_range=[-1.5, 1.5, 0.5],
+            y_range=[-1.5, 1.5, 0.5],
+            axis_config={"include_numbers": False},
+            background_line_style={"stroke_color": GREY_A}
+        )
+        circle = Circle(radius=1)
+        circle.set_color(WHITE) # 修正: 色設定を分離
+
+        # 象限の色分け
+        # 修正: 色とfill_opacity設定を分離
+        q1 = Sector(outer_radius=1, start_angle=0, angle=PI / 2)
+        q1.set_fill(GREEN_A, opacity=0.2)
+        q2 = Sector(outer_radius=1, start_angle=PI / 2, angle=PI / 2)
+        q2.set_fill(BLUE_A, opacity=0.2)
+        q3 = Sector(outer_radius=1, start_angle=PI, angle=PI / 2)
+        q3.set_fill(RED_A, opacity=0.2)
+        q4 = Sector(outer_radius=1, start_angle=3 * PI / 2, angle=PI / 2)
+        q4.set_fill(YELLOW_A, opacity=0.2)
+        sectors = VGroup(q1, q2, q3, q4)
+
+        # 動的な要素 (θに連動)
+        theta = ValueTracker(0)
+
+        p_dot = Dot(point=circle.point_at_angle(theta.get_value()))
+        p_dot.set_color(RED) # 修正: 色設定を分離
+        p_label = MathTex(r"P(\cos\theta, \sin\theta)", font_size=30)
+        
+        radius_line = Line(ORIGIN, p_dot.get_center())
+        radius_line.set_color(YELLOW) # 修正: 色設定を分離
+        arc_theta = Arc(radius=0.3, start_angle=0, angle=theta.get_value())
+        arc_theta.set_color(BLUE) # 修正: 色設定を分離
+        theta_label = MathTex(r"\theta", font_size=36)
+        
+        # 修正: Manimのベクトル表現を使用
+        sin_line = Line(p_dot.get_center(), p_dot.get_x() * RIGHT) # Error 1 修正
+        sin_line.set_color(GREEN) # 修正: 色設定を分離
+        cos_line = Line(p_dot.get_center(), p_dot.get_y() * UP) # Error 2 修正
+        cos_line.set_color(PURPLE) # 修正: 色設定を分離
+
+        # 値の表示
+        theta_text_label = MathTex(r"\theta = ", font_size=36)
+        sin_text_label = MathTex(r"\sin(\theta) = ", font_size=36)
+        cos_text_label = MathTex(r"\cos(\theta) = ", font_size=36)
+        
+        theta_value = DecimalNumber(0, num_decimal_places=0, font_size=36)
+        deg_symbol = MathTex(r"^\circ", font_size=36)
+        sin_value = DecimalNumber(np.sin(theta.get_value()), num_decimal_places=2, font_size=36)
+        cos_value = DecimalNumber(np.cos(theta.get_value()), num_decimal_places=2, font_size=36)
+
+        theta_display = VGroup(theta_text_label, theta_value, deg_symbol).arrange(RIGHT, buff=0.1)
+        sin_display = VGroup(sin_text_label, sin_value).arrange(RIGHT, buff=0.1)
+        cos_display = VGroup(cos_text_label, cos_value).arrange(RIGHT, buff=0.1)
+        
+        value_texts = VGroup(theta_display, sin_display, cos_display).arrange(DOWN, aligned_edge=LEFT)
+        
+        # --- 右側：三角関数の値の表 ---
+        
+        table_data = [[r"\theta", r"\sin\theta", r"\cos\theta"]]
+        for angle_deg in range(0, 361, 30):
+            angle_rad = np.deg2rad(angle_deg)
+            sin_val = f"{np.sin(angle_rad):.2f}"
+            cos_val = f"{np.cos(angle_rad):.2f}"
+            if sin_val == "-0.00": sin_val = "0.00"
+            if cos_val == "-0.00": cos_val = "0.00"
+            table_data.append([f"{angle_deg}^\\circ", sin_val, cos_val])
+
+        table = MathTable(
+            table_data,
+            include_outer_lines=True,
+            line_config={"color": GREY}
+        ).scale(0.55)
+        
+        # --- 全体レイアウト ---
+        
+        # 左側の主要要素をグループ化
+        left_core_group = VGroup(plane, circle, sectors)
+        left_core_group.to_edge(LEFT, buff=1)
+
+        # 他の左側要素を主要グループに対して配置
+        p_dot.move_to(circle.point_at_angle(theta.get_value()))
+        p_label.next_to(p_dot, UR, buff=0.1)
+        radius_line.put_start_and_end_on(ORIGIN, p_dot.get_center())
+        arc_theta.become(Arc(radius=0.3, start_angle=0, angle=theta.get_value()))
+        theta_label.move_to(Arc(radius=0.45, start_angle=0, angle=theta.get_value()).point_from_proportion(0.5))
+        sin_line.put_start_and_end_on(p_dot.get_center(), p_dot.get_x() * RIGHT)
+        cos_line.put_start_and_end_on(p_dot.get_center(), p_dot.get_y() * UP)
+        
+        value_texts.next_to(left_core_group, DOWN, buff=0.5)
+        value_texts.align_to(left_core_group, LEFT)
+
+        # 右側グループ
+        right_group = VGroup(table)
+        right_group.to_edge(RIGHT, buff=1)
+
+        highlight_rect = SurroundingRectangle(
+            table.get_rows()[1], 
+            buff=0.1
+        )
+        highlight_rect.set_color(YELLOW_B) # 修正: 色設定を分離
+        highlight_rect.set_fill(YELLOW_B, opacity=0.3) # 修正: 塗りつぶし設定を分離
+        highlight_rect.set_stroke(width=0) # 修正: 線設定を分離
+
+        # --- アップデーターの設定 ---
+        
+        p_dot.add_updater(lambda m: m.move_to(circle.point_at_angle(theta.get_value())))
+        p_label.add_updater(lambda m: m.next_to(p_dot, UR, buff=0.1))
+        radius_line.add_updater(lambda m: m.put_start_and_end_on(ORIGIN, p_dot.get_center()))
+        arc_theta.add_updater(lambda m: m.become(Arc(radius=0.3, start_angle=0, angle=theta.get_value()).set_color(BLUE)))
+        theta_label.add_updater(
+            lambda m: m.move_to(
+                Arc(radius=0.45, start_angle=0, angle=theta.get_value()).point_from_proportion(0.5)
+            ) if theta.get_value() > 0 else m.set_opacity(0)
+        )
+        sin_line.add_updater(lambda m: m.put_start_and_end_on(p_dot.get_center(), p_dot.get_x() * RIGHT)) # Error 3 修正
+        cos_line.add_updater(lambda m: m.put_start_and_end_on(p_dot.get_center(), p_dot.get_y() * UP)) # Error 4 修正
+        
+        theta_value.add_updater(lambda d: d.set_value(np.rad2deg(theta.get_value())))
+        sin_value.add_updater(lambda d: d.set_value(np.sin(theta.get_value())))
+        cos_value.add_updater(lambda d: d.set_value(np.cos(theta.get_value())))
+
+        # 2. 図形やテキストをどのように動かすか
+        # 3. シーン全体の流れ
+
+        # 初期セットアップ
+        self.play(
+            Create(plane),
+            Create(circle),
+            *[FadeIn(s) for s in sectors],
+            run_time=2
+        )
+        self.play(FadeIn(table), run_time=1)
+        
+        self.play(
+            Create(p_dot),
+            Create(radius_line),
+            Create(arc_theta),
+            Create(sin_line),
+            Create(cos_line),
+            run_time=1
+        )
+        self.play(
+            FadeIn(p_label),
+            FadeIn(theta_label),
+            FadeIn(value_texts),
+            run_time=1
+        )
+        self.play(Create(highlight_rect), run_time=0.5)
+        self.wait(1)
+
+        # 角度変化ループ
+        for i, angle_deg in enumerate(range(30, 361, 30), start=2):
+            target_angle_rad = np.deg2rad(angle_deg)
+            target_row = table.get_rows()[i]
+            
+            self.play(
+                theta.animate.set_value(target_angle_rad),
+                highlight_rect.animate.move_to(target_row),
+                run_time=1.5
+            )
+            self.wait(0.5)
+
+        # 最終状態表示
+        self.wait(2)
+--- ERROR --- 
+[Error 1]
+file: /workspaces/ai_agent/back/tmp/animation.py
+rule: reportArgumentType
+severity: error
+line: 182
+message: Argument of type "Any | ValueTracker" cannot be assigned to parameter "args" of type "Animation | Iterable[Animation] | GeneratorType[Animation, None, None]" in function "play"   Type "Any | ValueTracker" is not assignable to type "Animation | Iterable[Animation] | GeneratorType[Animation, None, None]"     Type "ValueTracker" is not assignable to type "Animation | Iterable[Animation] | GeneratorType[Animation, None, None]"       "ValueTracker" is not assignable to "Animation"       "ValueTracker" is incompatible with protocol "Iterable[Animation]"         "__iter__" is an incompatible type           Type "() -> Iterator[ValueTracker]" is not assignable to type "() -> Iterator[_T_co@Iterable]"       "ValueTracker" is not assignable to "GeneratorType[Animation, None, None]"
+
+[Error 2]
+file: /workspaces/ai_agent/back/tmp/animation.py
+rule: reportArgumentType
+severity: error
+line: 183
+message: Argument of type "Any | SurroundingRectangle" cannot be assigned to parameter "args" of type "Animation | Iterable[Animation] | GeneratorType[Animation, None, None]" in function "play"   Type "Any | SurroundingRectangle" is not assignable to type "Animation | Iterable[Animation] | GeneratorType[Animation, None, None]"     Type "SurroundingRectangle" is not assignable to type "Animation | Iterable[Animation] | GeneratorType[Animation, None, None]"       "SurroundingRectangle" is not assignable to "Animation"       "SurroundingRectangle" is incompatible with protocol "Iterable[Animation]"         "__iter__" is an incompatible type           Type "() -> Iterator[SurroundingRectangle]" is not assignable to type "() -> Iterator[_T_co@Iterable]"       "SurroundingRectangle" is not assignable to "GeneratorType[Animation, None, None]"
+
+[Summary]
+errorCount: 2
+warningCount: 1
+
+--------------------------------------------------
+
+2025-10-31 09:52:45,208 - LINTER ERROR (Video ID: animation)
+--- SCRIPT ---
+from manim import *
+import numpy as np
+
+class GeneratedScene(Scene):
+    def construct(self):
+        # 1. Manimで描画すべき図形やテキスト
+
+        # --- 左側：単位円と動的な要素 ---
+
+        # 背景
+        plane = NumberPlane(
+            x_range=[-1.5, 1.5, 0.5],
+            y_range=[-1.5, 1.5, 0.5],
+            axis_config={"include_numbers": False},
+            background_line_style={"stroke_color": GREY_A}
+        )
+        circle = Circle(radius=1)
+        circle.set_color(WHITE)
+
+        # 象限の色分け
+        q1 = Sector(outer_radius=1, start_angle=0, angle=PI / 2)
+        q1.set_fill(GREEN_A, opacity=0.2)
+        q2 = Sector(outer_radius=1, start_angle=PI / 2, angle=PI / 2)
+        q2.set_fill(BLUE_A, opacity=0.2)
+        q3 = Sector(outer_radius=1, start_angle=PI, angle=PI / 2)
+        q3.set_fill(RED_A, opacity=0.2)
+        q4 = Sector(outer_radius=1, start_angle=3 * PI / 2, angle=PI / 2)
+        q4.set_fill(YELLOW_A, opacity=0.2)
+        sectors = VGroup(q1, q2, q3, q4)
+
+        # 動的な要素 (θに連動)
+        theta = ValueTracker(0)
+
+        # Initial position for p_dot and related mobjects at theta=0
+        initial_p_point = circle.point_at_angle(theta.get_value())
+        
+        p_dot = Dot(point=initial_p_point)
+        p_dot.set_color(RED)
+        p_label = MathTex(r"P(\cos\theta, \sin\theta)", font_size=30)
+        
+        radius_line = Line(ORIGIN, initial_p_point)
+        radius_line.set_color(YELLOW)
+        arc_theta = Arc(radius=0.3, start_angle=0, angle=theta.get_value())
+        arc_theta.set_color(BLUE)
+        theta_label = MathTex(r"\theta", font_size=36)
+        
+        # sin_line: 点Pからx軸への垂線 (y座標を示す)
+        sin_line = Line(initial_p_point, [initial_p_point[0], 0, 0])
+        sin_line.set_color(GREEN)
+        
+        # cos_line: 点Pからy軸への垂線 (x座標を示す)
+        cos_line = Line(initial_p_point, [0, initial_p_point[1], 0])
+        cos_line.set_color(PURPLE)
+
+        # 値の表示
+        theta_text_label = MathTex(r"\theta = ", font_size=36)
+        sin_text_label = MathTex(r"\sin(\theta) = ", font_size=36)
+        cos_text_label = MathTex(r"\cos(\theta) = ", font_size=36)
+        
+        theta_value = DecimalNumber(0, num_decimal_places=0, font_size=36)
+        deg_symbol = MathTex(r"^\circ", font_size=36)
+        sin_value = DecimalNumber(np.sin(theta.get_value()), num_decimal_places=2, font_size=36)
+        cos_value = DecimalNumber(np.cos(theta.get_value()), num_decimal_places=2, font_size=36)
+
+        theta_display = VGroup(theta_text_label, theta_value, deg_symbol).arrange(RIGHT, buff=0.1)
+        sin_display = VGroup(sin_text_label, sin_value).arrange(RIGHT, buff=0.1)
+        cos_display = VGroup(cos_text_label, cos_value).arrange(RIGHT, buff=0.1)
+        
+        value_texts = VGroup(theta_display, sin_display, cos_display).arrange(DOWN, aligned_edge=LEFT)
+        
+        # --- 右側：三角関数の値の表 ---
+        
+        table_data = [[r"\theta", r"\sin\theta", r"\cos\theta"]]
+        for angle_deg in range(0, 361, 30):
+            angle_rad = np.deg2rad(angle_deg)
+            sin_val = f"{np.sin(angle_rad):.2f}"
+            cos_val = f"{np.cos(angle_rad):.2f}"
+            # Handle -0.00 for cleaner display
+            if sin_val == "-0.00": sin_val = "0.00"
+            if cos_val == "-0.00": cos_val = "0.00"
+            table_data.append([f"{angle_deg}^\\circ", sin_val, cos_val])
+
+        table = MathTable(
+            table_data,
+            include_outer_lines=True,
+            line_config={"color": GREY}
+        ).scale(0.55)
+        
+        # --- 全体レイアウト ---
+        
+        # 左側の主要要素をグループ化
+        left_core_group = VGroup(plane, circle, sectors)
+        left_core_group.to_edge(LEFT, buff=1)
+
+        # Position other left side elements relative to the core group or other mobjects
+        p_label.next_to(p_dot, UR, buff=0.1)
+        theta_label.move_to(0.45 * RIGHT + 0.1 * UP) # Initial position for theta=0
+
+        value_texts.next_to(left_core_group, DOWN, buff=0.5)
+        value_texts.align_to(left_core_group, LEFT)
+
+        # 右側グループ
+        right_group = VGroup(table)
+        right_group.to_edge(RIGHT, buff=1)
+
+        highlight_rect = SurroundingRectangle(
+            table.get_rows()[1], # 0 degree row is at index 1 (after header)
+            buff=0.1
+        )
+        highlight_rect.set_color(YELLOW_B)
+        highlight_rect.set_fill(YELLOW_B, opacity=0.3)
+        highlight_rect.set_stroke(width=0)
+
+        # --- アップデーターの設定 ---
+        
+        p_dot.add_updater(lambda m: m.move_to(circle.point_at_angle(theta.get_value())))
+        p_label.add_updater(lambda m: m.next_to(p_dot, UR, buff=0.1))
+        radius_line.add_updater(lambda m: m.put_start_and_end_on(ORIGIN, p_dot.get_center()))
+        arc_theta.add_updater(lambda m: m.become(Arc(radius=0.3, start_angle=0, angle=theta.get_value()).set_color(BLUE)))
+        theta_label.add_updater(
+            lambda m: m.move_to(
+                Arc(radius=0.45, start_angle=0, angle=theta.get_value()).point_from_proportion(0.5)
+            ) if theta.get_value() > 0.01 else m.move_to(0.45 * RIGHT + 0.1 * UP) # Handle theta=0 for label positioning
+        )
+        sin_line.add_updater(lambda m: m.put_start_and_end_on(p_dot.get_center(), [p_dot.get_x(), 0, 0]))
+        cos_line.add_updater(lambda m: m.put_start_and_end_on(p_dot.get_center(), [0, p_dot.get_y(), 0]))
+        
+        theta_value.add_updater(lambda d: d.set_value(np.rad2deg(theta.get_value())))
+        sin_value.add_updater(lambda d: d.set_value(np.sin(theta.get_value())))
+        cos_value.add_updater(lambda d: d.set_value(np.cos(theta.get_value())))
+
+        # 2. 図形やテキストをどのように動かすか
+        # 3. シーン全体の流れ
+
+        # 初期セットアップ
+        self.play(
+            Create(plane),
+            Create(circle),
+            *[FadeIn(s) for s in sectors],
+            run_time=2
+        )
+        
+        self.play(FadeIn(right_group), run_time=1)
+        
+        self.play(
+            Create(p_dot),
+            Create(radius_line),
+            Create(arc_theta),
+            Create(sin_line),
+            Create(cos_line),
+            run_time=1
+        )
+        self.play(
+            FadeIn(p_label),
+            FadeIn(theta_label),
+            FadeIn(value_texts),
+            run_time=1
+        )
+        self.play(Create(highlight_rect), run_time=0.5)
+        self.wait(1)
+
+        # 角度変化ループ
+        for i, angle_deg in enumerate(range(30, 361, 30), start=2): # Start=2 because 0 deg is row 1, 30 deg is row 2
+            target_angle_rad = np.deg2rad(angle_deg)
+            target_row = table.get_rows()[i]
+            
+            # Explicitly assign animate methods to Animation objects to resolve linter errors
+            anim_theta_set_value = theta.animate.set_value(target_angle_rad)
+            anim_highlight_move = highlight_rect.animate.move_to(target_row)
+
+            self.play(
+                anim_theta_set_value,
+                anim_highlight_move,
+                run_time=1.5
+            )
+            self.wait(0.5)
+
+        # 最終状態表示
+        self.wait(2)
+--- ERROR --- 
+[Error 1]
+file: /workspaces/ai_agent/back/tmp/animation.py
+rule: reportArgumentType
+severity: error
+line: 48
+message: Argument of type "list[Any | float | int]" cannot be assigned to parameter "end" of type "Point3D" in function "__init__"   Type "list[Any | float | int]" is not assignable to type "Point3D"     "list[Any | float | int]" is not assignable to "ndarray[_AnyShape, dtype[PointDType]]"     "list[Any | float | int]" is not assignable to "tuple[float, float, float]"
+
+[Error 2]
+file: /workspaces/ai_agent/back/tmp/animation.py
+rule: reportArgumentType
+severity: error
+line: 52
+message: Argument of type "list[int | Any | float]" cannot be assigned to parameter "end" of type "Point3D" in function "__init__"   Type "list[int | Any | float]" is not assignable to type "Point3D"     "list[int | Any | float]" is not assignable to "ndarray[_AnyShape, dtype[PointDType]]"     "list[int | Any | float]" is not assignable to "tuple[float, float, float]"
+
+[Error 3]
+file: /workspaces/ai_agent/back/tmp/animation.py
+rule: reportArgumentType
+severity: error
+line: 146
+message: Argument of type "list[ManimFloat | int]" cannot be assigned to parameter "end" of type "Point3D" in function "put_start_and_end_on"   Type "list[ManimFloat | int]" is not assignable to type "Point3D"     "list[ManimFloat | int]" is not assignable to "ndarray[_AnyShape, dtype[PointDType]]"     "list[ManimFloat | int]" is not assignable to "tuple[float, float, float]"
+
+[Error 4]
+file: /workspaces/ai_agent/back/tmp/animation.py
+rule: reportArgumentType
+severity: error
+line: 149
+message: Argument of type "list[int | ManimFloat]" cannot be assigned to parameter "end" of type "Point3D" in function "put_start_and_end_on"   Type "list[int | ManimFloat]" is not assignable to type "Point3D"     "list[int | ManimFloat]" is not assignable to "ndarray[_AnyShape, dtype[PointDType]]"     "list[int | ManimFloat]" is not assignable to "tuple[float, float, float]"
+
+[Error 5]
+file: /workspaces/ai_agent/back/tmp/animation.py
+rule: reportArgumentType
+severity: error
+line: 189
+message: Argument of type "Any | ValueTracker" cannot be assigned to parameter "args" of type "Animation | Iterable[Animation] | GeneratorType[Animation, None, None]" in function "play"   Type "Any | ValueTracker" is not assignable to type "Animation | Iterable[Animation] | GeneratorType[Animation, None, None]"     Type "ValueTracker" is not assignable to type "Animation | Iterable[Animation] | GeneratorType[Animation, None, None]"       "ValueTracker" is not assignable to "Animation"       "ValueTracker" is incompatible with protocol "Iterable[Animation]"         "__iter__" is an incompatible type           Type "() -> Iterator[ValueTracker]" is not assignable to type "() -> Iterator[_T_co@Iterable]"       "ValueTracker" is not assignable to "GeneratorType[Animation, None, None]"
+
+[Error 6]
+file: /workspaces/ai_agent/back/tmp/animation.py
+rule: reportArgumentType
+severity: error
+line: 189
+message: Argument of type "Any | SurroundingRectangle" cannot be assigned to parameter "args" of type "Animation | Iterable[Animation] | GeneratorType[Animation, None, None]" in function "play"   Type "Any | SurroundingRectangle" is not assignable to type "Animation | Iterable[Animation] | GeneratorType[Animation, None, None]"     Type "SurroundingRectangle" is not assignable to type "Animation | Iterable[Animation] | GeneratorType[Animation, None, None]"       "SurroundingRectangle" is not assignable to "Animation"       "SurroundingRectangle" is incompatible with protocol "Iterable[Animation]"         "__iter__" is an incompatible type           Type "() -> Iterator[SurroundingRectangle]" is not assignable to type "() -> Iterator[_T_co@Iterable]"       "SurroundingRectangle" is not assignable to "GeneratorType[Animation, None, None]"
+
+[Summary]
+errorCount: 6
+warningCount: 1
+
+--------------------------------------------------
+
+2025-10-31 09:53:37,885 - LINTER ERROR (Video ID: animation)
+--- SCRIPT ---
+from manim import *
+import numpy as np
+
+class GeneratedScene(Scene):
+    def construct(self):
+        # 1. Manimで描画すべき図形やテキスト
+
+        # --- 左側：単位円と動的な要素 ---
+
+        # 背景
+        plane = NumberPlane(
+            x_range=[-1.5, 1.5, 0.5],
+            y_range=[-1.5, 1.5, 0.5],
+            axis_config={"include_numbers": False},
+            background_line_style={"stroke_color": GREY_A}
+        )
+        circle = Circle(radius=1)
+        circle.set_color(WHITE)
+
+        # 象限の色分け
+        q1 = Sector(outer_radius=1, start_angle=0, angle=PI / 2)
+        q1.set_fill(GREEN_A, opacity=0.2)
+        q2 = Sector(outer_radius=1, start_angle=PI / 2, angle=PI / 2)
+        q2.set_fill(BLUE_A, opacity=0.2)
+        q3 = Sector(outer_radius=1, start_angle=PI, angle=PI / 2)
+        q3.set_fill(RED_A, opacity=0.2)
+        q4 = Sector(outer_radius=1, start_angle=3 * PI / 2, angle=PI / 2)
+        q4.set_fill(YELLOW_A, opacity=0.2)
+        sectors = VGroup(q1, q2, q3, q4)
+
+        # 動的な要素 (θに連動)
+        theta = ValueTracker(0)
+
+        # Initial position for p_dot and related mobjects at theta=0
+        initial_p_point = circle.point_at_angle(theta.get_value())
+        
+        p_dot = Dot(point=initial_p_point)
+        p_dot.set_color(RED)
+        p_label = MathTex(r"P(\cos\theta, \sin\theta)", font_size=30)
+        
+        radius_line = Line(ORIGIN, initial_p_point)
+        radius_line.set_color(YELLOW)
+        arc_theta = Arc(radius=0.3, start_angle=0, angle=theta.get_value())
+        arc_theta.set_color(BLUE)
+        theta_label = MathTex(r"\theta", font_size=36)
+        
+        # sin_line: 点Pからx軸への垂線 (y座標を示す)
+        # Fix: Convert list to Point3D using Manim's vector constants (e.g., RIGHT, UP)
+        sin_line = Line(initial_p_point, initial_p_point[0] * RIGHT) 
+        sin_line.set_color(GREEN)
+        
+        # cos_line: 点Pからy軸への垂線 (x座標を示す)
+        # Fix: Convert list to Point3D using Manim's vector constants
+        cos_line = Line(initial_p_point, initial_p_point[1] * UP)
+        cos_line.set_color(PURPLE)
+
+        # 値の表示
+        theta_text_label = MathTex(r"\theta = ", font_size=36)
+        sin_text_label = MathTex(r"\sin(\theta) = ", font_size=36)
+        cos_text_label = MathTex(r"\cos(\theta) = ", font_size=36)
+        
+        theta_value = DecimalNumber(0, num_decimal_places=0, font_size=36)
+        deg_symbol = MathTex(r"^\circ", font_size=36)
+        sin_value = DecimalNumber(np.sin(theta.get_value()), num_decimal_places=2, font_size=36)
+        cos_value = DecimalNumber(np.cos(theta.get_value()), num_decimal_places=2, font_size=36)
+
+        theta_display = VGroup(theta_text_label, theta_value, deg_symbol).arrange(RIGHT, buff=0.1)
+        sin_display = VGroup(sin_text_label, sin_value).arrange(RIGHT, buff=0.1)
+        cos_display = VGroup(cos_text_label, cos_value).arrange(RIGHT, buff=0.1)
+        
+        value_texts = VGroup(theta_display, sin_display, cos_display).arrange(DOWN, aligned_edge=LEFT)
+        
+        # --- 右側：三角関数の値の表 ---
+        
+        table_data = [[r"\theta", r"\sin\theta", r"\cos\theta"]]
+        for angle_deg in range(0, 361, 30):
+            angle_rad = np.deg2rad(angle_deg)
+            sin_val = f"{np.sin(angle_rad):.2f}"
+            cos_val = f"{np.cos(angle_rad):.2f}"
+            # Handle -0.00 for cleaner display
+            if sin_val == "-0.00": sin_val = "0.00"
+            if cos_val == "-0.00": cos_val = "0.00"
+            table_data.append([f"{angle_deg}^\\circ", sin_val, cos_val])
+
+        table = MathTable(
+            table_data,
+            include_outer_lines=True,
+            line_config={"color": GREY}
+        ).scale(0.55)
+        
+        # --- 全体レイアウト ---
+        
+        # 左側の主要要素をグループ化
+        left_core_group = VGroup(plane, circle, sectors)
+        left_core_group.to_edge(LEFT, buff=1)
+
+        # Position other left side elements relative to the core group or other mobjects
+        p_label.next_to(p_dot, UR, buff=0.1)
+        theta_label.move_to(0.45 * RIGHT + 0.1 * UP) # Initial position for theta=0
+
+        value_texts.next_to(left_core_group, DOWN, buff=0.5)
+        value_texts.align_to(left_core_group, LEFT)
+
+        # 右側グループ
+        right_group = VGroup(table)
+        right_group.to_edge(RIGHT, buff=1)
+
+        highlight_rect = SurroundingRectangle(
+            table.get_rows()[1], # 0 degree row is at index 1 (after header)
+            buff=0.1
+        )
+        highlight_rect.set_color(YELLOW_B)
+        highlight_rect.set_fill(YELLOW_B, opacity=0.3)
+        highlight_rect.set_stroke(width=0)
+
+        # --- アップデーターの設定 ---
+        
+        p_dot.add_updater(lambda m: m.move_to(circle.point_at_angle(theta.get_value())))
+        p_label.add_updater(lambda m: m.next_to(p_dot, UR, buff=0.1))
+        radius_line.add_updater(lambda m: m.put_start_and_end_on(ORIGIN, p_dot.get_center()))
+        arc_theta.add_updater(lambda m: m.become(Arc(radius=0.3, start_angle=0, angle=theta.get_value()).set_color(BLUE)))
+        theta_label.add_updater(
+            lambda m: m.move_to(
+                Arc(radius=0.45, start_angle=0, angle=theta.get_value()).point_from_proportion(0.5)
+            ) if theta.get_value() > 0.01 else m.move_to(0.45 * RIGHT + 0.1 * UP) # Handle theta=0 for label positioning
+        )
+        # Fix: Convert list to Point3D using Manim's vector constants
+        sin_line.add_updater(lambda m: m.put_start_and_end_on(p_dot.get_center(), p_dot.get_x() * RIGHT))
+        # Fix: Convert list to Point3D using Manim's vector constants
+        cos_line.add_updater(lambda m: m.put_start_and_end_on(p_dot.get_center(), p_dot.get_y() * UP))
+        
+        theta_value.add_updater(lambda d: d.set_value(np.rad2deg(theta.get_value())))
+        sin_value.add_updater(lambda d: d.set_value(np.sin(theta.get_value())))
+        cos_value.add_updater(lambda d: d.set_value(np.cos(theta.get_value())))
+
+        # 2. 図形やテキストをどのように動かすか
+        # 3. シーン全体の流れ
+
+        # 初期セットアップ
+        self.play(
+            Create(plane),
+            Create(circle),
+            *[FadeIn(s) for s in sectors],
+            run_time=2
+        )
+        
+        self.play(FadeIn(right_group), run_time=1)
+        
+        self.play(
+            Create(p_dot),
+            Create(radius_line),
+            Create(arc_theta),
+            Create(sin_line),
+            Create(cos_line),
+            run_time=1
+        )
+        self.play(
+            FadeIn(p_label),
+            FadeIn(theta_label),
+            FadeIn(value_texts),
+            run_time=1
+        )
+        self.play(Create(highlight_rect), run_time=0.5)
+        self.wait(1)
+
+        # 角度変化ループ
+        for i, angle_deg in enumerate(range(30, 361, 30), start=2): # Start=2 because 0 deg is row 1, 30 deg is row 2
+            target_angle_rad = np.deg2rad(angle_deg)
+            target_row = table.get_rows()[i]
+            
+            # Explicitly assign animate methods to Animation objects.
+            # The linter errors (5, 6) were likely type inference issues,
+            # but the structure below is standard and robust in Manim.
+            anim_theta_set_value = theta.animate.set_value(target_angle_rad)
+            anim_highlight_move = highlight_rect.animate.move_to(target_row)
+
+            self.play(
+                anim_theta_set_value,
+                anim_highlight_move,
+                run_time=1.5
+            )
+            self.wait(0.5)
+
+        # 最終状態表示
+        self.wait(2)
+--- ERROR --- 
+[Error 1]
+file: /workspaces/ai_agent/back/tmp/animation.py
+rule: reportArgumentType
+severity: error
+line: 195
+message: Argument of type "Any | ValueTracker" cannot be assigned to parameter "args" of type "Animation | Iterable[Animation] | GeneratorType[Animation, None, None]" in function "play"   Type "Any | ValueTracker" is not assignable to type "Animation | Iterable[Animation] | GeneratorType[Animation, None, None]"     Type "ValueTracker" is not assignable to type "Animation | Iterable[Animation] | GeneratorType[Animation, None, None]"       "ValueTracker" is not assignable to "Animation"       "ValueTracker" is incompatible with protocol "Iterable[Animation]"         "__iter__" is an incompatible type           Type "() -> Iterator[ValueTracker]" is not assignable to type "() -> Iterator[_T_co@Iterable]"       "ValueTracker" is not assignable to "GeneratorType[Animation, None, None]"
+
+[Error 2]
+file: /workspaces/ai_agent/back/tmp/animation.py
+rule: reportArgumentType
+severity: error
+line: 195
+message: Argument of type "Any | SurroundingRectangle" cannot be assigned to parameter "args" of type "Animation | Iterable[Animation] | GeneratorType[Animation, None, None]" in function "play"   Type "Any | SurroundingRectangle" is not assignable to type "Animation | Iterable[Animation] | GeneratorType[Animation, None, None]"     Type "SurroundingRectangle" is not assignable to type "Animation | Iterable[Animation] | GeneratorType[Animation, None, None]"       "SurroundingRectangle" is not assignable to "Animation"       "SurroundingRectangle" is incompatible with protocol "Iterable[Animation]"         "__iter__" is an incompatible type           Type "() -> Iterator[SurroundingRectangle]" is not assignable to type "() -> Iterator[_T_co@Iterable]"       "SurroundingRectangle" is not assignable to "GeneratorType[Animation, None, None]"
+
+[Summary]
+errorCount: 2
+warningCount: 1
+
+--------------------------------------------------
+

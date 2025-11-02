@@ -4,8 +4,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 import tomllib
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.prompts import PromptTemplate
-from langchain.schema.runnable import RunnableSequence
+from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnableSequence
 from langchain_core.output_parsers import StrOutputParser
 
 

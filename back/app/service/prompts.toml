@@ -15,7 +15,7 @@ manim_script_generate = """
 あなたは優秀な Manim コード生成の専門家です。
 以下の指示に基づいて、Manim で実行可能な Python コードを出力してください。
 コード以外の不要な説明は一切書かないでください。
-Manim のバージョンは 0.19.0 です。Python 実行環境には manim, numpy, matplotlib のみがインストールされています。
+Manim のバージョンは 0.18.0 です。Python 実行環境には manim, numpy, matplotlib のみがインストールされています。
 他のライブラリを使用してはいけません。
 numpy や matplotlib のデフォルト関数や変数名を直接使用するのは危険です。
 LaTeX コードを書く場合は、r""（raw 文字列）を使ってください。例：r"\\frac{{a}}{{b}}"
@@ -39,7 +39,7 @@ class GeneratedScene(Scene):
 ```
 """
 manim_planer_with_instruct = """
-あなたは Manim のプロダクションプランナーです。次のユーザーのプロンプトに基づいて、Manim でどのようなアニメーションや図形を作成すべきかを箇条書きで要約してください。
+あなたは Manim のプロダクションプランナーです。次のユーザーのプロンプトに基づいて、Manim でどのようなアニメーションや図形を作成すべきかを最低限の記述でシーンを生成するためのinstructionを生成してください。
 
 ユーザープロンプト: {user_prompt}
 
@@ -149,7 +149,7 @@ teacher_prompt = """
 "prompt"="""
 あなたは物理学・数学・情報科学の専門家です。
 次のユーザープロンプトに対して知識を構造化してユーザーに解説するためのわかりやすいアウトラインを作成してください。
-ユーザープロンプト: {input_text}
+ユーザープロンプト: {input_text}manim_planer_with_instruct
 出力形式: 以下のMarkdownで出力してください。 
 # タイトル
 ## 概要

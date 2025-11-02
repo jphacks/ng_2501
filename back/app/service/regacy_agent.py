@@ -6,8 +6,9 @@ import tomllib
 from langdetect import detect
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.prompts import PromptTemplate
-from langchain.schema.runnable import RunnableSequence
+from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnableSequence
+
 from langchain_core.output_parsers import StrOutputParser
 
 from app.tools.manim_lint import parse_manim_or_python_traceback, format_error_for_llm

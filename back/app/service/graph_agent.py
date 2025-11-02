@@ -4,27 +4,16 @@ from pathlib import Path
 from dotenv import load_dotenv
 import tomllib
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.prompts import PromptTemplate
-from langchain.schema.runnable import RunnableSequence,RunnablePassthrough
+from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnableSequence,RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 import json
 import logging
 import logging.handlers
-# 必要なツール群
-# (app.tools.lint, app.tools.manim_lint, app.tools.secure はインポートされていると仮定)
-# (ダミーの関数を仮置きします)
-def format_and_linter(path):
-    print(f"DUMMY: Linting {path}")
-    return {"summary": {"errorCount": 0}}
-def parse_manim_or_python_traceback(stderr):
-    print("DUMMY: Parsing traceback")
-    return {"error": "Parsed Error", "line": 10, "detail": stderr[:100]}
-def format_error_for_llm(parsed_error):
-    print("DUMMY: Formatting for LLM")
-    return f"Line {parsed_error.get('line', '?')}: {parsed_error.get('detail', 'Unknown Error')}"
-def is_code_safe(script):
-    print("DUMMY: Checking security")
-    return True
+
+from app.tools.lint import format_and_linter
+from app.tools.manim_lint import parse_manim_or_python_traceback,format_error_for_llm
+from app.tools.secure import is_code_safe
 
 
 # LangGraphのコンポーネント
@@ -71,16 +60,12 @@ class ManimGraphAnimationService:
         base_dir = Path(__file__).resolve().parent
         prompts_path = base_dir / "prompts.toml"
         
-        # (プロンプトのロード処理 - ダミーの値を設定)
-        self.prompts = {
-            "chain": {
-                "manim_planer_with_instruct": "Plan: {user_prompt} {video_enhance_prompt}",
-                "manim_script_generate": "Script: {instructions}"
-            },
-            "explain": {
-                "prompt": "Explain: {input_text}"
-            }
-        }
+        # tomlファイルの読み込み
+        if prompts_path.exists():
+            with open(prompts_path, "rb") as f:
+                self.prompts = tomllib.load(f)
+            self.graph_logger.info("Prompts loaded from prompts.toml.")
+        
         self.graph_logger.info("Using dummy prompts as prompts.toml not found.")
         
         # LLMのロード
@@ -284,6 +269,7 @@ class ManimGraphAnimationService:
             
             # 2. TracebackをLLM用にパース
             parsed_error = parse_manim_or_python_traceback(e.stderr)
+            self.graph_logger.error(f"   [!] Parsed error:\n{parsed_error}")
             llm_formatted_error = format_error_for_llm(parsed_error)
             
             # 3. (★変更点★) パースしたエラーもログに出力

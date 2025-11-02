@@ -421,7 +421,6 @@ class ManimGraphAnimationService:
         workflow = StateGraph(ManimGraphState)
         workflow.add_node("generate_initial", self._generate_initial_script)
         workflow.add_node("check_bad_request", self._check_bad_request)
-        workflow.add_node("lint_check", self._lint_check)
         workflow.add_node("execute", self._execute_script)
         workflow.add_node("refine", self._refine_script_on_error)
         workflow.set_entry_point("generate_initial")
@@ -429,11 +428,7 @@ class ManimGraphAnimationService:
         workflow.add_edge("refine", "check_bad_request") 
         workflow.add_conditional_edges(
             "check_bad_request", self._after_bad_request_check,
-            {"end_with_error": END, "lint_check": "lint_check"}
-        )
-        workflow.add_conditional_edges(
-            "lint_check", self._after_lint_check,
-            {"refine": "refine", "execute": "execute", "end_with_error": END}
+            {"end_with_error": END}
         )
         workflow.add_conditional_edges(
             "execute", self._after_execution,

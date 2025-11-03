@@ -146,7 +146,7 @@ class ManimRegacyAgentService(BaseManimAgent):
                 self.base_logger.error(f"File not found during video generation for video_id: {video_id}")
                 return "FileNotFoundError"
             else:
-                self.fix_code_agent(
+                script = self.fix_code_agent(
                     video_id,
                     content,
                     video_success

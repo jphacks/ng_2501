@@ -178,30 +178,27 @@ export const useVideoGeneration = () => {
     /**
      * プロンプトを生成
      * Landing画面で「動画生成」ボタンを押したときに呼ばれる
-     * - 動画ID発行
-     * - DB登録（教材作成セッション開始）
-     * - バックエンドがprompt.jsonを生成
-     * - prompt.jsonを取得してPrompt画面に表示
+     * - 生成・動画ID発行
+     * - バックエンドがgenerate_script_with_promptあたりからprompt情報を与える
+     * - prompt情報を取得してPrompt画面に表示
      */
     const generatePrompt = async (text: string, videoPrompt?: string) => {
         const request: VideoGenerationRequest = { text, videoPrompt }
         validateRequestOrThrow(request)
 
-        // ① 動画ID発行
+        // ① 生成・動画ID発行
+        // TODO: videoDBに実装した処理を呼び出してIDを生成
+        // 暫定実装
+        const generationId = createVideoId()
         const videoId = createVideoId()
         
         setIsGenerating(true)
         setError(null)
 
-        try {
-            // TODO: バックエンドにDB登録リクエスト（教材作成セッション開始）
-            // この時点でバックエンドが tmp/{videoId}/prompt.json を生成する想定
-            // await createLearningMaterialSession(videoId, request)
-            
-            // TODO: prompt.jsonを取得して使用
-            // バックエンドAPI実装後: GET /api/prompt/{videoId} で prompt.json を取得
+        try {            
+            // TODO: prompt情報を取得して使用
             // 取得内容: { prompt, originalText, videoPrompt, manimCode }
-            // const generatedPrompt = await fetchPromptJson(videoId)
+            // generationIdを使ってバックエンドに問い合わせる実装を想定
             
             // 暫定実装: prompt.jsonが生成されるまでの間はローカルで生成
             const generatedPrompt = createVideoGenerationPrompt(videoId, request)
@@ -255,6 +252,9 @@ export const useVideoGeneration = () => {
                 prompt: editedPrompt,
                 generatedAt: new Date(),
             }
+
+            // TODO: ④ 動画DB、promptDB、MainmcodeDBに結果を保存
+            // 実装したvideoDBにおける処理を用いてvideoDBに全情報を保存する
 
             setPrompt(editedPrompt)
             setResult(generatedResult)

@@ -1,0 +1,4 @@
+2025-11-03 09:54:02.183 | INFO     | app.service.base_agent:_setup_logger:78 - Logger initialized. Log file: log/ManimRegacyAgentService.log
+2025-11-03 09:54:02.184 | INFO     | app.service.base_agent:_load_prompt:93 - Prompts loaded from /workspaces/ai_agent/back/app/service/prompt/prompts.toml
+2025-11-03 09:55:38.416 | INFO     | app.service.base_agent:_save_script:129 - Script saved to tmp/regacy_agent.py
+2025-11-03 09:56:11.448 | INFO     | app.service.base_agent:_execute_script:153 - Script executed successfully: tmp/regacy_agent.py

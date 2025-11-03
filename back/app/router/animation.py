@@ -11,6 +11,7 @@ from typing import Optional
 
 
 from app.service.graph_agent import ManimGraphAnimationService
+from app.service.agent_regacy import ManimRegacyAgentService
 from back.app.service.base_agent import SuccessResponse
 
 
@@ -73,7 +74,23 @@ async def generate_regacy_animation(initial_prompt:InitialPrompt):
             video_id=initial_prompt.video_id,
             content=initial_prompt.content,
             enhance_prompt=initial_prompt.enhance_prompt,
-            maxloop=3
+            max_loop=3
+        )
+        return response
+    except Exception as e:
+        # サービス内例外は 500 で返却
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+@router.post("/api/regacy_animation")
+async def generate_regacy_animation(initial_prompt:InitialPrompt):
+    regacy_service = ManimRegacyAgentService()
+    try:
+        response: SuccessResponse = regacy_service.main(
+            video_id=initial_prompt.video_id,
+            content=initial_prompt.content,
+            enhance_prompt=initial_prompt.enhance_prompt,
+            max_loop=3
         )
         return response
     except Exception as e:

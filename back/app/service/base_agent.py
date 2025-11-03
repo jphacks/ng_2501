@@ -47,7 +47,6 @@ class SuccessResponse(BaseModel):
     ok: bool
     video_id: Optional[str] = None
     message: Optional[str] = None
-    path: Optional[str] = None
 
 
 
@@ -163,7 +162,7 @@ class BaseManimAgent(ABC):
             return parsed_error
         
     @abstractmethod
-    def generate_video(self,video_id:str,content:str,enhance_prompt:str,maxloop:int=3)->str:
+    def generate_video(self,video_id:str,content:str,enhance_prompt:str,max_loop:int=3)->str:
         """
         サブクラスで実装されるべき抽象的なメソッド
         
@@ -182,14 +181,14 @@ class BaseManimAgent(ABC):
             "error": そのほかのエラー
             "failed": その他の失敗
         """
-        pass 
-    
-    def main(self,video_id:str,content:str,enhance_prompt:str,maxloop:int=3)-> SuccessResponse:
+        pass
+
+    def main(self,video_id:str,content:str,enhance_prompt:str,max_loop:int=3)-> SuccessResponse:
         """
         動画生成のメイン関数
         """
-        is_success = self.generate_video(video_id,content,enhance_prompt,maxloop)
-        
+        is_success = self.generate_video(video_id,content,enhance_prompt,max_loop)
+
         if is_success == "Success":
             return SuccessResponse(
             ok=True,

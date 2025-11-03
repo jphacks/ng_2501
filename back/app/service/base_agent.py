@@ -1,6 +1,6 @@
 
 import os
-import sys
+
 import subprocess
 from pathlib import Path
 from dotenv import load_dotenv
@@ -22,9 +22,6 @@ from loguru import logger
 from app.tools.secure import is_code_safe
 from app.tools.manim_lint import parse_manim_or_python_traceback,format_error_for_llm
 
-# LangGraphのコンポーネント
-from typing import TypedDict, Literal
-from langgraph.graph import StateGraph, END
 
 load_dotenv()
 
@@ -71,7 +68,6 @@ class BaseManimAgent(ABC):
         # log/ ディレクトリが存在しない場合は作成
         if not os.path.exists("log"):
             os.makedirs("log")
-        self.base_logger = logger.bind(name=logger_name)
         log_file = f"log/{logger_name}.log"
         logger.add(log_file, rotation="10 MB", retention="10 days", level="DEBUG")
         self.base_logger.info(f"Logger initialized. Log file: {log_file}")
@@ -93,7 +89,7 @@ class BaseManimAgent(ABC):
         return prompt_data
     
     
-    def _load_llm(self, model_type: str,*,model_provider: str = "google") -> ChatGoogleGenerativeAI | ChatAnthropic  | ChatOpenAI | ValueError:
+    def _load_llm(self, model_type: str,*,model_provider: str = "google") -> ChatGoogleGenerativeAI | ChatAnthropic  | ChatOpenAI :
         """
         APIによって呼び出す場合のLLMはこの関数の中で定義する。
         例: Google Gemini, Anthropic Claude, OpenAI GPT, xAI grok など
@@ -108,7 +104,7 @@ class BaseManimAgent(ABC):
         elif model_provider == "openai":
             return ChatOpenAI(model_name=model_type, api_key=os.getenv('OPENAI_API_KEY'))
         else:
-            return ValueError("Unsupported model provider")
+            raise ValueError("Unsupported model provider")
         
    
     def _load_local_llm(self,model_type: str) -> ChatOllama:

@@ -246,7 +246,7 @@ class ManimGraphAnimationService(BaseManimAgent):
             {"refine": "refine", "end_with_success": END, "end_with_error": END}
         )
         return workflow
-    
+
     def generate_video(self,video_id:str,content:str,enhance_prompt:str,maxloop:int=3)->str:
         """
         動画生成のメイン関数

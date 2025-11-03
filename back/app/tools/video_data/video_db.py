@@ -1,6 +1,8 @@
 import sqlite3 as sql
 import os
 import datetime
+from typing import Optional
+
 
 class VideoDatabase:
     def __init__(self):
@@ -208,3 +210,15 @@ class VideoDatabase:
         cur.execute('DELETE FROM generation')
         conn.commit()
         conn.close()
+# --- FastAPI 依存性注入のための設定 ---
+
+_video_db_instance: Optional[VideoDatabase] = None
+
+def get_video_db() -> VideoDatabase:
+    """
+    VideoDatabaseのシングルトンインスタンスを取得する依存関係関数。
+    """
+    global _video_db_instance
+    if _video_db_instance is None:
+        _video_db_instance = VideoDatabase()
+    return _video_db_instance

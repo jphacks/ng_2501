@@ -38,6 +38,7 @@ class GeneratedScene(Scene):
         # ...
 ```
 """
+
 manim_planer_with_instruct = """
 あなたは Manim のプロダクションプランナーです。次のユーザーのプロンプトに基づいて、Manim でどのようなアニメーションや図形を作成すべきかを最低限の記述でシーンを生成するためのinstructionを生成してください。
 

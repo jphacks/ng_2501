@@ -129,6 +129,8 @@ class ManimRegacyAgentService(BaseManimAgent):
             f.write(script.replace("```python", "").replace("```", ""))
         return script.replace("```python", "").replace("```", "")
     
+    
+    # 抽象クラスの実装
     def generate_video(self, video_id, content, enhance_prompt, max_loop = 3):
         # スクリプト生成
         script = self.generate_script_with_prompt(

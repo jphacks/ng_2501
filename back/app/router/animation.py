@@ -11,7 +11,7 @@ from typing import Optional
 
 
 from app.service.graph_agent import ManimGraphAnimationService
-from app.service.agent_regacy import ManimRegacyAgentService
+from back.app.service.agent import ManimRegacyAgentService
 from back.app.service.base_agent import SuccessResponse
 
 

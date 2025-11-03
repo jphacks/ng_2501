@@ -1,17 +1,19 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
+
 
 from dotenv import load_dotenv
 from fastapi import APIRouter, HTTPException 
 from fastapi.responses import FileResponse, JSONResponse 
 from pydantic import BaseModel 
+from typing import Optional
 
-from app.service.agent import ManimAnimationService
-from app.service.rag_agent import ManimAnimationOnRAGService
-from app.service.regacy_agent import RegacyManimAnimationService
-from app.service.graph_agent import ManimGraphState,ManimGraphAnimationService
+
+from app.service.graph_agent import ManimGraphAnimationService
+from back.app.service.agent import ManimRegacyAgentService
+from back.app.service.base_agent import SuccessResponse
+
 
 load_dotenv()
 
@@ -30,15 +32,10 @@ class InitialPrompt(BaseModel):
     video_id: str
     enhance_prompt: str = ""
 
-class SuccessResponse(BaseModel):
-    ok: bool
-    video_id: Optional[str] = None
-    message: Optional[str] = None
-    path: Optional[str] = None
 
 
 # ---------- Service ----------
-service = ManimGraphState()
+service = ManimGraphAnimationService()
 
 
 # ---------- Helpers ----------
@@ -52,15 +49,6 @@ def find_latest_video(video_id: str) -> Optional[Path]:
         return JSONResponse(status_code=404, content={ "message":"Video not found" }) 
     return FileResponse(path,media_type="video/mp4",filename="GeneratedScene.mp4")
 
-
-# ---------- Routes ----------
-@router.post("/api/prompt", response_model=Output, summary="コンセプトの構造化説明を生成")
-def concept_enhance(concept_input: ConceptInput):
-    """
-    ユーザー入力テキストを受け取り、知識構造の説明を生成して返す。
-    """
-    result = service.explain_concept(concept_input.text)
-    return Output(output=result)
 
 
 @router.get("/api/animation/{video_id}", summary="生成済み動画の取得")
@@ -78,68 +66,33 @@ def get_animation(video_id: str):
     return JSONResponse(status_code=404, content={"message": "Video not found"})
 
 
-@router.post("/api/animation_new", response_model=SuccessResponse, summary="動画の生成")
-async def generate_animation(initial_prompt: InitialPrompt):
-    """
-    LLMエージェント経由で Manim 動画を生成する。
-    """
-    try:
-        is_success = service.generate_videos(
-            video_id=initial_prompt.video_id,
-            content=initial_prompt.content,           
-            enhance_prompt=initial_prompt.enhance_prompt or "",
-        )
-    except Exception as e:
-        # サービス内例外は 500 で返却
-        raise HTTPException(status_code=500, detail=str(e))
-
-    if is_success == "Success":
-        return SuccessResponse(
-            ok=True,
-            video_id=initial_prompt.video_id,
-            message="done",
-        )
-    elif is_success=="bad_request":
-        return SuccessResponse(
-            ok=False,
-            video_id=initial_prompt.video_id,
-            message="bad"
-        )
-    else:
-        return SuccessResponse(
-            ok=False,
-            video_id=initial_prompt.video_id,
-            message="failed",
-        )
 
 @router.post("/api/animation")
 async def generate_regacy_animation(initial_prompt:InitialPrompt):
-    service = ManimGraphAnimationService()
     try:
-        is_success = service.generate_videos_langgraph(
-             video_id=initial_prompt.video_id,
-             content=initial_prompt.content, 
-            enhance_prompt=initial_prompt.enhance_prompt or "",
+        response: SuccessResponse = service.main(
+            video_id=initial_prompt.video_id,
+            content=initial_prompt.content,
+            enhance_prompt=initial_prompt.enhance_prompt,
+            max_loop=3
         )
+        return response
     except Exception as e:
         # サービス内例外は 500 で返却
         raise HTTPException(status_code=500, detail=str(e))
+    
 
-    if is_success == "Success":
-        return SuccessResponse(
-            ok=True,
+@router.post("/api/regacy_animation")
+async def generate_regacy_animation(initial_prompt:InitialPrompt):
+    regacy_service = ManimRegacyAgentService()
+    try:
+        response: SuccessResponse = regacy_service.main(
             video_id=initial_prompt.video_id,
-            message="done",
+            content=initial_prompt.content,
+            enhance_prompt=initial_prompt.enhance_prompt,
+            max_loop=3
         )
-    elif is_success=="bad_request":
-        return SuccessResponse(
-            ok=False,
-            video_id=initial_prompt.video_id,
-            message="bad"
-        )
-    else:
-        return SuccessResponse(
-            ok=False,
-            video_id=initial_prompt.video_id,
-            message="failed",
-        )
+        return response
+    except Exception as e:
+        # サービス内例外は 500 で返却
+        raise HTTPException(status_code=500, detail=str(e))

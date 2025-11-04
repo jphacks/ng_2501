@@ -502,3 +502,4 @@ code: │   table = Table(                                                      
 2025-11-03 15:26:06.458 | INFO     | app.service.graph_agent:_execute_and_handle_errors:123 -    [+] Script executed successfully.
 2025-11-03 15:26:06.459 | INFO     | app.service.graph_agent:_after_execution:227 - --- [Branch] Execution Succeeded. Ending Graph. ---
 2025-11-03 15:26:06.459 | INFO     | app.service.graph_agent:generate_video:278 - --- Graph Finished: Success ---
+2025-11-04 13:51:09.069 | INFO     | app.service.base_agent:_load_prompt:96 - Prompts loaded from /workspaces/ai_agent/back/app/service/prompt/prompts.toml

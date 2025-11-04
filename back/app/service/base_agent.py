@@ -204,6 +204,17 @@ class BaseManimAgent(ABC):
             self.base_logger.error(f"Script execution failed: {parsed_error}")
             return parsed_error
     
+    @abstractmethod
+    def manim_planner(self,content:str,enhance_prompt:str="")-> str:
+        """
+        manimコード生成のための計画立案
+        
+        サブクラスで必要ならばオーバーライドして使用する。
+        標準実装では flash_llm を使用して計画立案を行う。
+        
+        """
+        
+        pass
     
     @abstractmethod
     def generate_video(self, video_id:str, content:str, enhance_prompt:str, max_loop:int=3)->str:

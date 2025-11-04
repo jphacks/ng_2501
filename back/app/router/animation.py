@@ -13,7 +13,7 @@ from typing import Optional
 from app.service.graph_agent import ManimGraphAnimationService
 from back.app.service.agent import ManimRegacyAgentService
 from back.app.service.base_agent import SuccessResponse
-from back.app.tools.video_data.video_db import VideoDatabase, get_video_db
+from back.app.model.model import VideoDatabase, get_video_db
 
 load_dotenv()
 
@@ -118,32 +118,6 @@ async def generate_regacy_animation(
         # サービス内例外は 500 で返却
         raise HTTPException(status_code=500, detail=str(e))
 
-
-
-@router.post("/api/regacy_animation")
-async def generate_regacy_animation(
-    initial_prompt:InitialPrompt,
-    db: VideoDatabase = Depends(get_video_db)
-    ):
-    regacy_service = ManimRegacyAgentService()
-    try:
-        response: SuccessResponse = regacy_service.main(
-            content=initial_prompt.content,
-            enhance_prompt=initial_prompt.enhance_prompt,
-            max_loop=3
-        )
-        
-        db.generate_video(
-            video_id=initial_prompt.video_id,
-            video_path=response.video_path,
-            prompt_path=response.prompt_path,
-            manim_code_path=response.manim_code_path
-        )
-        return response
-    except Exception as e:
-        # サービス内例外は 500 で返却
-        raise HTTPException(status_code=500, detail=str(e))
-    
 
 @router.post("/api/concept_to_animation", response_model=Output, summary="作った動画をEdit出来る")
 async def edit_animation(

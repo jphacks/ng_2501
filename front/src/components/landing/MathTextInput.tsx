@@ -609,38 +609,10 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                             />
                             <p className="mt-2 text-xs text-gray-500">動画の見た目や演出について具体的に指示できます</p>
                         </div>
-
-                        <div className="pt-2">
-                            <button
-                                type="submit"
-                                disabled={!text.trim() || isGenerating}
-                                className="w-full bg-green-600 text-white py-3 px-4 rounded text-base font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-sm flex items-center justify-center gap-2"
-                            >
-                                {isGenerating ? (
-                                    <>
-                                        <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                                            <title>生成中</title>
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                        </svg>
-                                        動画生成中...
-                                    </>
-                                ) : (
-                                    <>
-                                        動画を生成
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <title>生成</title>
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                    </>
-                                )}
-                            </button>
-                        </div>
                     </div>
                     <div className={`lg:col-span-2 flex-col space-y-3 min-h-0 min-w-0 ${isOptionalSettingsOpen ? 'hidden lg:flex' : 'flex'}`}>
                         {/* 表示モード切り替え */}
-                        <div className="flex gap-1 bg-gray-100 p-1 rounded">
+                        <div className="flex gap-1 sm:bg-gray-100 p-1 rounded">
                             {/* Desktop: 3 buttons */}
                             <button
                                 type="button"
@@ -710,16 +682,20 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                 </div>
                             </button>
 
-                            {/* Mobile: Toggle Button */}
+                        </div>
+
+                        {/* ツールバー */}
+                        <div className="flex gap-1.5 sm:gap-2">
+                            {/* Mobile: プレビュー・編集切り替えボタン */}
                             <button
                                 type="button"
                                 onClick={() => setViewMode(viewMode === 'edit' ? 'preview' : 'edit')}
                                 disabled={isGenerating || (viewMode === 'edit' && !text.trim())}
-                                className={`flex sm:hidden w-full px-3 py-2 text-xs font-medium rounded transition-all items-center justify-center gap-1.5 bg-white text-blue-600 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed`}
+                                className="flex sm:hidden flex-1 min-w-0 px-2 py-2 text-xs font-medium bg-white text-gray-700 border border-gray-300 rounded hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors items-center justify-center gap-1"
                             >
                                 {viewMode === 'edit' ? (
                                     <>
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <title>プレビュー</title>
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                             <path
@@ -729,11 +705,11 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                                 d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                                             />
                                         </svg>
-                                        <span>プレビュー</span>
+                                        <span className="text-[0.625rem] min-[360px]:text-[0.7rem] truncate">プレビュー</span>
                                     </>
                                 ) : (
                                     <>
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <title>編集</title>
                                             <path
                                                 strokeLinecap="round"
@@ -742,38 +718,35 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                                             />
                                         </svg>
-                                        <span>編集</span>
+                                        <span className="text-[0.625rem] min-[360px]:text-[0.7rem] truncate">編集</span>
                                     </>
                                 )}
                             </button>
-                        </div>
 
-                        {/* ツールバー */}
-                        <div className="flex gap-2">
                             <button
                                 type="button"
                                 onClick={loadSampleText}
                                 disabled={isGenerating}
-                                className="px-3 py-2 text-xs font-medium bg-white text-gray-700 border border-gray-300 rounded hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+                                className="flex-1 min-w-0 px-2 py-2 text-xs font-medium bg-white text-gray-700 border border-gray-300 rounded hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1"
                             >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <title>サンプル</title>
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
-                                <span className="text-[0.675rem] min-[330px]:text-xs">サンプルを読み込む</span>
+                                <span className="text-[0.625rem] min-[360px]:text-[0.7rem] sm:text-xs truncate">サンプル</span>
                             </button>
                             <button
                                 type="button"
                                 onClick={handleMathEditorOpen}
                                 disabled={isGenerating || viewMode === 'preview'}
-                                className="px-3 py-2 text-xs font-medium bg-white text-gray-700 border border-gray-300 rounded hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+                                className="flex-1 min-w-0 px-2 py-2 text-xs font-medium bg-white text-gray-700 border border-gray-300 rounded hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1"
                                 title={viewMode === 'preview' ? 'プレビューモードでは使用できません' : '数式を挿入'}
                             >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <title>数式</title>
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                 </svg>
-                                <span className="text-[0.675rem] min-[330px]:text-xs">数式を挿入</span>
+                                <span className="text-[0.625rem] min-[360px]:text-[0.7rem] sm:text-xs truncate">数式</span>
                             </button>
                         </div>
 

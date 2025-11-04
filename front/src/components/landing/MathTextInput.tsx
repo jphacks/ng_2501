@@ -541,7 +541,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
 
                 {/* ヘッダー */}
                 <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-200">
-                    <h3 className="text-sm font-semibold text-gray-800">数学テキスト入力</h3>
+                    <h3 className="text-lg font-bold text-gray-800">SUDO<span className="text-xs text-gray-500 ml-5">ー 数学テキスト入力</span></h3>
                     {/* モバイル版: オプション設定切替ボタン */}
                     <button
                         type="button"

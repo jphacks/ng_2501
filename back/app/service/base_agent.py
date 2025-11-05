@@ -298,7 +298,7 @@ class BaseManimAgent(ABC):
         pass
 
     @abstractmethod
-    def generate_video(self,video_id:str,content:str,enhance_prompt:str,animation_plan:str,maxloop:int=3)->str:
+    def generate_video(self,video_id:str,content:str,enhance_prompt:str,maxloop:int=3)->str:
         """
         サブクラスで実装されるべき抽象的なメソッド
 
@@ -372,7 +372,7 @@ class BaseManimAgent(ABC):
         # save prompt
         prompt_path = self._save_prompt(generation_id, content, enhance_prompt)
 
-        is_success = self.generate_video(video_id, content, enhance_prompt, animation_plan, max_loop)
+        is_success = self.generate_video(video_id, content, enhance_prompt, max_loop)
 
         if is_success == "Success":
             return SuccessResponse(

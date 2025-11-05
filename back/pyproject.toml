@@ -23,7 +23,7 @@ dependencies = [
     "langgraph>=0.6.8",
     "langserve>=0.3.2",
     "loguru>=0.7.3",
-    "manim==0.18.1",
+    "manim==0.19.0",
     "markdown-it-py>=4.0.0",
     "mypy>=1.18.2",
     "pandas>=2.3.3",

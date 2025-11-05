@@ -247,14 +247,14 @@ class ManimGraphAnimationService(BaseManimAgent):
         )
         return workflow
 
-    def generate_video(self,video_id:str,content:str,enhance_prompt:str,animation_plan:str,maxloop:int=3)->str:
+    def generate_video(self,video_id:str,content:str,enhance_prompt:str,maxloop:int=3)->str:
         """
         動画生成のメイン関数
         """
         initial_state: ManimGraphState = {
             "user_request": content,
             "generation_instructions": enhance_prompt,
-            "animation_plan": animation_plan,
+            "animation_plan": content,
             "video_id": video_id,
             "current_script": "",
             "last_error": "",

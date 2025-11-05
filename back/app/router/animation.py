@@ -177,27 +177,6 @@ async def generate_regacy_animation(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/api/concept_to_animation", response_model=Output, summary="作った動画をEdit出来る")
-async def edit_animation(
-    edit_prompt: EditPrompt,
-    db: VideoDatabase = Depends(get_video_db)
-):
-    try:
-        response: SuccessResponse = service.edit(
-            inner_prior_video_id=edit_prompt.prior_inner_video_id,
-            enhance_prompt=edit_prompt.enhance_prompt,
-            max_loop=3
-        )
-        db.edit_video(
-            video_id=edit_prompt.db_id,
-            video_path=response.video_path,
-        )
-        return response
-    except Exception as e:
-        # サービス内例外は 500 で返却
-        raise HTTPException(status_code=500, detail=str(e))
-    
-
 @router.post("/api/animation/search")
 async def search_existing_animation(request: SearchRequest):
     """
@@ -256,7 +235,7 @@ async def add_animation_template(request: AddTemplateRequest):
         raise HTTPException(status_code=500, detail=str(e))
     
 
-@router.post("/api/edit_video",response_class=SuccessResponse , summary="動画編集API")
+@router.post("/api/animation/edit", response_model=SuccessResponse, summary="動画編集API")
 async def edit_video(
     edit_prompt: EditPrompt,
     db: VideoDatabase = Depends(get_video_db)
@@ -266,12 +245,14 @@ async def edit_video(
             generation_id=edit_prompt.generation_id,
             prior_video_id=edit_prompt.prior_video_id,
             enhance_prompt=edit_prompt.enhance_prompt,
-            max_loop=3
+            max_loop=3,
         )
-        db.edit_video(
-            prior_video_id=edit_prompt.prior_video_id,
-            new_video_path=response.video_path,
-        )
+        if response.ok and response.video_id and response.video_path:
+            db.edit_video(
+                prior_video_id=edit_prompt.prior_video_id,
+                new_video_path=response.video_path,
+                new_video_id=response.video_id,
+            )
         return response
     except Exception as e:
         # サービス内例外は 500 で返却

@@ -280,16 +280,15 @@ class ManimFastAnimationService(BaseManimAgent):
         video_id: str,
         content: str,
         enhance_prompt: str,
-        animation_plan: str,
         maxloop: int = 3,
     ) -> str:
         """
         動画生成のメイン関数
         """
         initial_state: ManimGraphState = {
-            "user_request": content,
+            "user_request": "",
             "generation_instructions": enhance_prompt,
-            "animation_plan": animation_plan,
+            "animation_plan": content,
             "video_id": video_id,
             "current_script": "",
             "last_error": "",

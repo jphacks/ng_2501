@@ -38,8 +38,8 @@ export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
     return (
         <div className="flex flex-col h-full">
             {/* ヘッダー */}
-            <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-semibold text-gray-800">動画生成完了</h2>
+            <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-200">
+                <h3 className="text-lg font-bold text-gray-800">SUDO<span className="text-xs text-gray-500 ml-5">ー 数学テキスト入力</span></h3>
                 {onReset && (
                     <button
                         type="button"
@@ -58,7 +58,7 @@ export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
             </div>
 
             {/* メインコンテンツ: 2カラムレイアウト */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0 min-w-0">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:flex-1 min-h-0 min-w-0">
                 {/* 左側: 動画プレイヤー（メイン） */}
                 <div className="lg:col-span-2 flex flex-col min-h-0 min-w-0 w-full gap-2">
                     <VideoPlayer videoUrl={result.videoUrl} />

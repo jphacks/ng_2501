@@ -30,7 +30,7 @@ export function PromptEditor({ prompt, isGenerating, onGenerate }: PromptEditorP
         <div className="flex flex-col h-full min-w-0 w-full">
             {/* ヘッダー */}
             <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-200">
-                <h3 className="text-sm font-semibold text-gray-800">プロンプト確認・編集</h3>
+                <h3 className="text-lg font-bold text-gray-800">SUDO<span className="text-xs text-gray-500 ml-5">ー プロンプト確認・編集</span></h3>
             </div>
 
             {/* メインコンテンツ: 2カラムレイアウト（右は常に固定幅） */}

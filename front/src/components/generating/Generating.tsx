@@ -6,6 +6,9 @@
 export function Generating() {
     return (
         <div className="space-y-4">
+            <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-200">
+                <h3 className="text-lg font-bold text-gray-800">SUDO<span className="text-xs text-gray-500 ml-5">ー 生成中</span></h3>
+            </div>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-8 text-center">
                 <div className="flex justify-center mb-4">
                     <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600" />

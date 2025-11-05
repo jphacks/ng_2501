@@ -1,0 +1,39 @@
+erDiagram
+    Prompt {
+        Integer prompt_id PK
+        String prompt_path
+    }
+    ManimCode {
+        Integer manim_code_id PK
+        String manim_code_path
+    }
+    Generation {
+        Integer generate_id PK
+        TIMESTAMP generate_time
+    }
+    Video {
+        Integer video_id PK
+        Integer generate_id FK
+        String video_path
+        Integer prompt_id FK
+        Integer manim_code_id FK
+        TIMESTAMP generate_time
+        TIMESTAMP edit_time
+        Integer edit_count
+    }
+    VideoSeq {
+        Integer seq_video_id PK
+        TIMESTAMP create_time
+    }
+
+
+    %% Prompt (1) -- (0..N) Video
+    %% (CASCADE削除が有効)
+    Prompt ||--o{ Video : "videos (ON DELETE CASCADE)"
+
+    %% ManimCode (1) -- (0..N) Video
+    %% (CASCADE削除が有効)
+    ManimCode ||--o{ Video : "videos (ON DELETE CASCADE)"
+
+    %% Generation (1) -- (0..N) Video
+    Generation ||--o{ Video : "videos"

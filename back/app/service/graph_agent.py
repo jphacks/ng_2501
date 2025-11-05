@@ -246,7 +246,7 @@ class ManimGraphAnimationService(BaseManimAgent):
             {"refine": "refine", "end_with_success": END, "end_with_error": END}
         )
         return workflow
-    
+
     def generate_video(self,video_id:str,content:str,enhance_prompt:str,maxloop:int=3)->str:
         """
         動画生成のメイン関数
@@ -280,3 +280,59 @@ class ManimGraphAnimationService(BaseManimAgent):
         
         self.base_logger.critical("--- Graph Finished: Fallback (Unknown State) ---")
         return "fall back"
+    
+    def edit_video(self,video_id:str,original_script:str,edit_instructions:str,maxloop:int=3)->str:
+        """
+        既存のスクリプトを編集して動画を生成するメイン関数
+        """
+        initial_state: ManimGraphState = {
+            "user_request": edit_instructions,
+            "generation_instructions": "",
+            "video_id": video_id,
+            "current_script": original_script,
+            "last_error": "",
+            "error_type": "",
+            "is_bad_request": False,
+            "max_retries": maxloop,
+            "current_retry": 0,
+            "animation_plan": ""
+        }
+        
+        final_state = self.app.invoke(initial_state)
+
+        if final_state["is_bad_request"]:
+            self.base_logger.error("--- Graph Finished: Bad Request ---")
+            return "bad_request"
+        
+        if final_state["last_error"]:
+            self.base_logger.error(f"--- Graph Finished: Error (Max Retries Reached) ---")
+            return "error"
+        
+        if not final_state["last_error"] and not final_state["is_bad_request"]:
+             self.base_logger.info("--- Graph Finished: Success ---")
+             return "Success"
+        
+        self.base_logger.critical("--- Graph Finished: Fallback (Unknown State) ---")
+        return "fall back"
+    
+    def manim_planner(self,content:str,enhance_prompt:str)->str:
+        """
+        Manimのアニメーションプランを生成する関数
+        """
+        manim_planer = PromptTemplate(
+            input_variables=['user_prompt'],
+            optional_variables= ['video_enhance_prompt'],
+            template=self.prompts['chain']['manim_planer_with_instruct']
+        )
+        parser = StrOutputParser()
+        
+        chain = manim_planer | self.lite_llm | parser
+        
+        output: str = chain.invoke(
+            {
+                "user_prompt": content,
+                "video_enhance_prompt": enhance_prompt
+            }
+        )
+        self.base_logger.info(f"Manim planner output: {output}")
+        return output

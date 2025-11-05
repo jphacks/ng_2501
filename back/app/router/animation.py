@@ -1,69 +1,102 @@
-from __future__ import annotations
+
 
 from pathlib import Path
-from typing import Optional
+
 
 from dotenv import load_dotenv
-from fastapi import APIRouter, HTTPException 
+from fastapi import APIRouter, HTTPException ,Depends
 from fastapi.responses import FileResponse, JSONResponse 
 from pydantic import BaseModel 
+from typing import Optional
 
-from app.service.agent import ManimAnimationService
-from app.service.rag_agent import ManimAnimationOnRAGService
-from app.service.regacy_agent import RegacyManimAnimationService
+
+from app.service.graph_agent import ManimGraphAnimationService
+from back.app.service.agent import ManimRegacyAgentService
+from back.app.service.base_agent import SuccessResponse , PlanResponse
+from back.app.model.model import VideoDatabase, get_video_db
 
 load_dotenv()
 
 router = APIRouter(tags=["animation"])
+
+
+
+
 workspace_path = Path("/workspaces/ai_agent/back/media/videos") 
-script_path = Path("/workspace/ai_agent/tmp")
+
 # ---------- Pydantic Models ----------
 class ConceptInput(BaseModel):
     text: str
+    additional_instructions: Optional[str] = ""
 
 class Output(BaseModel):
     output: str
 
 class InitialPrompt(BaseModel):
-    content: str
-    video_id: str
+    generation_id:int
+    content: str # manim planで作成したプロンプト
     enhance_prompt: str = ""
 
-class SuccessResponse(BaseModel):
-    ok: bool
-    video_id: Optional[str] = None
-    message: Optional[str] = None
-    path: Optional[str] = None
+class EditPrompt(BaseModel):
+    generation_id: int
+    prior_video_id: str
+    enhance_prompt: str
 
 
 # ---------- Service ----------
-service = ManimAnimationService()
+service = ManimGraphAnimationService()
 
 
-# ---------- Helpers ----------
-def find_latest_video(video_id: str) -> Optional[Path]:
-    """
-    media/videos/{video_id}/ 以下から最も新しい mp4 を探す。
-    典型パス: 480p15/GeneratedScene.mp4 または partial_movie_files 配下の完成ファイル。
-    """
-    path = workspace_path / video_id / "480p15" / "GeneratedScene.mp4"
-    if not path.is_file(): 
-        return JSONResponse(status_code=404, content={ "message":"Video not found" }) 
-    return FileResponse(path,media_type="video/mp4",filename="GeneratedScene.mp4")
 
 
-# ---------- Routes ----------
-@router.post("/api/prompt", response_model=Output, summary="コンセプトの構造化説明を生成")
-def concept_enhance(concept_input: ConceptInput):
+@router.post("/api/plan_animation", response_model=PlanResponse, summary="動画生成の計画立案")
+async def plan_animation(
+    concept_input: ConceptInput,
+    db: VideoDatabase = Depends(get_video_db)
+):
     """
-    ユーザー入力テキストを受け取り、知識構造の説明を生成して返す。
+    動画生成の計画立案を行う。
+    ここで発行した生成IDは基本的にSession IDとしてフロントエンドで保持する
     """
-    result = service.explain_concept(concept_input.text)
-    return Output(output=result)
+    try:
+        # DB に生成セッションを登録し、生成IDを取得
+        generate_id = db.generate_prompt()
+        print(f"Generated ID: {generate_id}")
+        
+        
+        # 生成IDによって計画立案を実行と保存
+        plan_response: PlanResponse = service.plan(
+            generation_id=generate_id,
+            content=concept_input.text,
+            enhance_prompt=concept_input.additional_instructions
+        )
+        print(plan_response)
+        return plan_response
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Planning error: {str(e)}")
+
+
+@router.post("/api/dev/reset_database", summary="【開発用】データベースの完全リセット")
+async def dev_reset_database(
+    db: VideoDatabase = Depends(get_video_db)
+):
+    """
+    【危険な操作】データベースのすべてのテーブルを削除し、
+    現在のモデル定義に基づいて再作成します。
+    これにより、すべてのデータが失われます。
+    開発環境でのスキーマ変更の適用にのみ使用してください。
+    """
+    try:
+        db._drop_and_recreate_tables()
+        return JSONResponse(status_code=200, content={"message": "Database has been successfully reset."})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database reset failed: {str(e)}")
 
 
 @router.get("/api/animation/{video_id}", summary="生成済み動画の取得")
-def get_animation(video_id: str):
+async def get_animation(
+    video_id: str,
+    ):
     """
     生成済みの動画ファイル（mp4）を返す。
     最終 mp4 が確定パスにない場合でも、サブディレクトリを走査して最新の mp4 を返す。
@@ -77,103 +110,51 @@ def get_animation(video_id: str):
     return JSONResponse(status_code=404, content={"message": "Video not found"})
 
 
-@router.post("/api/animation_new", response_model=SuccessResponse, summary="動画の生成")
-async def generate_animation(initial_prompt: InitialPrompt):
-    """
-    LLMエージェント経由で Manim 動画を生成する。
-    """
-    try:
-        is_success = service.generate_videos(
-            video_id=initial_prompt.video_id,
-            content=initial_prompt.content,           
-            enhance_prompt=initial_prompt.enhance_prompt or "",
-        )
-    except Exception as e:
-        # サービス内例外は 500 で返却
-        raise HTTPException(status_code=500, detail=str(e))
-
-    if is_success == "Success":
-        return SuccessResponse(
-            ok=True,
-            video_id=initial_prompt.video_id,
-            message="done",
-        )
-    elif is_success=="bad_request":
-        return SuccessResponse(
-            ok=False,
-            video_id=initial_prompt.video_id,
-            message="bad"
-        )
-    else:
-        return SuccessResponse(
-            ok=False,
-            video_id=initial_prompt.video_id,
-            message="failed",
-        )
-
-@router.post("/api/animation_agent_rag_model")
-async def generate_rag_animation(initial_prompt: InitialPrompt):
-    """
-    LLMエージェント経由で Manim 動画を生成する。
-    """
-    rag_service = ManimAnimationOnRAGService()
-    try:
-        is_success = rag_service.generate_videos(
-            video_id=initial_prompt.video_id,
-            content=initial_prompt.content,           
-            enhance_prompt=initial_prompt.enhance_prompt or "",
-        )
-    except Exception as e:
-        # サービス内例外は 500 で返却
-        raise HTTPException(status_code=500, detail=str(e))
-
-    if is_success == "Success":
-        return SuccessResponse(
-            ok=True,
-            video_id=initial_prompt.video_id,
-            message="done",
-        )
-    elif is_success=="bad_request":
-        return SuccessResponse(
-            ok=False,
-            video_id=initial_prompt.video_id,
-            message="bad"
-        )
-    else:
-        return SuccessResponse(
-            ok=False,
-            video_id=initial_prompt.video_id,
-            message="failed",
-        )
-
 @router.post("/api/animation")
-async def generate_regacy_animation(initial_prompt:InitialPrompt):
-    service = RegacyManimAnimationService()
+async def generate_regacy_animation(
+    initial_prompt:InitialPrompt,
+    db: VideoDatabase = Depends(get_video_db)
+    ):
     try:
-        is_success = service.generate_animation_with_error_handling(
-            file_name=initial_prompt.video_id,
-            user_prompt=initial_prompt.content,           
-            enhance_prompt=initial_prompt.enhance_prompt or "",
+        response: SuccessResponse = service.main(
+            generation_id=initial_prompt.generation_id,
+            content=initial_prompt.content,
+            enhance_prompt=initial_prompt.enhance_prompt,
+            max_loop=3
         )
+        
+        video_id = db.generate_video(
+            generate_id=initial_prompt.generation_id,
+            video_id=response.video_id,
+            video_path=response.video_path,
+            prompt_path=response.prompt_path,
+            manim_code_path=response.manim_code_path
+        )
+        
+        return response
     except Exception as e:
         # サービス内例外は 500 で返却
         raise HTTPException(status_code=500, detail=str(e))
 
-    if is_success == "Success":
-        return SuccessResponse(
-            ok=True,
-            video_id=initial_prompt.video_id,
-            message="done",
+
+@router.post("/api/edit_video",response_class=SuccessResponse , summary="動画編集API")
+async def edit_video(
+    edit_prompt: EditPrompt,
+    db: VideoDatabase = Depends(get_video_db)
+):
+    try:
+        response: SuccessResponse = service.edit(
+            generation_id=edit_prompt.generation_id,
+            prior_video_id=edit_prompt.prior_video_id,
+            enhance_prompt=edit_prompt.enhance_prompt,
+            max_loop=3
         )
-    elif is_success=="bad_request":
-        return SuccessResponse(
-            ok=False,
-            video_id=initial_prompt.video_id,
-            message="bad"
+        db.edit_video(
+            prior_video_id=edit_prompt.prior_video_id,
+            new_video_path=response.video_path,
         )
-    else:
-        return SuccessResponse(
-            ok=False,
-            video_id=initial_prompt.video_id,
-            message="failed",
-        )
+        return response
+    except Exception as e:
+        # サービス内例外は 500 で返却
+        raise HTTPException(status_code=500, detail=str(e))
+

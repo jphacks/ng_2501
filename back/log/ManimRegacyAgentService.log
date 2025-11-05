@@ -1,0 +1,70 @@
+2025-11-03 09:54:02.183 | INFO     | app.service.base_agent:_setup_logger:78 - Logger initialized. Log file: log/ManimRegacyAgentService.log
+2025-11-03 09:54:02.184 | INFO     | app.service.base_agent:_load_prompt:93 - Prompts loaded from /workspaces/ai_agent/back/app/service/prompt/prompts.toml
+2025-11-03 09:55:38.416 | INFO     | app.service.base_agent:_save_script:129 - Script saved to tmp/regacy_agent.py
+2025-11-03 09:56:11.448 | INFO     | app.service.base_agent:_execute_script:153 - Script executed successfully: tmp/regacy_agent.py
+2025-11-03 15:06:12.078 | INFO     | app.service.base_agent:_load_prompt:96 - Prompts loaded from /workspaces/ai_agent/back/app/service/prompt/prompts.toml
+2025-11-03 15:06:12.083 | INFO     | app.service.base_agent:_save_prompt:154 - Prompt saved to /workspaces/ai_agent/back/prompts/a8ae4add-ff6e-4d1c-aa77-d58e923606f5.json
+2025-11-03 15:07:51.077 | INFO     | app.service.base_agent:_save_script:132 - Script saved to tmp/a8ae4add-ff6e-4d1c-aa77-d58e923606f5.py
+2025-11-03 15:07:52.193 | ERROR    | app.service.base_agent:_execute_script:197 - Script execution failed: [Error]
+file: /workspaces/ai_agent/back/tmp/a8ae4add-ff6e-4d1c-aa77-d58e923606f5.py
+line: 36
+type: TypeError
+message: Mobject.__getattr__.<locals>.getter() got an unexpected keyword argument 'x_range'
+code: │   exp_graph = left_axes.get_graph(lambda x: 2**x, x_range=[-2, 3.5], color=BLUE)     │
+
+2025-11-03 15:08:56.736 | INFO     | app.service.base_agent:_save_script:132 - Script saved to tmp/a8ae4add-ff6e-4d1c-aa77-d58e923606f5.py
+2025-11-03 15:08:57.377 | ERROR    | app.service.base_agent:_execute_script:197 - Script execution failed: [Error]
+file: /workspaces/ai_agent/back/tmp/a8ae4add-ff6e-4d1c-aa77-d58e923606f5.py
+line: 38
+type: TypeError
+message: Mobject.__getattr__.<locals>.getter() got an unexpected keyword argument 'color'
+code: │   exp_graph = left_axes.get_graph(lambda x: 2**x, color=BLUE)                        │
+
+2025-11-03 15:09:27.328 | INFO     | app.service.base_agent:_save_script:132 - Script saved to tmp/a8ae4add-ff6e-4d1c-aa77-d58e923606f5.py
+2025-11-03 15:09:28.049 | ERROR    | app.service.base_agent:_execute_script:197 - Script execution failed: [Error]
+file: /workspaces/ai_agent/back/tmp/a8ae4add-ff6e-4d1c-aa77-d58e923606f5.py
+line: 39
+type: TypeError
+message: Mobject.__getattr__.<locals>.getter() takes 1 positional argument but 2 were given
+code: │   exp_graph = left_axes.get_graph(lambda x: 2**x).set_color(BLUE)                    │
+
+2025-11-03 15:10:53.599 | INFO     | app.service.base_agent:_save_script:132 - Script saved to tmp/a8ae4add-ff6e-4d1c-aa77-d58e923606f5.py
+2025-11-03 15:10:54.226 | ERROR    | app.service.base_agent:_execute_script:197 - Script execution failed: [Error]
+file: /workspaces/ai_agent/back/tmp/a8ae4add-ff6e-4d1c-aa77-d58e923606f5.py
+line: 36
+type: TypeError
+message: Mobject.__getattr__.<locals>.getter() takes 1 positional argument but 2 were given
+code: │   exp_graph = left_axes.get_graph(lambda x: 2**x).set_color(BLUE)                    │
+
+2025-11-03 15:12:39.126 | INFO     | app.service.base_agent:_save_script:132 - Script saved to tmp/a8ae4add-ff6e-4d1c-aa77-d58e923606f5.py
+2025-11-03 15:12:39.769 | ERROR    | app.service.base_agent:_execute_script:197 - Script execution failed: [Error]
+file: /workspaces/ai_agent/back/tmp/a8ae4add-ff6e-4d1c-aa77-d58e923606f5.py
+line: 41
+type: TypeError
+message: Mobject.__getattr__.<locals>.getter() takes 1 positional argument but 2 were given
+code: │   exp_graph = left_axes.get_graph(lambda x: 2**x).set_color(BLUE)                    │
+
+2025-11-03 15:14:09.443 | INFO     | app.service.base_agent:_save_script:132 - Script saved to tmp/a8ae4add-ff6e-4d1c-aa77-d58e923606f5.py
+2025-11-03 15:14:10.190 | ERROR    | app.service.base_agent:_execute_script:197 - Script execution failed: [Error]
+file: /workspaces/ai_agent/back/tmp/a8ae4add-ff6e-4d1c-aa77-d58e923606f5.py
+line: 38
+type: TypeError
+message: Mobject.__getattr__.<locals>.getter() takes 1 positional argument but 2 were given
+code: │   exp_graph = left_axes.get_graph(lambda x: 2**x).set_color(BLUE)                    │
+
+2025-11-03 15:15:40.411 | INFO     | app.service.base_agent:_save_script:132 - Script saved to tmp/a8ae4add-ff6e-4d1c-aa77-d58e923606f5.py
+2025-11-03 15:15:41.066 | ERROR    | app.service.base_agent:_execute_script:197 - Script execution failed: [Error]
+file: /workspaces/ai_agent/back/tmp/a8ae4add-ff6e-4d1c-aa77-d58e923606f5.py
+line: 39
+type: TypeError
+message: Mobject.__getattr__.<locals>.getter() got an unexpected keyword argument 'color'
+code: │   exp_graph = left_axes.get_graph(lambda x: 2**x, color=BLUE)                        │
+
+2025-11-03 15:16:46.125 | INFO     | app.service.base_agent:_save_script:132 - Script saved to tmp/a8ae4add-ff6e-4d1c-aa77-d58e923606f5.py
+2025-11-03 15:16:47.247 | ERROR    | app.service.base_agent:_execute_script:197 - Script execution failed: [Error]
+file: /workspaces/ai_agent/back/tmp/a8ae4add-ff6e-4d1c-aa77-d58e923606f5.py
+line: 34
+type: TypeError
+message: Mobject.__getattr__.<locals>.getter() takes 1 positional argument but 2 were given
+code: │   exp_graph = left_axes.get_graph(lambda x: 2**x)                                    │
+

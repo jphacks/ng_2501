@@ -15,6 +15,7 @@ from typing import Optional
 from back.app.service.fast_ai_agent import ManimFastAnimationService
 from back.app.service.base_agent import SuccessResponse
 from back.app.model.model import VideoDatabase, get_video_db
+from back.app.service.search_existing_code import SearchExistingCodeService
 
 load_dotenv()
 
@@ -42,11 +43,48 @@ class EditPrompt(BaseModel):
     prior_inner_video_id: str
     enhance_prompt: str
 
+class SearchRequest(BaseModel):
+    """
+    既存コード検索のリクエストボディ。
+    Attributes
+    ----------
+    query:
+        類似検索に用いる文章。
+    threshold:
+        類似度の下限値 (0.0 - 1.0)。
+    max_gets:
+        返却する件数の上限。
+    """
+
+    query: str = (
+        "単位円を使って、角度θに対応する点P(cosθ, sinθ)が円周上を動く様子を左側に表示してください。"
+        "右側にはθを0°から360°まで30°刻みで変化させたときのsinθとcosθの値を表にして表示し、"
+        "現在のθの行をハイライトしてください。また、sinθとcosθの符号がどの象限で変わるのか"
+        "（第1象限は+,+、第2象限は-,+、第3象限は-,-、第4象限は+,-）を色分けして示してください。"
+    )
+    threshold: float = 0.8
+    max_gets: int = 3
+
+class AddTemplateRequest(BaseModel):
+    """
+    テンプレートリストに新しいコードを追加するリクエスト。
+
+    Attributes
+    ----------
+    theme:
+        追加するテンプレートの説明・テーマ概要。
+    code:
+        登録する Manim コード本体。
+    """
+
+    theme: str
+    code: str
+
 
 # ---------- Service ----------
 # service = ManimGraphAnimationService()
 service = ManimFastAnimationService()
-
+search_service = SearchExistingCodeService()
 
 
 @router.post("/api/init_session", summary="動画生成セッションの初期化")
@@ -137,4 +175,62 @@ async def edit_animation(
         return response
     except Exception as e:
         # サービス内例外は 500 で返却
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+@router.post("/api/animation/search")
+async def search_existing_animation(request: SearchRequest):
+    """
+    既存のテンプレートから類似するテーマを検索して返す。
+    類似度が threshold 以上のテーマ概要を最大 max_gets 件返却する。
+    """
+    try:
+        results = search_service.search(
+            contents=request.query,
+            thres=request.threshold,
+            max_get=request.max_gets,
+        )
+        themes = [
+            {
+                "similar": round(score, 4),
+                "theme": theme,
+            }
+            for theme, score in results
+        ]
+        return {"results": themes}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+@router.delete("/api/animation/search")
+async def delete_latest_template():
+    """
+    テンプレートリストから最新のエントリを削除する。
+    """
+    try:
+        entry = search_service.delete_latest()
+        return {
+            "template_id": entry.template_id,
+            "theme": entry.theme,
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/api/animation/search/add")
+async def add_animation_template(request: AddTemplateRequest):
+    """
+    テンプレートリストに新しいテーマとコードを追加し、埋め込みを更新する。
+    """
+    try:
+        entry = search_service.add(
+            contents=request.theme,
+            code=request.code,
+        )
+        return {
+            "template_id": entry.template_id,
+            "theme": entry.theme,
+        }
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -8,8 +8,9 @@ import {
     type VideoResult,
     validateVideoGeneration,
 } from '../datas/Video'
-import fetchVideo from './fetchVideo'
+import { useDB } from './useDB';
 
+import  fetchVideo from './fetchVideo'
 // ⚠️ テスト用import（開発環境のみ）
 import { useTestVideoGeneration } from './__test_utils__/useTestVideoGeneration'
 
@@ -17,6 +18,9 @@ type AnimationResponse = {
     ok?: boolean
     video_id?: string
     message?: string
+    manim_code_path?: string
+    prompt_path?: string
+    video_path?: string
 }
 
 const stripWrappingQuotes = (value: string) => value.replace(/^['"]|['"]$/g, '')
@@ -37,7 +41,7 @@ const createVideoId = () => {
     return `video-${Date.now()}`
 }
 
-const createVideoGenerationPrompt = (videoId: string, request: VideoGenerationRequest, enhancePrompt?: string): VideoGenerationPrompt => {
+const createVideoGenerationPrompt = (generationId: number, request: VideoGenerationRequest, plan: string, enhancePrompt?: string): VideoGenerationPrompt => {
     const sections: string[] = [request.text]
 
     if (request.videoPrompt && request.videoPrompt.trim().length > 0) {
@@ -49,8 +53,8 @@ const createVideoGenerationPrompt = (videoId: string, request: VideoGenerationRe
     }
 
     return {
-        videoId,
-        prompt: sections.join('\n\n'),
+        generationId,
+        planningPrompt: plan, // Use the plan from the backend
         originalText: request.text,
         videoPrompt: request.videoPrompt,
     }
@@ -60,10 +64,12 @@ const createVideoGenerationPrompt = (videoId: string, request: VideoGenerationRe
  * UseCase層: 動画生成のビジネスロジックとAPI処理
  */
 export const useVideoGeneration = () => {
+    const { planAnimation } = useDB();
     // ⚠️ 開発環境: テスト用hookも初期化（本番環境では null）
     const testHook = process.env.NODE_ENV === 'development' ? useTestVideoGeneration() : null
 
     const [isGenerating, setIsGenerating] = useState(false)
+    const [generationId, setGenerationId] = useState<number | null>(null);
     const [prompt, setPrompt] = useState<VideoGenerationPrompt | null>(null)
     const [result, setResult] = useState<VideoResult | null>(null)
     const [error, setError] = useState<string | null>(null)
@@ -91,13 +97,47 @@ export const useVideoGeneration = () => {
         }
     }
 
-    const requestAnimation = async (videoId: string, content: string, enhancePrompt?: string) => {
+    const requestEditAnimation = async (generationId: number, priorVideoId: string, enhancePrompt: string) => {
+        const baseUrl = resolveBackendUrl()
+        const response = await fetch(`${baseUrl}/api/animation/edit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                generation_id: generationId,
+                prior_video_id: priorVideoId,
+                enhance_prompt: enhancePrompt,
+            }),
+        })
+
+        let data: AnimationResponse | null = null
+        try {
+            data = (await response.json()) as AnimationResponse
+        } catch {
+            data = null
+        }
+
+        if (!response.ok) {
+            throw new Error(data?.message ?? '動画編集リクエストに失敗しました')
+        }
+
+        if (!data?.ok) {
+            throw new Error(data?.message ?? '動画編集に失敗しました')
+        }
+        if (!data?.video_id) {
+            throw new Error('編集後の動画IDが取得できませんでした')
+        }
+
+        return data.video_id
+    }
+
+
+    const requestAnimation = async (generationId: number, content: string, enhancePrompt?: string) => {
         const baseUrl = resolveBackendUrl()
         const response = await fetch(`${baseUrl}/api/animation`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                video_id: videoId,
+                generation_id: generationId, // Use the stored generationId
                 content,
                 enhance_prompt: enhancePrompt ?? '',
             }),
@@ -118,7 +158,7 @@ export const useVideoGeneration = () => {
             throw new Error(data?.message ?? '動画生成に失敗しました')
         }
 
-        return data.video_id ?? videoId
+        return data.video_id
     }
 
     const replaceVideoUrl = async (videoId: string) => {
@@ -135,45 +175,52 @@ export const useVideoGeneration = () => {
         return videoUrl
     }
 
-    /**
-     * ランディングから動画生成完了までを一括で実行
-     */
-    const startVideoGeneration = async (text: string, videoPrompt?: string) => {
-        try {
-            const request: VideoGenerationRequest = { text, videoPrompt }
-            validateRequestOrThrow(request)
+    // /**
+    //  * ランディングから動画生成完了までを一括で実行
+    //  */
+    // const startVideoGeneration = async (text: string, videoPrompt?: string) => {
+    //     try {
+    //         const request: VideoGenerationRequest = { text, videoPrompt }
+    //         validateRequestOrThrow(request)
 
-            const videoId = createVideoId()
-            lastRequestRef.current = request
+    //         const videoId = createVideoId()
+    //         lastRequestRef.current = request
 
-            setIsGenerating(true)
-            setError(null)
-            setPrompt(null)
-            setResult(null)
+    //         setIsGenerating(true)
+    //         setError(null)
+    //         setPrompt(null)
+    //         setResult(null)
 
-            const nextPrompt = createVideoGenerationPrompt(videoId, request)
+    //         const { plan, generation_id } = await planAnimation({ text, additional_instructions: videoPrompt });
 
-            await requestAnimation(videoId, request.text, request.videoPrompt)
-            const videoUrl = await replaceVideoUrl(videoId)
+    //         if (!generation_id) {
+    //             throw new Error('Failed to get generation ID.');
+    //         }
 
-            const generatedResult: VideoResult = {
-                videoId,
-                videoUrl,
-                prompt: nextPrompt,
-                generatedAt: new Date(),
-            }
+    //         const nextPrompt = createVideoGenerationPrompt(videoId, request, plan)
 
-            setPrompt(nextPrompt)
-            setResult(generatedResult)
-            return generatedResult
-        } catch (err) {
-            setPrompt(null)
-            setHandledError(err, '動画生成中にエラーが発生しました')
-            throw err
-        } finally {
-            setIsGenerating(false)
-        }
-    }
+    //         await requestAnimation(videoId, request.text, request.videoPrompt)
+    //         const videoUrl = await replaceVideoUrl(videoId)
+
+    //         const generatedResult: VideoResult = {
+    //             videoId,
+    //             videoUrl,
+    //             prompt: nextPrompt,
+    //             generatedAt: new Date(),
+    //         }
+
+    //         setGenerationId(generation_id);
+    //         setPrompt(nextPrompt)
+    //         setResult(generatedResult)
+    //         return generatedResult
+    //     } catch (err) {
+    //         setPrompt(null)
+    //         setHandledError(err, '動画生成中にエラーが発生しました')
+    //         throw err
+    //     } finally {
+    //         setIsGenerating(false)
+    //     }
+    // }
 
     /**
      * プロンプトを生成
@@ -186,26 +233,23 @@ export const useVideoGeneration = () => {
         const request: VideoGenerationRequest = { text, videoPrompt }
         validateRequestOrThrow(request)
 
-        // ① 生成・動画ID発行
-        // TODO: videoDBに実装した処理を呼び出してIDを生成
-        // 暫定実装
-        const generationId = createVideoId()
-        const videoId = createVideoId()
-        
         setIsGenerating(true)
         setError(null)
 
-        try {            
-            // TODO: prompt情報を取得して使用
-            // 取得内容: { prompt, originalText, videoPrompt, manimCode }
-            // generationIdを使ってバックエンドに問い合わせる実装を想定
-            
-            // 暫定実装: prompt.jsonが生成されるまでの間はローカルで生成
-            const generatedPrompt = createVideoGenerationPrompt(videoId, request)
-            
-            setPrompt(generatedPrompt)
-            lastRequestRef.current = request
-            return generatedPrompt
+        try {
+            // 1. useDBフックのplanAnimationを呼び出して計画とgeneration_idを取得
+            const { plan, generation_id } = await planAnimation({ text, additional_instructions: videoPrompt });
+
+            if (generation_id === null) {
+                throw new Error('Failed to get a generation ID.');
+            }
+            const generatedPrompt :VideoGenerationPrompt = createVideoGenerationPrompt(generation_id, request, plan, videoPrompt);
+
+            setGenerationId(generation_id);
+            setPrompt(generatedPrompt);
+            lastRequestRef.current = request;
+
+            return generatedPrompt;
         } catch (err) {
             setHandledError(err, 'プロンプト生成中にエラーが発生しました')
             throw err
@@ -225,36 +269,26 @@ export const useVideoGeneration = () => {
         if (testHook?.prompt) {
             return await testHook.generateVideo(editedPrompt)
         }
-
-        const videoId = editedPrompt.videoId
         
         setIsGenerating(true)
         setError(null)
 
         try {
-            // TODO: ① prompt.jsonに保存
-            // prompt.jsonの中身：
-            //   - プロンプト（manim生成用のプロンプト）
-            //   - 教材（originalText：Landingページの入力テキスト）
-            //   - 動画への追加指示（videoPrompt：任意）
-            // 保存場所: tmp/{videoId}/prompt.json
-            // await savePromptJson(videoId, editedPrompt)
             
             // ② バックエンドに動画生成をリクエスト
-            await requestAnimation(videoId, editedPrompt.originalText, editedPrompt.prompt)
-            
+            const videoId =  await requestAnimation(editedPrompt.generationId, editedPrompt.originalText, editedPrompt.planningPrompt)
+            if (!videoId) {
+                throw new Error('動画生成に失敗しました')
+            }
             // ③ 生成された動画を取得（パスに保存されたものを取得）
             const videoUrl = await replaceVideoUrl(videoId)
-            
+
             const generatedResult: VideoResult = {
                 videoId,
                 videoUrl,
                 prompt: editedPrompt,
                 generatedAt: new Date(),
             }
-
-            // TODO: ④ 動画DB、promptDB、MainmcodeDBに結果を保存
-            // 実装したvideoDBにおける処理を用いてvideoDBに全情報を保存する
 
             setPrompt(editedPrompt)
             setResult(generatedResult)
@@ -280,7 +314,7 @@ export const useVideoGeneration = () => {
     /**
      * 動画を編集（再生成）
      */
-    const editVideo = async (videoId: string, editPrompt: string) => {
+    const editVideo = async (generationId: number, videoId: string, editPrompt: string) => {
         const baseRequest = lastRequestRef.current
         if (!baseRequest) {
             const err = new Error('動画の元データが存在しません')
@@ -296,10 +330,15 @@ export const useVideoGeneration = () => {
         setIsGenerating(true)
         setError(null)
 
+        if (enhancePrompt === undefined) {
+            const err = new Error('編集プロンプトが空です')
+            setHandledError(err, '動画編集中にエラーが発生しました')
+            throw err
+        }
         try {
-            await requestAnimation(videoId, baseRequest.text, enhancePrompt)
+            const video_id = await requestEditAnimation(generationId!, videoId, enhancePrompt )
             const videoUrl = await replaceVideoUrl(videoId)
-            const updatedPrompt = createVideoGenerationPrompt(videoId, baseRequest, enhancePrompt)
+            const updatedPrompt = createVideoGenerationPrompt(generationId, baseRequest, enhancePrompt)
 
             const updatedResult: VideoResult = {
                 videoId,
@@ -346,8 +385,6 @@ export const useVideoGeneration = () => {
         isGenerating: activeIsGenerating,
         prompt: activePrompt,
         result: activeResult,
-        error,
-        startVideoGeneration,
         generatePrompt,
         generateVideo,
         editVideo,

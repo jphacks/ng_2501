@@ -38,8 +38,8 @@ class InitialPrompt(BaseModel):
     enhance_prompt: str = ""
 
 class EditPrompt(BaseModel):
-    db_id:str
-    prior_inner_video_id: str
+    generation_id: int
+    prior_video_id: str
     enhance_prompt: str
 
 
@@ -50,7 +50,7 @@ service = ManimGraphAnimationService()
 
 
 @router.post("/api/plan_animation", response_model=PlanResponse, summary="動画生成の計画立案")
-def plan_animation(
+async def plan_animation(
     concept_input: ConceptInput,
     db: VideoDatabase = Depends(get_video_db)
 ):
@@ -77,7 +77,7 @@ def plan_animation(
 
 
 @router.post("/api/dev/reset_database", summary="【開発用】データベースの完全リセット")
-def dev_reset_database(
+async def dev_reset_database(
     db: VideoDatabase = Depends(get_video_db)
 ):
     """
@@ -94,7 +94,7 @@ def dev_reset_database(
 
 
 @router.get("/api/animation/{video_id}", summary="生成済み動画の取得")
-def get_animation(
+async def get_animation(
     video_id: str,
     ):
     """
@@ -108,9 +108,6 @@ def get_animation(
         return FileResponse(common_path, media_type="video/mp4", filename="GeneratedScene.mp4")
 
     return JSONResponse(status_code=404, content={"message": "Video not found"})
-
-
-
 
 
 @router.post("/api/animation")
@@ -159,3 +156,25 @@ async def edit_animation(
     except Exception as e:
         # サービス内例外は 500 で返却
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/api/edit_video",response_class=SuccessResponse , summary="動画編集API")
+async def edit_video(
+    edit_prompt: EditPrompt,
+    db: VideoDatabase = Depends(get_video_db)
+):
+    try:
+        response: SuccessResponse = service.edit(
+            generation_id=edit_prompt.generation_id,
+            prior_video_id=edit_prompt.prior_video_id,
+            enhance_prompt=edit_prompt.enhance_prompt,
+            max_loop=3
+        )
+        db.edit_video(
+            prior_video_id=edit_prompt.prior_video_id,
+            new_video_path=response.video_path,
+        )
+        return response
+    except Exception as e:
+        # サービス内例外は 500 で返却
+        raise HTTPException(status_code=500, detail=str(e))
+

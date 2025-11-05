@@ -34,12 +34,7 @@ const resolveBackendUrl = () => {
     return sanitized
 }
 
-const createVideoId = () => {
-    if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-        return crypto.randomUUID()
-    }
-    return `video-${Date.now()}`
-}
+// Removed unused createVideoId function
 
 const createVideoGenerationPrompt = (generationId: number, request: VideoGenerationRequest, plan: string, enhancePrompt?: string): VideoGenerationPrompt => {
     const sections: string[] = [request.text]
@@ -69,7 +64,7 @@ export const useVideoGeneration = () => {
     const testHook = process.env.NODE_ENV === 'development' ? useTestVideoGeneration() : null
 
     const [isGenerating, setIsGenerating] = useState(false)
-    const [generationId, setGenerationId] = useState<number | null>(null);
+    const [_generationId, setGenerationId] = useState<number | null>(null);
     const [prompt, setPrompt] = useState<VideoGenerationPrompt | null>(null)
     const [result, setResult] = useState<VideoResult | null>(null)
     const [error, setError] = useState<string | null>(null)
@@ -306,7 +301,7 @@ export const useVideoGeneration = () => {
      */
     const loadExistingVideo = async (videoId: string, promptText: string) => {
         if (testHook) {
-            return await testHook.loadExistingVideo(videoId, promptText)
+            return await testHook.loadExistingVideo(Number(videoId), promptText)
         }
         throw new Error('テストモードは開発環境でのみ利用可能です')
     }
@@ -336,7 +331,7 @@ export const useVideoGeneration = () => {
             throw err
         }
         try {
-            const video_id = await requestEditAnimation(generationId!, videoId, enhancePrompt )
+            await requestEditAnimation(generationId!, videoId, enhancePrompt )
             const videoUrl = await replaceVideoUrl(videoId)
             const updatedPrompt = createVideoGenerationPrompt(generationId, baseRequest, enhancePrompt)
 
@@ -385,6 +380,7 @@ export const useVideoGeneration = () => {
         isGenerating: activeIsGenerating,
         prompt: activePrompt,
         result: activeResult,
+        error,
         generatePrompt,
         generateVideo,
         editVideo,

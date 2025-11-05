@@ -34,7 +34,7 @@ class Output(BaseModel):
 
 class InitialPrompt(BaseModel):
     generation_id:int
-    content: str
+    content: str # manim planで作成したプロンプト
     enhance_prompt: str = ""
 
 class EditPrompt(BaseModel):

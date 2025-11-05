@@ -26,7 +26,7 @@ interface TestVideoLoaderProps {
 export function TestVideoLoader({ onLoadVideo, isLoading }: TestVideoLoaderProps) {
     // ⚠️ テスト用の動画ID（自分の環境の動画IDに変更してください）
     const TEST_VIDEO_ID = '0ad1f000-abcd-468c-bd20-2c3190102d5e'
-    const TEST_PROMPT = '単位円と三角関数のデモンストレーション'
+    const TEST_PROMPT = 'テスト用のプロンプト'
 
     const handleClick = async () => {
         await onLoadVideo(TEST_VIDEO_ID, TEST_PROMPT)

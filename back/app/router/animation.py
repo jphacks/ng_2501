@@ -13,7 +13,7 @@ from typing import Optional
 # from app.service.graph_agent import ManimGraphAnimationService
 # from back.app.service.agent import ManimRegacyAgentService
 from back.app.service.fast_ai_agent import ManimFastAnimationService
-from back.app.service.base_agent import SuccessResponse
+from back.app.service.base_agent import SuccessResponse , PlanResponse
 from back.app.model.model import VideoDatabase, get_video_db
 from back.app.service.search_existing_code import SearchExistingCodeService
 
@@ -25,17 +25,18 @@ router = APIRouter(tags=["animation"])
 
 
 workspace_path = Path("/workspaces/ai_agent/back/media/videos") 
-script_path = Path("/workspace/ai_agent/tmp")
+
 # ---------- Pydantic Models ----------
 class ConceptInput(BaseModel):
     text: str
+    additional_instructions: Optional[str] = ""
 
 class Output(BaseModel):
     output: str
 
 class InitialPrompt(BaseModel):
+    generation_id:int
     content: str
-    video_id: str
     enhance_prompt: str = ""
 
 class EditPrompt(BaseModel):
@@ -87,32 +88,49 @@ service = ManimFastAnimationService()
 search_service = SearchExistingCodeService()
 
 
-@router.post("/api/init_session", summary="動画生成セッションの初期化")
-def initialize_animation_session(
+
+@router.post("/api/plan_animation", response_model=PlanResponse, summary="動画生成の計画立案")
+def plan_animation(
+    concept_input: ConceptInput,
     db: VideoDatabase = Depends(get_video_db)
 ):
     """
-    フロントエンドで「新規作成」を押した時などに呼び出す。
-    「生成ID (generate_id)」と「動画ID (video_id)」を採番し、
-    クライアント（フロントエンド）に返す。
+    動画生成の計画立案を行う。
+    ここで発行した生成IDは基本的にSession IDとしてフロントエンドで保持する
     """
     try:
-        # フロー1: 生成セッションID (generate_id)
+        # DB に生成セッションを登録し、生成IDを取得
         generate_id = db.generate_prompt()
+        print(f"Generated ID: {generate_id}")
         
-        # フロー2: このセッションで「最初に」生成する動画のID (video_id)
-        video_id = db.generate_video_seq()
         
-        return {
-            "generate_id": generate_id,
-            "video_id": video_id,
-            "message": "Session initialized. Use this video_id for the first generation."
-        }
+        # 生成IDによって計画立案を実行と保存
+        plan_response: PlanResponse = service.plan(
+            generation_id=generate_id,
+            content=concept_input.text,
+            enhance_prompt=concept_input.additional_instructions
+        )
+        print(plan_response)
+        return plan_response
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"DB initialization error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Planning error: {str(e)}")
 
 
-
+@router.post("/api/dev/reset_database", summary="【開発用】データベースの完全リセット")
+def dev_reset_database(
+    db: VideoDatabase = Depends(get_video_db)
+):
+    """
+    【危険な操作】データベースのすべてのテーブルを削除し、
+    現在のモデル定義に基づいて再作成します。
+    これにより、すべてのデータが失われます。
+    開発環境でのスキーマ変更の適用にのみ使用してください。
+    """
+    try:
+        db._drop_and_recreate_tables()
+        return JSONResponse(status_code=200, content={"message": "Database has been successfully reset."})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database reset failed: {str(e)}")
 
 
 @router.get("/api/animation/{video_id}", summary="生成済み動画の取得")
@@ -132,6 +150,9 @@ def get_animation(
     return JSONResponse(status_code=404, content={"message": "Video not found"})
 
 
+
+
+
 @router.post("/api/animation")
 async def generate_regacy_animation(
     initial_prompt:InitialPrompt,
@@ -139,13 +160,15 @@ async def generate_regacy_animation(
     ):
     try:
         response: SuccessResponse = service.main(
+            generation_id=initial_prompt.generation_id,
             content=initial_prompt.content,
             enhance_prompt=initial_prompt.enhance_prompt,
             max_loop=3
         )
         
-        db.generate_video(
-            video_id=initial_prompt.video_id,
+        video_id = db.generate_video(
+            generate_id=initial_prompt.generation_id,
+            video_id=response.video_id,
             video_path=response.video_path,
             prompt_path=response.prompt_path,
             manim_code_path=response.manim_code_path

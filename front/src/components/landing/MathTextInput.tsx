@@ -90,6 +90,7 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
     const [titleInput, setTitleInput] = useState('')
     const [isGeneratingContent, setIsGeneratingContent] = useState(false)
     const [generationError, setGenerationError] = useState<string | null>(null)
+    const [isOptionalSettingsOpen, setIsOptionalSettingsOpen] = useState(false)
 
     const textAreaRef = useRef<HTMLTextAreaElement>(null)
     const [popupPosition, setPopupPosition] = useState<{ top: number; left: number } | null>(null)
@@ -540,90 +541,212 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
 
                 {/* ヘッダー */}
                 <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-200">
-                    <h3 className="text-sm font-semibold text-gray-800">数学テキスト入力</h3>
+                    <h3 className="text-lg font-bold text-gray-800">SUDO<span className="text-xs text-gray-500 ml-5">ー 数学テキスト入力</span></h3>
+                    {/* モバイル版: 追加項目設定切替ボタン */}
+                    <button
+                        type="button"
+                        onClick={() => setIsOptionalSettingsOpen(!isOptionalSettingsOpen)}
+                        className="lg:hidden px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 border border-gray-300 rounded hover:bg-gray-200 transition-colors flex items-center gap-1.5"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <title>追加項目設定</title>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span>{isOptionalSettingsOpen ? '閉じる' : '追加項目'}</span>
+                    </button>
                 </div>
 
                 {/* メイン */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0 min-w-0">
-                    <div className="lg:col-span-2 flex flex-col space-y-3 min-h-0 min-w-0">
+                    {/* モバイル版: 追加項目設定表示エリア */}
+                    <div className={`lg:hidden ${isOptionalSettingsOpen ? 'flex' : 'hidden'} flex-col overflow-y-auto space-y-4 pb-4 lg:col-span-1`}>
+                        <div className="bg-gray-50 border border-gray-200 rounded p-4">
+                            <h5 className="text-sm font-medium text-gray-800 mb-3 flex items-center gap-2">
+                                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <title>AI</title>
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                AIで文章のひな形を生成
+                            </h5>
+                            <div className="flex flex-col gap-2">
+                                <input
+                                    type="text"
+                                    value={titleInput}
+                                    onChange={(e) => setTitleInput(e.target.value)}
+                                    placeholder="例: 積分の方法、微分の公式"
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    disabled={isGeneratingContent || isGenerating}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleGenerateFromTitle}
+                                    disabled={!titleInput.trim() || isGeneratingContent || isGenerating}
+                                    className="w-full px-4 py-2 text-sm font-medium text-white bg-gray-700 rounded hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    {isGeneratingContent ? '生成中...' : '生成'}
+                                </button>
+                            </div>
+                            {generationError && <p className="mt-2 text-xs text-red-600">{generationError}</p>}
+                            <p className="mt-2 text-xs text-gray-600">トピックのタイトルを入力すると、Markdown + LaTeX形式の解説を生成します</p>
+                        </div>
+
+                        <div className="bg-gray-50 border border-gray-200 rounded p-4">
+                            <h5 className="text-sm font-medium text-gray-800 mb-3 flex items-center gap-2">
+                                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <title>動画</title>
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                                動画への追加指示（任意）
+                            </h5>
+                            <textarea
+                                id="video-prompt-mobile"
+                                value={videoPrompt}
+                                onChange={(e) => setVideoPrompt(e.target.value)}
+                                placeholder="例: 積分記号を赤色で強調、文字サイズを大きく"
+                                className="w-full p-3 text-sm border border-gray-300 rounded h-32 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                disabled={isGenerating}
+                            />
+                            <p className="mt-2 text-xs text-gray-500">動画の見た目や演出について具体的に指示できます</p>
+                        </div>
+                    </div>
+                    <div className={`lg:col-span-2 flex-col space-y-3 min-h-0 min-w-0 ${isOptionalSettingsOpen ? 'hidden lg:flex' : 'flex'}`}>
                         {/* 表示モード切り替え */}
-                        <div className="flex gap-1 bg-gray-100 p-1 rounded">
+                        <div className="flex gap-1 sm:bg-gray-100 p-1 rounded">
+                            {/* Desktop: 3 buttons */}
                             <button
                                 type="button"
                                 onClick={() => setViewMode('edit')}
                                 disabled={isGenerating}
-                                className={`px-3 py-2 text-xs font-medium rounded transition-all flex items-center gap-1.5 ${viewMode === 'edit' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                className={`hidden sm:flex px-3 py-2 text-xs font-medium rounded transition-all items-center gap-1.5 ${
+                                    viewMode === 'edit' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                                } disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <title>編集</title>
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                    />
                                 </svg>
                                 <div className="flex flex-col sm:flex-row">
-                                    <span className="text-xxs min-[360px]:text-xs">編集</span><span className="text-xxs min-[360px]:text-xs">のみ</span>
+                                    <span className="text-xxs min-[360px]:text-xs">編集</span>
+                                    <span className="text-xxs min-[360px]:text-xs">のみ</span>
                                 </div>
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setViewMode('split')}
                                 disabled={isGenerating || !text.trim()}
-                                className={`px-3 py-2 text-xs font-medium rounded transition-all flex items-center gap-1.5 ${viewMode === 'split' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                className={`hidden sm:flex px-3 py-2 text-xs font-medium rounded transition-all items-center gap-1.5 ${
+                                    viewMode === 'split' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                                } disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <title>分割</title>
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7" />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"
+                                    />
                                 </svg>
-                                
                                 <div className="flex flex-col sm:flex-row">
-                                    <span className="text-xxs min-[360px]:text-xs">編集+</span><span className="text-xxs min-[360px]:text-xs">プレビュー</span>
+                                    <span className="text-xxs min-[360px]:text-xs">編集+</span>
+                                    <span className="text-xxs min-[360px]:text-xs">プレビュー</span>
                                 </div>
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setViewMode('preview')}
                                 disabled={isGenerating || !text.trim()}
-                                className={`px-3 py-2 text-xs font-medium rounded transition-all flex items-center gap-1.5 ${viewMode === 'preview' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                className={`hidden sm:flex px-3 py-2 text-xs font-medium rounded transition-all items-center gap-1.5 ${
+                                    viewMode === 'preview' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                                } disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <title>プレビュー</title>
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                    />
                                 </svg>
                                 <div className="flex flex-col sm:flex-row">
-                                    <span className="text-xxs min-[360px]:text-xs">プレビュー</span><span className="text-xxs min-[360px]:text-xs">のみ</span>
+                                    <span className="text-xxs min-[360px]:text-xs">プレビュー</span>
+                                    <span className="text-xxs min-[360px]:text-xs">のみ</span>
                                 </div>
-                                
                             </button>
+
                         </div>
 
                         {/* ツールバー */}
-                        <div className="flex gap-2">
+                        <div className="flex gap-1.5 sm:gap-2">
+                            {/* Mobile: プレビュー・編集切り替えボタン */}
+                            <button
+                                type="button"
+                                onClick={() => setViewMode(viewMode === 'edit' ? 'preview' : 'edit')}
+                                disabled={isGenerating || (viewMode === 'edit' && !text.trim())}
+                                className="flex sm:hidden flex-1 min-w-0 px-2 py-2 text-xs font-medium bg-white text-gray-700 border border-gray-300 rounded hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors items-center justify-center gap-1"
+                            >
+                                {viewMode === 'edit' ? (
+                                    <>
+                                        <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <title>プレビュー</title>
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                            />
+                                        </svg>
+                                        <span className="text-[0.625rem] min-[360px]:text-[0.7rem] truncate">プレビュー</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <title>編集</title>
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                            />
+                                        </svg>
+                                        <span className="text-[0.625rem] min-[360px]:text-[0.7rem] truncate">編集</span>
+                                    </>
+                                )}
+                            </button>
+
                             <button
                                 type="button"
                                 onClick={loadSampleText}
                                 disabled={isGenerating}
-                                className="px-3 py-2 text-xs font-medium bg-white text-gray-700 border border-gray-300 rounded hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+                                className="flex-1 min-w-0 px-2 py-2 text-xs font-medium bg-white text-gray-700 border border-gray-300 rounded hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1"
                             >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <title>サンプル</title>
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
-                                <span className="text-[0.675rem] min-[330px]:text-xs">サンプルを読み込む</span>
+                                <span className="text-[0.625rem] min-[360px]:text-[0.7rem] sm:text-xs truncate">サンプル</span>
                             </button>
                             <button
                                 type="button"
                                 onClick={handleMathEditorOpen}
                                 disabled={isGenerating || viewMode === 'preview'}
-                                className="px-3 py-2 text-xs font-medium bg-white text-gray-700 border border-gray-300 rounded hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+                                className="flex-1 min-w-0 px-2 py-2 text-xs font-medium bg-white text-gray-700 border border-gray-300 rounded hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1"
                                 title={viewMode === 'preview' ? 'プレビューモードでは使用できません' : '数式を挿入'}
                             >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <title>数式</title>
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                 </svg>
-                                <span className="text-[0.675rem] min-[330px]:text-xs">数式を挿入</span>
+                                <span className="text-[0.625rem] min-[360px]:text-[0.7rem] sm:text-xs truncate">数式</span>
                             </button>
                         </div>
 
@@ -681,9 +804,9 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                     {/* 右側: 操作エリア */}
                     <div className="flex flex-col min-h-0 min-w-0">
                         <div className="overflow-y-auto flex-1 min-h-0 pr-2">
-                            <div className="space-y-3">
-                                {/* AIで文章のひな形を生成 */}
-                                <div className="bg-gray-50 border border-gray-200 rounded p-3">
+                            <div className="flex flex-col gap-4 lg:block lg:space-y-3">
+                                {/* デスクトップ版: 通常表示 */}
+                                <div className="hidden lg:block order-1 bg-gray-50 border border-gray-200 rounded p-3">
                                     <h5 className="text-sm font-medium text-gray-800 mb-2 flex items-center gap-2">
                                         <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <title>AI</title>
@@ -712,9 +835,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                     {generationError && <p className="mt-2 text-xs text-red-600">{generationError}</p>}
                                     <p className="mt-2 text-xs text-gray-600">トピックのタイトルを入力すると、Markdown + LaTeX形式の解説を生成します</p>
                                 </div>
-
-                                {/* 動画への追加指示 */}
-                                <div className="bg-gray-50 border border-gray-200 rounded p-3">
+                                <div className="hidden lg:block order-2 bg-gray-50 border border-gray-200 rounded p-3">
                                     <h5 className="text-sm font-medium text-gray-800 mb-2 flex items-center gap-2">
                                         <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <title>動画</title>
@@ -734,7 +855,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                 </div>
 
                                 {/* 動画生成ボタン */}
-                                <div className="pt-3 border-t border-gray-200">
+                                <div className="order-1 lg:order-3 lg:pt-3 lg:border-t border-gray-200">
                                     <button
                                         type="submit"
                                         disabled={!text.trim() || isGenerating}

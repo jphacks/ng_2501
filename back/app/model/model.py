@@ -1,7 +1,7 @@
 import os
 import datetime
 from typing import Optional
-from sqlalchemy import create_engine, Column, Integer, String, TIMESTAMP, ForeignKey, func, event, Engine
+from sqlalchemy import create_engine, Column, Integer, String, TIMESTAMP, ForeignKey, func, event, Engine,UUID
 from sqlalchemy.orm import sessionmaker, relationship, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -69,13 +69,6 @@ class Generation(Base):
     # Videoへのリレーション
     videos = relationship("Video", back_populates="generation")
 
-class VideoSeq(Base):
-    """
-    `video_seq` テーブルに対応するモデル。
-    """
-    __tablename__ = 'video_seq'
-    seq_video_id = Column(Integer, primary_key=True, autoincrement=True)
-    create_time = Column(TIMESTAMP)
 
 class Video(Base):
     """
@@ -85,10 +78,9 @@ class Video(Base):
     
     # 元のDDL `video_id INTEGER PRIMARY KEY` に対応。
     # SQLiteでは、これにより自動インクリメントと手動ID挿入の両方が可能になる。
-    video_id = Column(Integer, primary_key=True) 
+    video_id = Column(UUID, primary_key=True)  # UUID文字列として扱うためStringに変更
     
     generate_id = Column(Integer, ForeignKey('generation.generate_id'))
-    
     video_path = Column(String)
     
     # `ondelete='CASCADE'` を指定して、元のDDLの挙動を再現
@@ -166,25 +158,8 @@ class VideoDatabase:
         finally:
             session.close()
 
-    def generate_video_seq(self) -> int:
-        '''動画生成シーケンスIDを新規作成する処理
-        
-        動画生成シーケンスIDを新規作成する。
-        '''
-        session = self._get_session()
-        try:
-            new_seq = VideoSeq(create_time=datetime.datetime.now())
-            session.add(new_seq)
-            session.commit()
-            return new_seq.seq_video_id
-        except Exception as e:
-            session.rollback()
-            print(f"Error in generate_video_seq: {e}")
-            raise
-        finally:
-            session.close()
 
-    def generate_video(self, video_id: int, video_path: str, prompt_path: str, manim_code_path: str) -> int:
+    def generate_video(self, generate_id:int, video_id: str, video_path: str, prompt_path: str, manim_code_path: str) -> int:
         '''生成された動画とそれに紐づくプロンプト、manimコードをDBに保存する処理
 
         生成された動画id、動画ファイルのパス、プロンプトファイルのパス、manimコードファイルのパスを受け取り、DBに保存する。
@@ -192,9 +167,6 @@ class VideoDatabase:
         session = self._get_session()
         try:
             create_time = datetime.datetime.now()
-            
-            # 最新のgenerate_idを取得
-            generate_id = session.query(func.max(Generation.generate_id)).scalar()
             
             # 新しいPromptとManimCodeを作成
             new_prompt = Prompt(prompt_path=prompt_path)
@@ -329,6 +301,25 @@ class VideoDatabase:
             session.close()
 
     # --- ここまで追加 ---
+
+    def _drop_and_recreate_tables(self):
+        '''
+        【危険】すべてのテーブルを削除し、再作成する。
+        スキーマの変更を反映させるために使用する。
+        '''
+        try:
+            print("Dropping all tables...")
+            # Base.metadata.drop_allは外部キーの依存関係を考慮してくれる
+            Base.metadata.drop_all(self.engine)
+            print("All tables dropped.")
+            
+            print("Recreating all tables...")
+            Base.metadata.create_all(self.engine)
+            print("All tables recreated successfully.")
+            
+        except Exception as e:
+            print(f"Error in _drop_and_recreate_tables: {e}")
+            raise
 
     def delete_video(self, video_id: int):
         '''指定された動画IDの動画をDBから削除する処理'''

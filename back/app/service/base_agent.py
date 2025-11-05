@@ -199,8 +199,9 @@ class BaseManimAgent(ABC):
             return "FileNotFoundError"
 
         except subprocess.CalledProcessError as e:
-            parsed_error = parse_manim_or_python_traceback(e.stderr)
-            parsed_error = format_error_for_llm(parsed_error)
+            parsed_error  = e.stderr
+            # parsed_error = parse_manim_or_python_traceback(e.stderr)
+            # parsed_error = format_error_for_llm(parsed_error)
             self.base_logger.error(f"Low-res execution failed: {parsed_error}")
             return parsed_error
     
@@ -226,8 +227,9 @@ class BaseManimAgent(ABC):
             return "FileNotFoundError"
         
         except subprocess.CalledProcessError as e:
-            parsed_error  = parse_manim_or_python_traceback(e.stderr)
-            parsed_error =  format_error_for_llm(parsed_error)
+            parsed_error  = e.stderr
+            # parsed_error  = parse_manim_or_python_traceback(e.stderr)
+            # parsed_error =  format_error_for_llm(parsed_error)
             self.base_logger.error(f"Script execution failed: {parsed_error}")
             return parsed_error
     

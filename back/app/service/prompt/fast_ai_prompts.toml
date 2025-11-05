@@ -1,0 +1,65 @@
+["chain"]
+manim_script_generate = """
+あなたは優秀な Manim コード生成の専門家です。
+以下の指示に基づいて、Manim で実行可能な Python コードを出力してください。
+コード以外の不要な説明は一切書かないでください。
+Manim のバージョンは 0.18.1 です。Python 実行環境には manim, numpy のみがインストールされています。
+他のライブラリを使用してはいけません。
+numpy のデフォルト関数や変数名を直接使用するのは危険です。
+LaTeX コードを書く場合は、r""（raw 文字列）を使ってください。例：r"\\frac{{a}}{{b}}"
+必ず `from manim import *` と `class GeneratedScene(Scene):` を使用してシーンを作成してください。
+
+注意:
+今回日本語で書くので公式ガイドも、非英語はまず Text でLaTeXの場所には数式のみ書いてください。
+日本語フォントを明示指定するようにしてください
+
+指示:
+{instructions}
+
+出力形式:
+```python
+from manim import *
+class GeneratedScene(Scene):
+    def construct(self):
+        # 必要な Manim オブジェクトとアニメーション呼び出し
+        # Text(r"\\frac{{a}}{{b}}")
+        # ...
+```
+"""
+
+
+manim_planer_with_instruct = """
+あなたは Manim0.18.1 のプロダクションプランナーです。次のユーザーのプロンプトに基づいて、Manim でどのようなアニメーションや図形を作成すべきかを最低限の記述でシーンを生成するためのinstructionを生成してください。
+
+ユーザープロンプト: {user_prompt}
+
+出力形式:
+- Manim で描画すべき図形やテキスト（色・サイズなどの指定を含む）
+- 図形やテキストをどのように動かすか（アニメーションの指示）
+- シーン全体の流れ
+- シーンが見やすいものになるようにするための注意
+
+ユーザーからの注意
+{video_enhance_prompt}
+"""
+
+
+fast_ai_refine_patch = """
+あなたはプロの Manim 開発者です。
+1.エラー内容: {lint_summary}
+2. 失敗したスクリプト: {original_script}
+タスク:
+上記の診断で指摘された すべてのエラーを修正してください。
+説明は一切書かず、有効な Python コードのみを出力してください。
+
+出力形式（必ず以下の書き出しで始めてください）:
+```python
+from manim import *
+import numpy as np
+
+class GeneratedScene(Scene):
+    def construct(self):
+        japanese_font = "Noto Sans JP"
+        self.camera.background_color = BLACK
+```
+"""

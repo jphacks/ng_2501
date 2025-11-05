@@ -32,7 +32,7 @@ class ManimGraphState(TypedDict):
 
 
 class ManimFastAnimationService(BaseManimAgent):
-    def __init__(self, prompt_path="prompt/prompts.toml"):
+    def __init__(self, prompt_path="prompt/fast_ai_prompts.toml"):
         super().__init__(prompt_path)
         # --- LangGraph のグラフを構築 ---
         self.workflow = self._build_graph()
@@ -83,7 +83,7 @@ class ManimFastAnimationService(BaseManimAgent):
         if not is_safe:
             return {"is_bad_request": True}
         return {"is_bad_request": False}
-    
+
     def _handle_execution_result(self, execution_result: str, *, stage: str):
         if execution_result == "Success":
             self.base_logger.info(f"   [+] {stage} succeeded.")
@@ -98,7 +98,9 @@ class ManimFastAnimationService(BaseManimAgent):
                 "error_type": "runtime",
             }
         if execution_result == "FileNotFoundError":
-            self.base_logger.error(f"   [-] {stage} failed: Manim executable not found.")
+            self.base_logger.error(
+                f"   [-] {stage} failed: Manim executable not found."
+            )
             return {
                 "last_error": "Manim executable not found.",
                 "error_type": "runtime",
@@ -138,38 +140,22 @@ class ManimFastAnimationService(BaseManimAgent):
             f"--- 4. [Node] Refining Script (Attempt {state['current_retry'] + 1}) ---"
         )
 
-        repair_prompt_template = """
-        あなたはプロの Manim 開発者です。
-        1. アニメーションプラン: {animation_plan}
-        2. {error_type}の診断結果: {lint_summary}
-        3. 失敗したスクリプト: {original_script}
-        タスク:
-        上記の診断で指摘された すべてのエラーを修正しつつ、アニメーションプランが示す意図（意味・見た目）を保ったままコードを書き直してください。
-        説明は一切書かず、有効な Python コードのみを出力してください。
-
-        出力形式:
-        ```python
-        from manim import *
-        class GeneratedScene(Scene):
-            def construct(self):
-                # ... 修正されたコード ...
-        ```
-        """
-        repair_prompt = PromptTemplate.from_template(repair_prompt_template)
+        repair_prompt = PromptTemplate.from_template(
+            self.prompts["chain"]["fast_ai_refine_patch"]
+        )
 
         parser = StrOutputParser()
-        chain = repair_prompt | self.pro_llm | parser
 
-        error_type_str = (
-            "静的解析(Lint)" if state["error_type"] == "lint" else "実行時(Runtime)"
-        )
+        # エラー処理1回目はflash_llm、それ以降はpro_llmを使用
+        if state["current_retry"] == 0:
+            self.base_logger.debug("   [+] Using flash_llm for first refinement.")
+            chain = repair_prompt | self.flash_llm | parser
+        else:
+            self.base_logger.debug("   [+] Using pro_llm for subsequent refinements.")
+            chain = repair_prompt | self.pro_llm | parser
 
         fixed_script = chain.invoke(
             {
-                "animation_plan": state[
-                    "animation_plan"
-                ],  # user_request の代わりに animation_plan を使用
-                "error_type": error_type_str,
                 "lint_summary": state["last_error"],
                 "original_script": state["current_script"],
             }

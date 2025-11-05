@@ -88,6 +88,7 @@ class Video(Base):
     video_id = Column(Integer, primary_key=True) 
     
     generate_id = Column(Integer, ForeignKey('generation.generate_id'))
+    
     video_path = Column(String)
     
     # `ondelete='CASCADE'` を指定して、元のDDLの挙動を再現

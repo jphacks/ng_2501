@@ -92,8 +92,6 @@ def get_animation(
     return JSONResponse(status_code=404, content={"message": "Video not found"})
 
 
-
-
 @router.post("/api/animation")
 async def generate_regacy_animation(
     initial_prompt:InitialPrompt,

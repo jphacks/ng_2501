@@ -503,3 +503,61 @@ code: │   table = Table(                                                      
 2025-11-03 15:26:06.459 | INFO     | app.service.graph_agent:_after_execution:227 - --- [Branch] Execution Succeeded. Ending Graph. ---
 2025-11-03 15:26:06.459 | INFO     | app.service.graph_agent:generate_video:278 - --- Graph Finished: Success ---
 2025-11-04 13:51:09.069 | INFO     | app.service.base_agent:_load_prompt:96 - Prompts loaded from /workspaces/ai_agent/back/app/service/prompt/prompts.toml
+2025-11-04 14:37:18.991 | INFO     | app.service.base_agent:_save_prompt:154 - Prompt saved to /workspaces/ai_agent/back/prompts/9a6a0733-12a7-4316-8262-e1503fe76b3d.json
+2025-11-04 14:37:18.992 | INFO     | app.service.graph_agent:_generate_initial_script:90 - --- 1. [Node] Generating Initial Script ---
+2025-11-04 14:37:32.228 | INFO     | app.service.graph_agent:generate_script_with_prompt:79 - --- 取得した中間出力 (Planner) ---
+2025-11-04 14:37:32.228 | INFO     | app.service.graph_agent:generate_script_with_prompt:80 - ユーザープロンプト: aaa
+
+出力形式:
+- Manim で描画すべき図形やテキスト（色・サイズなどの指定を含む）
+- 図形やテキストをどのように動かすか（アニメーションの指示）
+- シーン全体の流れ
+- シーンが見やすいものになるようにするための注意
+
+ユーザーからの注意:
+「aaa」というテキストを画面中央に表示し、そのテキストが徐々にフェードインするアニメーションを作成してください。
+
+---
+
+**Instruction for Manim Scene Generation:**
+
+- **Manim Objects:**
+    - `Text("aaa", font_size=72)`: 中央に配置。
+
+- **Animations:**
+    - `FadeIn(text_object)`: テキストオブジェクトが徐々に表示される。
+
+- **Scene Flow:**
+    1. テキストオブジェクト `aaa` を生成し、画面中央に配置する。
+    2. `FadeIn` アニメーションを用いて、テキストオブジェクトを画面に表示する。
+
+- **Readability Notes:**
+    - 背景色はデフォルトの黒を使用。
+    - テキスト色はデフォルトの白を使用。
+    - テキストが画面中央に配置されていることを確認する。
+
+- **User Notes:**
+    - (ユーザーからの注意はここに記載。今回は特にありません。)
+2025-11-04 14:37:32.228 | INFO     | app.service.graph_agent:generate_script_with_prompt:81 - -----------------------------------
+2025-11-04 14:37:32.228 | DEBUG    | app.service.graph_agent:_generate_initial_script:96 -    [+] Initial script generated (length: 287)
+2025-11-04 14:37:32.229 | INFO     | app.service.graph_agent:_check_bad_request:103 - --- 2. [Node] Checking for Bad Request ---
+2025-11-04 14:37:32.229 | DEBUG    | app.service.graph_agent:_check_bad_request:105 -    [+] Code security check: Passed
+2025-11-04 14:37:32.229 | DEBUG    | app.service.graph_agent:_after_bad_request_check:204 - --- [Branch] Secure. Proceeding to Lint. ---
+2025-11-04 14:37:32.230 | INFO     | app.service.graph_agent:_execute_and_handle_errors:116 - --- 4. [Node] Executing Manim ---
+2025-11-04 14:37:32.232 | INFO     | app.service.base_agent:_save_script:132 - Script saved to tmp/9a6a0733-12a7-4316-8262-e1503fe76b3d.py
+2025-11-04 14:37:32.473 | ERROR    | app.service.base_agent:_execute_script:204 - Script execution failed: [Error]
+file: <frozen importlib._bootstrap_external>
+line: 1131
+type: UnknownError
+message: KeyboardInterrupt
+code: None
+
+2025-11-04 14:37:32.474 | ERROR    | app.service.graph_agent:_execute_and_handle_errors:141 -    [-] Script execution failed with errors.
+2025-11-04 14:37:32.474 | INFO     | app.service.graph_agent:_after_execution:224 - --- [Branch] Runtime Error. Proceeding to Refine. ---
+2025-11-04 14:37:32.474 | INFO     | app.service.graph_agent:_refine_script_on_error:150 - --- 5. [Node] Refining Script (Attempt 1) ---
+2025-11-04 14:37:40.821 | DEBUG    | app.service.graph_agent:_refine_script_on_error:188 -    [+] Script refined (length: 288)
+2025-11-04 14:37:40.822 | INFO     | app.service.graph_agent:_check_bad_request:103 - --- 2. [Node] Checking for Bad Request ---
+2025-11-04 14:37:40.822 | DEBUG    | app.service.graph_agent:_check_bad_request:105 -    [+] Code security check: Passed
+2025-11-04 14:37:40.822 | DEBUG    | app.service.graph_agent:_after_bad_request_check:204 - --- [Branch] Secure. Proceeding to Lint. ---
+2025-11-04 14:37:40.823 | INFO     | app.service.graph_agent:_execute_and_handle_errors:116 - --- 4. [Node] Executing Manim ---
+2025-11-04 14:37:40.823 | INFO     | app.service.base_agent:_save_script:132 - Script saved to tmp/9a6a0733-12a7-4316-8262-e1503fe76b3d.py

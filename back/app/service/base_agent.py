@@ -17,7 +17,7 @@ import json
 from pydantic import BaseModel 
 from typing import Optional
 
-from loguru import logger
+from loguru import logger 
 
 from app.tools.secure import is_code_safe
 from app.tools.manim_lint import parse_manim_or_python_traceback,format_error_for_llm
@@ -42,7 +42,6 @@ LLMの初期化と共通のユーティリティ関数を提供する関数と�
 """
 class SuccessResponse(BaseModel):
     ok: bool
-    inner_video_id: Optional[str] = None
     message: Optional[str] = None
     video_path: Optional[str] = None
     prompt_path: Optional[str] = None
@@ -133,13 +132,13 @@ class BaseManimAgent(ABC):
         return tmp_path
 
 
-    def _save_prompt(self, video_id:str, content:str, enhance_prompt:str="") -> Path:
+    def _save_prompt(self, generation_id:str, content:str, enhance_prompt:str="") -> Path:
         """[Helper] 共通のプロンプト保存処理"""
         prompt_dir = self.user_instruction_path
         # ディレクトリが存在しない場合は作成する
         if not os.path.exists(prompt_dir):
             os.makedirs(prompt_dir)
-        prompt_json_path = prompt_dir / f"{video_id}.json"
+        prompt_json_path = prompt_dir / f"{generation_id}.json"
         # このファイルが存在しない場合は新規作成する
         if not os.path.isfile(prompt_json_path):
             # jsonファイル作成
@@ -157,13 +156,15 @@ class BaseManimAgent(ABC):
             # すでにjsonファイルが存在する場合は追加する
             with open(prompt_json_path, "w", encoding='utf-8') as f:
                 data = json.load(f)
+                
+                trial_number = len(data["prompt"]) + 1 if isinstance(data["prompt"], list) else 2
                 data["prompt"].append({
-                    "trial": video_id,
+                    "trial": trial_number,
                     "content": content,
                     "enhance_prompt": enhance_prompt
                 })
                 json.dump(data, f, ensure_ascii=False, indent=4)
-        return prompt_json_path
+        return f"{generation_id}.json"
     
     def _get_script(self, video_id:str) -> str:
         """[Helper] manimスクリプトの取得"""
@@ -212,6 +213,14 @@ class BaseManimAgent(ABC):
         サブクラスで必要ならばオーバーライドして使用する。
         標準実装では flash_llm を使用して計画立案を行う。
         
+        このメソッドでは
+        content: 動画生成のためのユーザーの入力
+        enhance_prompt: 動画生成を補助するための追加プロンプト
+        
+        の二つを受け取り、manimコード生成のための計画を文字列として返す。
+        
+        return:str
+            manimコード生成のための計画を示す文字列
         """
         
         pass
@@ -260,16 +269,23 @@ class BaseManimAgent(ABC):
         pass
     
     
-    def main(self, content:str, enhance_prompt:str, max_loop:int=3)-> SuccessResponse:
+    def plan(self,content:str,enhance_prompt:str="")-> str:
+        """
+        manimコード生成のための計画立案の共通関数
+        """
+        
+        
+        
+        
+    
+    def main(self,generation_id, content:str, enhance_prompt:str, max_loop:int=3)-> SuccessResponse:
         """
         動画生成のメイン関数
         """
         # video_id(DBに保存するためのpathを一意にするためのID)
-
         video_id = str(uuid.uuid4())
-
         # save prompt
-        prompt_path = self._save_prompt(video_id, content, enhance_prompt)
+        prompt_path = self._save_prompt(generation_id, content, enhance_prompt)
 
         is_success = self.generate_video(video_id, content, enhance_prompt, max_loop)
 
@@ -278,27 +294,27 @@ class BaseManimAgent(ABC):
             ok=True,
             inner_video_id=video_id,
             message="done",
-            video_path=str(self.video_output_path / video_id / "480p15" / "GeneratedScene.mp4"),
+            video_path=str(Path(video_id) / "480p15" / "GeneratedScene.mp4"),
             prompt_path=str(prompt_path),
-            manim_code_path=str(self.manim_scripts_path / f"{video_id}.py")
+            manim_code_path=str(f"{video_id}.py")
         )
         elif is_success=="bad_request":
             return SuccessResponse(
                 ok=False,
-                inner_video_id=video_id,
                 message="bad",
                 prompt_path=str(prompt_path),
-                manim_code_path=str(self.manim_scripts_path / f"{video_id}.py")
+                manim_code_path=str(f"{video_id}.py")
             )
         else:
             return SuccessResponse(
                 ok=False,
-                inner_video_id=video_id,
                 message="failed",
             )
-            
-    def edit(self, innner_prior_video_id:str,enhance_prompt:str,max_loop:int=3):
-        script = self._get_script(innner_prior_video_id)
+
+    def edit(self, inner_prior_video_id:str, enhance_prompt:str, max_loop:int=3):
+
+        script = self._get_script(inner_prior_video_id)
+        
         new_video_id = str(uuid.uuid4())
         prompt_path = self._save_prompt(new_video_id, "", enhance_prompt)
         is_success = self.edit_video(new_video_id, script, enhance_prompt, max_loop)
@@ -307,24 +323,21 @@ class BaseManimAgent(ABC):
         if is_success == "Success":
             return SuccessResponse(
             ok=True,
-            inner_video_id=new_video_id,
             message="done",
-            video_path=str(self.video_output_path / new_video_id / "480p15" / "GeneratedScene.mp4"),
+            video_path=str(Path(new_video_id) / "480p15" / "GeneratedScene.mp4"),
             prompt_path=str(prompt_path),
-            manim_code_path=str(self.manim_scripts_path / f"{new_video_id}.py")
+            manim_code_path=str(f"{new_video_id}.py")
         )
         elif is_success=="bad_request":
             return SuccessResponse(
                 ok=False,
-                inner_video_id=new_video_id,
                 message="bad",
                 prompt_path=str(prompt_path),
-                manim_code_path=str(self.manim_scripts_path / f"{new_video_id}.py")
+                manim_code_path=str(f"{new_video_id}.py")
             )
         else:
             return SuccessResponse(
                 ok=False,
-                inner_video_id=new_video_id,
                 message="failed",
             )
         

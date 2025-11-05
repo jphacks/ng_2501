@@ -561,3 +561,4 @@ code: None
 2025-11-04 14:37:40.822 | DEBUG    | app.service.graph_agent:_after_bad_request_check:204 - --- [Branch] Secure. Proceeding to Lint. ---
 2025-11-04 14:37:40.823 | INFO     | app.service.graph_agent:_execute_and_handle_errors:116 - --- 4. [Node] Executing Manim ---
 2025-11-04 14:37:40.823 | INFO     | app.service.base_agent:_save_script:132 - Script saved to tmp/9a6a0733-12a7-4316-8262-e1503fe76b3d.py
+2025-11-05 02:21:36.018 | INFO     | app.service.base_agent:_load_prompt:96 - Prompts loaded from /workspaces/ai_agent/back/app/service/prompt/prompts.toml

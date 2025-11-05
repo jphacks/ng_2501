@@ -68,14 +68,7 @@ class Generation(Base):
     
     # Videoへのリレーション
     videos = relationship("Video", back_populates="generation")
-
-class VideoSeq(Base):
-    """
-    `video_seq` テーブルに対応するモデル。
-    """
-    __tablename__ = 'video_seq'
-    seq_video_id = Column(Integer, primary_key=True, autoincrement=True)
-    create_time = Column(TIMESTAMP)
+    
 
 class Video(Base):
     """
@@ -162,24 +155,6 @@ class VideoDatabase:
         except Exception as e:
             session.rollback()
             print(f"Error in generate_prompt: {e}")
-            raise
-        finally:
-            session.close()
-
-    def generate_video_seq(self) -> int:
-        '''動画生成シーケンスIDを新規作成する処理
-        
-        動画生成シーケンスIDを新規作成する。
-        '''
-        session = self._get_session()
-        try:
-            new_seq = VideoSeq(create_time=datetime.datetime.now())
-            session.add(new_seq)
-            session.commit()
-            return new_seq.seq_video_id
-        except Exception as e:
-            session.rollback()
-            print(f"Error in generate_video_seq: {e}")
             raise
         finally:
             session.close()

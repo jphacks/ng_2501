@@ -12,7 +12,7 @@ app = FastAPI(
 # CORS（Vercelなどからのアクセス許可）
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://ng2501.vercel.app/","http://localhost:3000"],  # 本番ではドメインを限定
+    allow_origins=["https://ng2501.vercel.app","http://localhost:3000"],  # 本番ではドメインを限定
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -20,33 +20,6 @@ import type { VideoGenerationPrompt, VideoResult } from '../../datas/Video'
 import fetchVideo from '../fetchVideo'
 
 /**
- * サンプルのmanimコードを生成
- */
-function createSampleManimCode(promptText: string): string {
-    const truncatedText = promptText.length > 50 ? `${promptText.substring(0, 50)}...` : promptText
-    return `from manim import *
-
-class MathAnimation(Scene):
-    def construct(self):
-        # テスト用動画: ${truncatedText}
-        
-        # タイトル
-        title = Text("数式アニメーション", font_size=48)
-        self.play(Write(title))
-        self.wait(1)
-        self.play(FadeOut(title))
-        
-        # 数式の表示（例）
-        equation = MathTex(r"\\\\int_0^1 x^2 dx = \\\\frac{1}{3}")
-        self.play(Write(equation))
-        self.wait(2)
-        
-        # フェードアウト
-        self.play(FadeOut(equation))
-        self.wait(1)`
-}
-
-/**
  * テスト用: 既存動画を使った動画生成フローのシミュレーション
  */
 export const useTestVideoGeneration = () => {
@@ -55,7 +28,7 @@ export const useTestVideoGeneration = () => {
     const [result, setResult] = useState<VideoResult | null>(null)
     const [error, setError] = useState<string | null>(null)
     const videoUrlRef = useRef<string | null>(null)
-    const testVideoIdRef = useRef<string | null>(null)
+    const testVideoIdRef = useRef<number | null>(null)
 
     useEffect(() => {
         return () => {
@@ -68,19 +41,15 @@ export const useTestVideoGeneration = () => {
     /**
      * 既存動画IDを保持してPrompt画面を表示
      */
-    const loadExistingVideo = async (videoId: string, promptText: string = '既存の動画') => {
+    const loadExistingVideo = async (generateId: number, promptText: string = '既存の動画') => {
         try {
             // テスト用: videoIdを保持（generateVideoで使用）
-            testVideoIdRef.current = videoId
+            testVideoIdRef.current = generateId
 
-            // サンプルのmanimCodeを生成
-            const sampleManimCode = createSampleManimCode(promptText)
-            
             const generatedPrompt: VideoGenerationPrompt = {
-                videoId,  // セッションIDとして使用
-                prompt: promptText,
+                generationId: generateId,  // セッションIDとして使用
+                planningPrompt: promptText,
                 originalText: promptText,
-                manimCode: sampleManimCode,
             }
 
             // 状態を更新
@@ -111,7 +80,7 @@ export const useTestVideoGeneration = () => {
 
         try {
             // 既存動画を取得
-            const videoUrl = await fetchVideo(videoId)
+            const videoUrl = await fetchVideo(String(videoId))
             if (!videoUrl) {
                 throw new Error('動画の取得に失敗しました')
             }
@@ -120,9 +89,9 @@ export const useTestVideoGeneration = () => {
                 URL.revokeObjectURL(videoUrlRef.current)
             }
             videoUrlRef.current = videoUrl
-            
+
             const generatedResult: VideoResult = {
-                videoId,
+                videoId: String(videoId),
                 videoUrl,
                 prompt: editedPrompt,
                 generatedAt: new Date(),

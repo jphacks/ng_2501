@@ -34,12 +34,7 @@ const resolveBackendUrl = () => {
     return sanitized
 }
 
-const createVideoId = () => {
-    if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-        return crypto.randomUUID()
-    }
-    return `video-${Date.now()}`
-}
+// Removed unused createVideoId function
 
 const createVideoGenerationPrompt = (generationId: number, request: VideoGenerationRequest, plan: string, enhancePrompt?: string): VideoGenerationPrompt => {
     const sections: string[] = [request.text]
@@ -306,7 +301,7 @@ export const useVideoGeneration = () => {
      */
     const loadExistingVideo = async (videoId: string, promptText: string) => {
         if (testHook) {
-            return await testHook.loadExistingVideo(videoId, promptText)
+            return await testHook.loadExistingVideo(Number(videoId), promptText)
         }
         throw new Error('テストモードは開発環境でのみ利用可能です')
     }
@@ -336,7 +331,7 @@ export const useVideoGeneration = () => {
             throw err
         }
         try {
-            const video_id = await requestEditAnimation(generationId!, videoId, enhancePrompt )
+            await requestEditAnimation(generationId!, videoId, enhancePrompt )
             const videoUrl = await replaceVideoUrl(videoId)
             const updatedPrompt = createVideoGenerationPrompt(generationId, baseRequest, enhancePrompt)
 
@@ -381,13 +376,22 @@ export const useVideoGeneration = () => {
     const activeResult = testHook?.result || result
     const activeIsGenerating = testHook?.isGenerating || isGenerating
 
+    // editVideoのラッパー: generationIdを自動的に渡す
+    const editVideoWrapper = async (videoId: string, editPrompt: string) => {
+        if (!generationId) {
+            throw new Error('Generation IDが設定されていません')
+        }
+        return await editVideo(generationId, videoId, editPrompt)
+    }
+
     return {
         isGenerating: activeIsGenerating,
         prompt: activePrompt,
         result: activeResult,
+        error,
         generatePrompt,
         generateVideo,
-        editVideo,
+        editVideo: editVideoWrapper,
         loadExistingVideo,  // ⚠️ テスト用
         clearResult,
     }

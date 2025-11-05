@@ -64,7 +64,7 @@ export const useVideoGeneration = () => {
     const testHook = process.env.NODE_ENV === 'development' ? useTestVideoGeneration() : null
 
     const [isGenerating, setIsGenerating] = useState(false)
-    const [_generationId, setGenerationId] = useState<number | null>(null);
+    const [generationId, setGenerationId] = useState<number | null>(null);
     const [prompt, setPrompt] = useState<VideoGenerationPrompt | null>(null)
     const [result, setResult] = useState<VideoResult | null>(null)
     const [error, setError] = useState<string | null>(null)
@@ -376,6 +376,14 @@ export const useVideoGeneration = () => {
     const activeResult = testHook?.result || result
     const activeIsGenerating = testHook?.isGenerating || isGenerating
 
+    // editVideoのラッパー: generationIdを自動的に渡す
+    const editVideoWrapper = async (videoId: string, editPrompt: string) => {
+        if (!generationId) {
+            throw new Error('Generation IDが設定されていません')
+        }
+        return await editVideo(generationId, videoId, editPrompt)
+    }
+
     return {
         isGenerating: activeIsGenerating,
         prompt: activePrompt,
@@ -383,7 +391,7 @@ export const useVideoGeneration = () => {
         error,
         generatePrompt,
         generateVideo,
-        editVideo,
+        editVideo: editVideoWrapper,
         loadExistingVideo,  // ⚠️ テスト用
         clearResult,
     }

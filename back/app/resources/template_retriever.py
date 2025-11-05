@@ -4,11 +4,11 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Pattern, Tuple
 
 import numpy as np
-import torch
-from transformers import AutoModel, AutoTokenizer
+
+from back.app.resources.template_encoder import TemplateEncoder
 
 
 @dataclass(frozen=True)
@@ -20,18 +20,6 @@ class TemplateEntry:
     template_id: str
     theme: str
     code: str
-
-
-def _mean_pool(
-    last_hidden_state: torch.Tensor, attention_mask: torch.Tensor
-) -> torch.Tensor:
-    """
-    アテンションマスクを考慮した平均プーリングを行う。
-    """
-    mask = attention_mask.unsqueeze(-1).type_as(last_hidden_state)
-    summed = (last_hidden_state * mask).sum(dim=1)
-    counts = mask.sum(dim=1).clamp(min=1e-9)
-    return summed / counts
 
 
 class TemplateRetriever:
@@ -58,12 +46,9 @@ class TemplateRetriever:
         self._template_by_id: Dict[str, TemplateEntry] = {
             entry.template_id: entry for entry in self.templates
         }
-        self._sequence_pattern_cache: Dict[str, re.Pattern] = {}
+        self._sequence_pattern_cache: Dict[str, Pattern[str]] = {}
 
-        self.device = "cpu"
-        self.tokenizer = AutoTokenizer.from_pretrained(self.MODEL_NAME)
-        self.model = AutoModel.from_pretrained(self.MODEL_NAME).to(self.device)
-        self.model.eval()
+        self.encoder = TemplateEncoder(self.MODEL_NAME)
 
     def _load_templates(self) -> List[TemplateEntry]:
         """
@@ -100,30 +85,22 @@ class TemplateRetriever:
         norms[norms == 0] = 1e-9
         return matrix / norms
 
-    @torch.no_grad()
     def encode(self, text: str, *, max_length: int = 256) -> np.ndarray:
         """
         テキストをエンコードし、正規化済みの文ベクトルを返す。
         """
-        encoded = self.tokenizer(
-            [text],
-            padding=True,
-            truncation=True,
-            max_length=max_length,
-            return_tensors="pt",
-        )
-        encoded = {k: v.to(self.device) for k, v in encoded.items()}
-        model_output = self.model(**encoded)
-        sentence_vector = _mean_pool(
-            model_output.last_hidden_state, encoded["attention_mask"]
-        )
-        sentence_vector = torch.nn.functional.normalize(sentence_vector, p=2, dim=1)
-        return sentence_vector.cpu().numpy()[0]
+        return self.encoder.encode(text, max_length=max_length)
 
-    def allocate_template_id(self, prefix: str = "code") -> str:
+    def allocate_template_id(
+        self, template_id: Optional[str] = None, *, prefix: str = "code"
+    ) -> str:
         """
-        新しいテンプレートIDを連番で生成する。
+        新しいテンプレートIDを取得する。テンプレートID指定時は重複チェックのみ行う。
         """
+        if template_id:
+            if template_id in self._template_by_id:
+                raise ValueError("指定された template_id は既に存在します。")
+            return template_id
         next_seq = self._compute_next_sequence(prefix)
         return f"{prefix}{next_seq}"
 
@@ -228,7 +205,7 @@ class TemplateRetriever:
     def _save_embeddings(self) -> None:
         np.save(self.embeddings_path, self.embeddings)
 
-    def _get_id_pattern(self, prefix: str) -> re.Pattern:
+    def _get_id_pattern(self, prefix: str) -> Pattern[str]:
         pattern = self._sequence_pattern_cache.get(prefix)
         if pattern is None:
             pattern = re.compile(rf"^{re.escape(prefix)}(\d+)$")

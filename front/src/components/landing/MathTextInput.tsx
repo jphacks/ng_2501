@@ -542,24 +542,24 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                 {/* ヘッダー */}
                 <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-200">
                     <h3 className="text-lg font-bold text-gray-800">SUDO<span className="text-xs text-gray-500 ml-5">ー 数学テキスト入力</span></h3>
-                    {/* モバイル版: オプション設定切替ボタン */}
+                    {/* モバイル版: 追加項目設定切替ボタン */}
                     <button
                         type="button"
                         onClick={() => setIsOptionalSettingsOpen(!isOptionalSettingsOpen)}
                         className="lg:hidden px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 border border-gray-300 rounded hover:bg-gray-200 transition-colors flex items-center gap-1.5"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <title>オプション設定</title>
+                            <title>追加項目設定</title>
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
-                        <span>{isOptionalSettingsOpen ? '閉じる' : 'オプション'}</span>
+                        <span>{isOptionalSettingsOpen ? '閉じる' : '追加項目'}</span>
                     </button>
                 </div>
 
                 {/* メイン */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0 min-w-0">
-                    {/* モバイル版: オプション設定表示エリア */}
+                    {/* モバイル版: 追加項目設定表示エリア */}
                     <div className={`lg:hidden ${isOptionalSettingsOpen ? 'flex' : 'hidden'} flex-col overflow-y-auto space-y-4 pb-4 lg:col-span-1`}>
                         <div className="bg-gray-50 border border-gray-200 rounded p-4">
                             <h5 className="text-sm font-medium text-gray-800 mb-3 flex items-center gap-2">

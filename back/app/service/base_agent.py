@@ -332,8 +332,8 @@ class BaseManimAgent(ABC):
                 message="failed",
             )
             
-    def edit(self, innner_prior_video_id:str,enhance_prompt:str,max_loop:int=3):
-        script = self._get_script(innner_prior_video_id)
+    def edit(self, inner_prior_video_id:str,enhance_prompt:str,max_loop:int=3):
+        script = self._get_script(inner_prior_video_id)
         new_video_id = str(uuid.uuid4())
         prompt_path = self._save_prompt(new_video_id, "", enhance_prompt)
         is_success = self.edit_video(new_video_id, script, enhance_prompt, max_loop)

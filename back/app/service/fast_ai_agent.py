@@ -29,6 +29,7 @@ class ManimGraphState(TypedDict):
     # --- 制御用 ---
     max_retries: int  # 最大試行回数 (元の max_loop)
     current_retry: int  # 現在の試行回数 (元の loop)
+    mode: Literal["generate", "edit"]  # 動作モード
 
 
 class ManimFastAnimationService(BaseManimAgent):
@@ -63,6 +64,42 @@ class ManimFastAnimationService(BaseManimAgent):
     def _generate_initial_script(self, state: ManimGraphState):
         """[Node 1] 最初のスクリプトを生成する"""
         self.base_logger.info("--- 1. [Node] Generating Initial Script ---")
+
+        if state["mode"] == "edit":
+            self.base_logger.info("   [+] Edit mode detected. Applying targeted adjustments.")
+            edit_prompt = PromptTemplate.from_template(
+                self.prompts["chain"]["fast_ai_edit_initial"]
+            )
+            parser = StrOutputParser()
+            chain = edit_prompt | self.flash_llm | parser
+            llm_response = chain.invoke(
+                {
+                    "edit_instructions": state["user_request"],
+                    "original_script": state["current_script"],
+                }
+            )
+            updated_script = (
+                llm_response.strip()
+                .replace("```python", "")
+                .replace("```", "")
+                .strip()
+            )
+            if updated_script:
+                self.base_logger.debug(
+                    f"   [+] Generated edited script (length: {len(updated_script)})"
+                )
+            else:
+                self.base_logger.warning(
+                    "   [-] Edit response empty. Keeping original script."
+                )
+                updated_script = state["current_script"]
+
+            return {
+                "current_script": updated_script,
+                "current_retry": 0,
+                "last_error": "",
+                "error_type": "",
+            }
 
         script = self.generate_script_with_prompt(state["animation_plan"])
 
@@ -260,6 +297,7 @@ class ManimFastAnimationService(BaseManimAgent):
             "is_bad_request": False,
             "max_retries": maxloop,
             "current_retry": 0,
+            "mode": "generate",
         }
 
         final_state = self.app.invoke(initial_state)
@@ -302,6 +340,7 @@ class ManimFastAnimationService(BaseManimAgent):
             "is_bad_request": False,
             "max_retries": maxloop,
             "current_retry": 0,
+            "mode": "edit",
         }
 
         final_state = self.app.invoke(initial_state)

@@ -199,7 +199,7 @@ class VideoDatabase:
         finally:
             session.close()
 
-    def edit_video(self, prior_video_id: int, new_video_path: str) -> Optional[int]:
+    def edit_video(self, prior_video_id: int,  new_video_path: str,new_video_id:str ) -> Optional[int]:
         '''編集された動画を新たにDBに保存する処理
         
         既存の動画IDをもとに、新たに生成された動画ファイルのパスを受け取り、DBに保存する。
@@ -217,9 +217,10 @@ class VideoDatabase:
             
             new_edit_count = prior_video.edit_count + 1
             
-            # 新しいVideoオブジェクトを作成 (video_idは指定せず、自動インクリメントに任せる)
+            
             new_video = Video(
                 generate_id=prior_video.generate_id,
+                video_id=new_video_id,
                 video_path=new_video_path,
                 prompt_id=prior_video.prompt_id,
                 manim_code_id=prior_video.manim_code_id,

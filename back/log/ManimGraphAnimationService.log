@@ -1639,3 +1639,321 @@ code: │   trig_table = MobjectTable(                                          
 2025-11-05 14:23:35.246 | ERROR    | app.service.graph_agent:_execute_and_handle_errors:141 -    [-] Script execution failed with errors.
 2025-11-05 14:23:35.246 | INFO     | app.service.graph_agent:_after_execution:224 - --- [Branch] Runtime Error. Proceeding to Refine. ---
 2025-11-05 14:23:35.247 | INFO     | app.service.graph_agent:_refine_script_on_error:150 - --- 5. [Node] Refining Script (Attempt 2) ---
+2025-11-05 16:31:35.640 | INFO     | app.service.base_agent:_load_prompt:99 - Prompts loaded from /workspaces/ai_agent/back/app/service/prompt/prompts.toml
+2025-11-05 16:32:00.091 | INFO     | app.service.base_agent:_save_prompt:180 - Prompt file already exists: /workspaces/ai_agent/back/prompts/2.json
+2025-11-05 16:32:07.807 | INFO     | app.service.graph_agent:manim_planner:337 - Manim planner output: ## Manim シーン生成指示: 二次方程式の解の公式
+
+### 描画要素
+
+*   **テキスト:**
+    *   「二次方程式の解の公式」 (タイトル、大きめ、太字、中央上部)
+    *   「ax² + bx + c = 0」 (二次方程式の一般形、大きめ、中央)
+    *   「x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}」 (解の公式、特大、中央、数式として描画)
+    *   「判別式 D = b² - 4ac」 (判別式、大きめ、解の公式の下)
+*   **数式部品:**
+    *   二次方程式の一般形を構成する `a`, `x²`, `+`, `b`, `x`, `+`, `c`, `=`, `0` を個別の `MathTex` オブジェクトとして作成。
+    *   解の公式を構成する `-b`, `\pm`, `\sqrt{...}`, `b²`, `-`, `4ac`, `2a` を個別の `MathTex` オブジェクトとして作成。
+    *   判別式を構成する `D`, `=`, `b²`, `-`, `4ac` を個別の `MathTex` オブジェクトとして作成。
+
+### アニメーション指示
+
+1.  **タイトル表示:** 「二次方程式の解の公式」が画面中央上部からフェードインして表示される。
+2.  **一般形表示:** 二次方程式の一般形「ax² + bx + c = 0」が、個別の数式部品 (`a`, `x²` など) が順番に現れて組み立てられるように表示される。
+3.  **解の公式表示:**
+    *   解の公式「x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}」が、数式部品 (`-b`, `\pm` など) が順番に現れて組み立てられるように表示される。
+    *   特に、分母の `2a`、分子の `-b`、そして平方根の中身 `b^2 - 4ac` が強調されるように、少し遅れて表示される。
+4.  **判別式表示:**
+    *   「判別式 D = b² - 4ac」が、数式部品 (`D`, `=`, `b²` など) が順番に現れて表示される。
+    *   判別式の `b² - 4ac` の部分が、解の公式の平方根の中身と関連があることを示すために、少し強調（例えば、一時的に色を変えるなど）される。
+5.  **要素の配置:** 全ての要素が表示された後、タイトル、一般形、解の公式、判別式が、見やすいように適切な位置に配置される。
+
+### シーン全体の流れ
+
+1.  タイトルが表示される。
+2.  二次方程式の一般形が組み立てられるように表示される。
+3.  解の公式が組み立てられるように表示される。
+4.  判別式が表示され、解の公式との関連が示唆される。
+5.  全ての要素が配置され、静止画として表示される。
+
+### 見やすさのための注意点
+
+*   **フォントサイズ:** 主要な数式（一般形、解の公式）は大きく、タイトルも読みやすいサイズにする。
+*   **色:** 数式部品ごとに異なる色を使用すると、どの部分がどの数式に対応しているか分かりやすくなる。例えば、`a` は青、`b` は緑、`c` は赤、といった具合。解の公式の `-b`、`\pm`、`\sqrt{...}`、`2a` は、それぞれ異なる色や太さで強調する。
+*   **アニメーション速度:** 数式部品の組み立てアニメーションは、速すぎず遅すぎず、視聴者が追える速度にする。
+*   **配置:** 全ての要素が表示された後、互いに重ならず、中心を意識して配置することで、情報が整理されて見えるようにする。
+*   **背景:** シンプルな単色背景を使用し、数式が際立つようにする。
+*   **一時停止:** 解の公式が表示された後、数秒間静止させることで、視聴者が内容を理解する時間を確保する。
+
+---
+
+**ユーザーからの注意:**
+
+*   二次補つて意識の解の公式、とあります。これは「二次方程式の解の公式」と解釈します。
+*   数式はLatex形式で描画します。
+*   アニメーションは、数式がどのように構成されるかを視覚的に理解できるようにすることを重視します。
+2025-11-05 16:32:07.808 | INFO     | app.service.base_agent:_save_prompt:180 - Prompt file already exists: /workspaces/ai_agent/back/prompts/2.json
+2025-11-05 16:32:07.808 | INFO     | app.service.base_agent:plan:325 - Plan generated: 2
+2025-11-05 16:32:07.808 | DEBUG    | app.service.base_agent:plan:326 - Plan details: 2.json
+2025-11-05 16:32:41.304 | INFO     | app.service.base_agent:_save_prompt:180 - Prompt file already exists: /workspaces/ai_agent/back/prompts/2.json
+2025-11-05 16:32:41.311 | INFO     | app.service.graph_agent:_generate_initial_script:90 - --- 1. [Node] Generating Initial Script ---
+2025-11-05 16:33:39.317 | INFO     | app.service.graph_agent:generate_script_with_prompt:79 - --- 取得した中間出力 (Planner) ---
+2025-11-05 16:33:39.317 | INFO     | app.service.graph_agent:generate_script_with_prompt:80 - ## Manim シーン生成指示: 二次方程式の解の公式
+
+### 描画要素
+
+*   **テキスト:**
+    *   「二次方程式の解の公式」 (タイトル、`Text`, `font_size=60`, `weight="BOLD"`, 中央上部)
+    *   `MathTex("ax^2 + bx + c = 0")` (二次方程式の一般形、`font_size=48`, 中央)
+    *   `MathTex("x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}")` (解の公式、`font_size=72`, 中央)
+    *   `MathTex("D = b^2 - 4ac")` (判別式、`font_size=48`, 解の公式の下)
+*   **数式部品 (個別):**
+    *   `MathTex("a")`, `MathTex("x^2")`, `MathTex("+")`, `MathTex("b")`, `MathTex("x")`, `MathTex("+")`, `MathTex("c")`, `MathTex("=")`, `MathTex("0")` (一般形用、`font_size=48`)
+    *   `MathTex("-b")`, `MathTex("\\pm")`, `MathTex("\\sqrt{b^2 - 4ac}")`, `MathTex("b^2")`, `MathTex("-")`, `MathTex("4ac")`, `MathTex("2a")` (解の公式用、`font_size=60`)
+    *   `MathTex("D")`, `MathTex("=")`, `MathTex("b^2")`, `MathTex("-")`, `MathTex("4ac")` (判別式用、`font_size=48`)
+
+### アニメーション指示
+
+1.  **タイトル表示:** `FadeIn(title)`
+2.  **一般形表示:**
+    *   `general_form_parts = [MathTex("a"), MathTex("x^2"), MathTex("+"), MathTex("b"), MathTex("x"), MathTex("+"), MathTex("c"), MathTex("="), MathTex("0")]`
+    *   `self.play(LaggedStart(*[FadeIn(part) for part in general_form_parts], lag_ratio=0.2))`
+    *   `self.wait(0.5)`
+    *   `self.play(FadeOut(VGroup(*general_form_parts)))`
+    *   `self.play(FadeIn(general_form))`
+3.  **解の公式表示:**
+    *   `formula_parts = [MathTex("-b"), MathTex("\\pm"), MathTex("\\sqrt{b^2 - 4ac}"), MathTex("2a")]` (主要部品)
+    *   `self.play(LaggedStart(*[FadeIn(part) for part in formula_parts], lag_ratio=0.3))`
+    *   `self.wait(0.5)`
+    *   `self.play(FadeOut(VGroup(*formula_parts)))`
+    *   `self.play(FadeIn(solution_formula))`
+4.  **判別式表示:**
+    *   `discriminant_parts = [MathTex("D"), MathTex("="), MathTex("b^2 - 4ac")]`
+    *   `self.play(LaggedStart(*[FadeIn(part) for part in discriminant_parts], lag_ratio=0.3))`
+    *   `self.wait(0.5)`
+    *   `self.play(FadeOut(VGroup(*discriminant_parts)))`
+    *   `self.play(FadeIn(discriminant))`
+    *   **強調:** `self.play(Indicate(discriminant.get_part_by_tex("b^2 - 4ac"), color=YELLOW, scale_factor=1.1, run_time=1))`
+    *   `self.play(solution_formula.get_part_by_tex("\\sqrt{b^2 - 4ac}").animate.set_color(YELLOW).scale(1.1))`
+    *   `self.wait(1)`
+    *   `self.play(solution_formula.get_part_by_tex("\\sqrt{b^2 - 4ac}").animate.set_color(WHITE).scale(1/1.1))`
+5.  **要素の配置:**
+    *   `self.play(
+        VGroup(title, general_form, solution_formula, discriminant).arrange(DOWN, buff=0.5)
+    )`
+
+### シーン全体の流れ
+
+1.  タイトルがフェードインする。
+2.  二次方程式の一般形が、各部品が順番に現れて組み立てられるように表示され、その後全体として表示される。
+3.  解の公式が、主要部品が順番に現れて組み立てられるように表示され、その後全体として表示される。
+4.  判別式が表示され、その `b² - 4ac` の部分が強調される。
+5.  解の公式の根号の中身も強調され、判別式との関連が示唆される。
+6.  全ての要素（タイトル、一般形、解の公式、判別式）が、見やすいように垂直に配置される。
+
+### 見やすさのための注意点
+
+*   **色分け:** `a` は青、`b` は緑、`c` は赤、といったように、一般形、解の公式、判別式で同じ係数には同じ色を適用する。`\pm` は紫、`\sqrt{...}` はオレンジ、`2a` は水色など、各要素にユニークな色を割り当てる。
+*   **アニメーション速度:** `lag_ratio` を調整し、数式部品の組み立てが追える速度にする。
+*   **配置:** `arrange(DOWN, buff=0.5)` を使用して、要素間の間隔を均一に保ち、視覚的な整理を促進する。
+*   **強調:** `Indicate` や `set_color` を使用して、判別式と解の公式の関連部分を一時的に強調する。
+*   **背景:** デフォルトの黒背景を使用し、数式が際立つようにする。
+*   **一時停止:** 各主要な数式が表示された後、`self.wait()` を追加して、視聴者が内容を消化する時間を確保する。
+2025-11-05 16:33:39.318 | INFO     | app.service.graph_agent:generate_script_with_prompt:81 - -----------------------------------
+2025-11-05 16:33:39.318 | DEBUG    | app.service.graph_agent:_generate_initial_script:96 -    [+] Initial script generated (length: 4833)
+2025-11-05 16:33:39.320 | INFO     | app.service.graph_agent:_check_bad_request:103 - --- 2. [Node] Checking for Bad Request ---
+2025-11-05 16:33:39.323 | DEBUG    | app.service.graph_agent:_check_bad_request:105 -    [+] Code security check: Passed
+2025-11-05 16:33:39.323 | DEBUG    | app.service.graph_agent:_after_bad_request_check:204 - --- [Branch] Secure. Proceeding to Lint. ---
+2025-11-05 16:33:39.323 | INFO     | app.service.graph_agent:_execute_and_handle_errors:116 - --- 4. [Node] Executing Manim ---
+2025-11-05 16:33:39.324 | INFO     | app.service.base_agent:_save_script:139 - Script saved to tmp/fb336725-39a7-4c11-af99-7bd2402b3498.py
+2025-11-05 16:33:51.557 | INFO     | app.service.base_agent:_execute_script:238 - Script executed successfully: tmp/fb336725-39a7-4c11-af99-7bd2402b3498.py
+2025-11-05 16:33:51.557 | INFO     | app.service.graph_agent:_execute_and_handle_errors:123 -    [+] Script executed successfully.
+2025-11-05 16:33:51.557 | INFO     | app.service.graph_agent:_after_execution:227 - --- [Branch] Execution Succeeded. Ending Graph. ---
+2025-11-05 16:33:51.558 | INFO     | app.service.graph_agent:generate_video:278 - --- Graph Finished: Success ---
+2025-11-05 16:35:10.385 | INFO     | app.service.base_agent:_save_prompt:180 - Prompt file already exists: /workspaces/ai_agent/back/prompts/3.json
+2025-11-05 16:35:18.505 | INFO     | app.service.graph_agent:manim_planner:337 - Manim planner output: ## Manim シーン生成 Instruction: 二次方程式
+
+### 1. Manim で描画すべき図形やテキスト
+
+*   **テキスト:**
+    *   「二次方程式」というタイトル（フォントサイズ: 大、太字、中央揃え）
+    *   二次方程式の一般形: $ax^2 + bx + c = 0$ （フォントサイズ: 中、中央揃え）
+    *   係数 $a, b, c$ がそれぞれ何を表すかの説明（フォントサイズ: 小、左揃え）
+    *   二次方程式の解の公式: $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$ （フォントサイズ: 中、中央揃え）
+    *   判別式 $D = b^2 - 4ac$ （フォントサイズ: 中、中央揃え）
+    *   判別式による解の種類の説明（$D > 0$: 異なる2つの実数解、 $D = 0$: 重解、 $D < 0$: 異なる2つの虚数解）（フォントサイズ: 小、左揃え）
+    *   具体的な二次方程式の例（例: $x^2 - 5x + 6 = 0$）（フォントサイズ: 中、中央揃え）
+    *   例における係数 $a, b, c$ の値（フォントサイズ: 小、左揃え）
+    *   例の解（例: $x = 2, x = 3$）（フォントサイズ: 中、中央揃え）
+*   **図形:**
+    *   二次関数のグラフ（放物線）: $y = ax^2 + bx + c$ の形を描画。$a$ の値によってグラフの開き具合や向きが変わることを示すために、いくつかの異なる $a$ の値でのグラフを重ねて描画するか、アニメーションで変化させる。
+    *   座標軸（x軸、y軸）: グラフと共鳴するように描画。
+    *   判別式 $D$ の値とグラフの形状、解の個数を視覚的に対応させるための矢印やハイライト。
+
+### 2. 図形やテキストをどのように動かすか
+
+*   **タイトル:** 画面中央にフェードイン。
+*   **二次方程式の一般形:** タイトルの下にフェードイン。
+*   **係数の説明:** 一般形のテキストの横にフェードイン。
+*   **解の公式:** 一般形から少し間を置いて、画面中央にフェードイン。
+*   **判別式:** 解の公式の後にフェードイン。
+*   **判別式による解の種類の説明:** 判別式のテキストの横に、それぞれフェードイン。
+*   **具体的な二次方程式の例:** 画面下部にフェードイン。
+*   **例における係数 $a, b, c$ の値:** 例のテキストの横にフェードイン。
+*   **例の解:** 例のテキストの下にフェードイン。
+*   **二次関数のグラフ:**
+    *   まず、基本的な放物線（例: $y=x^2$）を描画。
+    *   次に、$a$ の値を変化させながら、グラフがどのように変化するかをアニメーションで示す（例: $y=2x^2$, $y=-x^2$ など）。
+    *   具体的な二次方程式の例に対応するグラフを描画し、そのグラフがx軸と交わる点（解）をハイライトする。
+*   **座標軸:** グラフの描画と同時に表示。
+*   **判別式とグラフの対応:**
+    *   $D > 0$ の場合: グラフがx軸と2点で交わることを示す。
+    *   $D = 0$ の場合: グラフがx軸と1点で接することを示す。
+    *   $D < 0$ の場合: グラフがx軸と交わらないことを示す。
+    *   これらの対応を、判別式の部分からグラフの該当箇所へ矢印を引くなどの方法で視覚化する。
+
+### 3. シーン全体の流れ
+
+1.  **導入:** 「二次方程式」というタイトルを表示。
+2.  **定義:** 二次方程式の一般形 $ax^2 + bx + c = 0$ と、係数の説明を表示。
+3.  **解の公式:** 二次方程式の解の公式を表示。
+4.  **判別式:** 判別式 $D = b^2 - 4ac$ と、その値による解の種類の関係を表示。
+5.  **グラフとの関連:**
+    *   二次関数のグラフ（放物線）の描画。
+    *   $a$ の値によるグラフの変化のアニメーション。
+    *   判別式の値とグラフのx軸との交点の関係を視覚的に説明。
+6.  **具体例:** 具体的な二次方程式の例、その係数、そして解を表示。
+7.  **まとめ:** （必要であれば）二次方程式の重要性や応用について簡単に触れる。
+
+### 4. シーンが見やすいものになるようにするための注意
+
+*   **色の統一:** 全体を通して、統一感のある色使いを心がける。重要な要素（解の公式、判別式など）は目立つ色を使用する。
+*   **フォントサイズと配置:** テキストのフォントサイズは、遠くからでも見えるように配慮し、適切な位置に配置する。数式は中央揃え、説明文は左揃えなど、情報の種類に応じて配置を工夫する。
+*   **アニメーションの速度:** アニメーションは、視聴者が内容を理解できる程度の速度に調整する。速すぎたり遅すぎたりしないように注意する。
+*   **余白:** 図形やテキストの間に十分な余白を設けることで、視覚的な cluttered 感をなくし、見やすさを向上させる。
+*   **要素の出現順序:** 情報を論理的な順序で、かつ段階的に表示することで、視聴者の理解を助ける。
+*   **グラフのスケール:** グラフの描画時には、x軸とy軸のスケールを適切に設定し、解や頂点が分かりやすいように調整する。
+*   **強調:** 重要な数式や概念は、一時的に拡大したり、色を変えたりして強調する。
+*   **簡潔さ:** 情報を詰め込みすぎず、最も重要なポイントに焦点を当てる。
+
+### ユーザーからの注意 (例)
+
+*   「二次方程式の解の公式を導出する過程は、今回は省略してください。」
+*   「グラフのアニメーションでは、$a$ の値が正の場合と負の場合の両方を示してください。」
+*   「虚数解の概念は、今回は深入りせず、判別式が負の場合に『虚数解』と表示する程度に留めてください。」
+2025-11-05 16:35:18.505 | INFO     | app.service.base_agent:_save_prompt:180 - Prompt file already exists: /workspaces/ai_agent/back/prompts/3.json
+2025-11-05 16:35:18.505 | INFO     | app.service.base_agent:plan:325 - Plan generated: 3
+2025-11-05 16:35:18.505 | DEBUG    | app.service.base_agent:plan:326 - Plan details: 3.json
+2025-11-05 16:35:26.037 | INFO     | app.service.base_agent:_save_prompt:180 - Prompt file already exists: /workspaces/ai_agent/back/prompts/3.json
+2025-11-05 16:35:26.038 | INFO     | app.service.graph_agent:_generate_initial_script:90 - --- 1. [Node] Generating Initial Script ---
+2025-11-05 16:36:58.886 | INFO     | app.service.graph_agent:generate_script_with_prompt:79 - --- 取得した中間出力 (Planner) ---
+2025-11-05 16:36:58.886 | INFO     | app.service.graph_agent:generate_script_with_prompt:80 - ## Manim シーン生成 Instruction: 二次方程式
+
+### 1. Manim で描画すべき図形やテキスト
+
+*   **テキスト:**
+    *   `Title`: "二次方程式" (フォントサイズ: `LARGE`, 太字, 中央揃え)
+    *   `GeneralForm`: $ax^2 + bx + c = 0$ (フォントサイズ: `MEDIUM`, 中央揃え)
+    *   `CoeffExplanation`: ($a, b, c$ は係数、$a \neq 0$) (フォントサイズ: `SMALL`, 左揃え, `GeneralForm` の下に配置)
+    *   `QuadraticFormula`: $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$ (フォントサイズ: `MEDIUM`, 中央揃え)
+    *   `Discriminant`: $D = b^2 - 4ac$ (フォントサイズ: `MEDIUM`, 中央揃え)
+    *   `DiscriminantCases`:
+        *   $D > 0$: 異なる2つの実数解 (フォントサイズ: `SMALL`, 左揃え)
+        *   $D = 0$: 重解 (フォントサイズ: `SMALL`, 左揃え)
+        *   $D < 0$: 異なる2つの虚数解 (フォントサイズ: `SMALL`, 左揃え)
+    *   `ExampleEquation`: $x^2 - 5x + 6 = 0$ (フォントサイズ: `MEDIUM`, 中央揃え)
+    *   `ExampleCoeffs`: ($a=1, b=-5, c=6$) (フォントサイズ: `SMALL`, 左揃え, `ExampleEquation` の下に配置)
+    *   `ExampleSolutions`: $x = 2, x = 3$ (フォントサイズ: `MEDIUM`, 中央揃え)
+    *   `GraphTitle`: "二次関数のグラフ" (フォントサイズ: `LARGE`, 中央揃え)
+    *   `GraphA1`: $y = x^2$ (フォントサイズ: `SMALL`, 右下配置)
+    *   `GraphA2`: $y = 2x^2$ (フォントサイズ: `SMALL`, 右下配置)
+    *   `GraphA3`: $y = -x^2$ (フォントサイズ: `SMALL`, 右下配置)
+*   **図形:**
+    *   `Axes`: 座標軸 (x軸, y軸)
+    *   `Graph1`: $y = x^2$ の放物線 (色: 青)
+    *   `Graph2`: $y = 2x^2$ の放物線 (色: 緑)
+    *   `Graph3`: $y = -x^2$ の放物線 (色: 赤)
+    *   `ExampleGraph`: $y = x^2 - 5x + 6$ の放物線 (色: 紫)
+    *   `IntersectionPoints`: `ExampleGraph` が x 軸と交わる点 (色: 黄色, サイズ: 少し大きめ)
+    *   `D_pos_arrow`: `Discriminant` から `ExampleGraph` がx軸と2点で交わる様子を指す矢印 (色: 黄色)
+    *   `D_zero_arrow`: `Discriminant` からグラフがx軸と1点で接する様子を指す仮想的な矢印 (色: 黄色, 点線)
+    *   `D_neg_arrow`: `Discriminant` からグラフがx軸と交わらない様子を指す仮想的な矢印 (色: 黄色, 点線)
+
+### 2. 図形やテキストをどのように動かすか
+
+*   `Title`: 画面中央に `FadeIn`
+*   `GeneralForm`: `Title` の下に `FadeIn`
+*   `CoeffExplanation`: `GeneralForm` の右横に `FadeIn`
+*   `QuadraticFormula`: `GeneralForm` と `CoeffExplanation` の後に、画面中央に `FadeIn`
+*   `Discriminant`: `QuadraticFormula` の後に、画面中央に `FadeIn`
+*   `DiscriminantCases`: `Discriminant` の下に、それぞれ `FadeIn` (D>0, D=0, D<0 の順)
+*   **グラフ表示:**
+    *   `Axes` を表示。
+    *   `GraphTitle` を画面上部に `FadeIn`
+    *   `Graph1` ($y=x^2$) を描画、`GraphA1` と共に表示。
+    *   `Graph2` ($y=2x^2$) を描画、`GraphA2` と共に表示。
+    *   `Graph3` ($y=-x^2$) を描画、`GraphA3` と共に表示。
+    *   `Graph1`, `Graph2`, `Graph3` を `Transform` または `FadeOut` させて、一度画面をクリア。
+    *   `ExampleGraph` ($y=x^2 - 5x + 6$) を描画。
+    *   `IntersectionPoints` を `ExampleGraph` の x 軸との交点に `Create`。
+    *   `ExampleEquation` と `ExampleCoeffs` を `ExampleGraph` の下に `FadeIn`。
+    *   `ExampleSolutions` を `ExampleEquation` の下に `FadeIn`。
+*   **判別式とグラフの対応:**
+    *   `D_pos_arrow` を `Discriminant` の $D > 0$ の部分から `IntersectionPoints` へ `DrawBorder`。
+    *   `D_zero_arrow` を `Discriminant` の $D = 0$ の部分から、`ExampleGraph` が x 軸と接する仮想的な位置へ `DrawBorder` (点線)。
+    *   `D_neg_arrow` を `Discriminant` の $D < 0$ の部分から、`ExampleGraph` が x 軸と交わらない仮想的な位置へ `DrawBorder` (点線)。
+    *   `DiscriminantCases` の説明文を、対応する矢印と同時に `FadeIn` させる。
+
+### 3. シーン全体の流れ
+
+1.  **タイトル表示:** 「二次方程式」というタイトルを中央に表示。
+2.  **一般形と係数:** 二次方程式の一般形 $ax^2 + bx + c = 0$ と、係数に関する注釈を表示。
+3.  **解の公式:** 二次方程式の解の公式を表示。
+4.  **判別式:** 判別式 $D = b^2 - 4ac$ を表示。
+5.  **判別式と解の種類:** 判別式の値による解の種類（異なる2つの実数解、重解、異なる2つの虚数解）を、それぞれ表示。
+6.  **グラフの概念:**
+    *   二次関数のグラフ（放物線）の描画。
+    *   異なる $a$ の値によるグラフの形状変化を、例示的に描画。
+7.  **具体例:**
+    *   具体的な二次方程式の例 ($x^2 - 5x + 6 = 0$) を表示。
+    *   その係数 ($a=1, b=-5, c=6$) を表示。
+    *   対応する二次関数のグラフを描画し、x軸との交点（解）をハイライト。
+    *   例の解 ($x=2, x=3$) を表示。
+8.  **判別式とグラフの対応:** 判別式の値と、二次関数のグラフがx軸と交わる点の数との関係を、矢印などを使い視覚的に説明。
+
+### 4. シーンが見やすいものになるようにするための注意
+
+*   **色分け:** 数式、グラフ、説明文などで一貫した色を使用し、重要な要素（解の公式、判別式、解）は目立つ色にする。
+*   **配置の整理:** テキストは中央揃え、左揃えなどを適切に使い分け、視覚的なまとまりを持たせる。数式は画面中央付近に、説明文は関連する数式の近くに配置する。
+*   **アニメーションのタイミング:** 要素の出現順序を論理的にし、各アニメーションの間に適切な間隔を設ける。グラフの描画は、数式説明の後に行う。
+*   **グラフの視認性:** グラフは、x軸とy軸のスケールを適切に設定し、解となる交点が明確に見えるようにする。複数のグラフを描画する場合は、重なりすぎないように注意するか、一時的に表示・非表示を切り替える。
+*   **矢印の明確さ:** 判別式とグラフの対応を示す矢印は、太さや色で強調し、どこからどこへ向かっているか分かりやすくする。
+*   **余白の確保:** 要素間に十分な余白を設けることで、画面がごちゃごちゃするのを防ぎ、各要素を際立たせる。
+*   **簡潔な表現:** 説明文は、二次方程式の概念を理解する上で最低限必要な情報に絞る。
+2025-11-05 16:36:58.887 | INFO     | app.service.graph_agent:generate_script_with_prompt:81 - -----------------------------------
+2025-11-05 16:36:58.887 | DEBUG    | app.service.graph_agent:_generate_initial_script:96 -    [+] Initial script generated (length: 5837)
+2025-11-05 16:36:58.888 | INFO     | app.service.graph_agent:_check_bad_request:103 - --- 2. [Node] Checking for Bad Request ---
+2025-11-05 16:36:58.891 | DEBUG    | app.service.graph_agent:_check_bad_request:105 -    [+] Code security check: Passed
+2025-11-05 16:36:58.891 | DEBUG    | app.service.graph_agent:_after_bad_request_check:204 - --- [Branch] Secure. Proceeding to Lint. ---
+2025-11-05 16:36:58.892 | INFO     | app.service.graph_agent:_execute_and_handle_errors:116 - --- 4. [Node] Executing Manim ---
+2025-11-05 16:36:58.892 | INFO     | app.service.base_agent:_save_script:139 - Script saved to tmp/015dd4ca-683c-4daf-b8c2-b643c7acbfaa.py
+2025-11-05 16:37:10.862 | ERROR    | app.service.base_agent:_execute_script:247 - Script execution failed: [Error]
+file: /workspaces/ai_agent/back/tmp/015dd4ca-683c-4daf-b8c2-b643c7acbfaa.py
+line: 144
+type: NameError
+message: name 'DashedArrow' is not defined
+code: │   d_zero_arrow = DashedArrow(                                                        │
+
+2025-11-05 16:37:10.863 | ERROR    | app.service.graph_agent:_execute_and_handle_errors:141 -    [-] Script execution failed with errors.
+2025-11-05 16:37:10.863 | INFO     | app.service.graph_agent:_after_execution:224 - --- [Branch] Runtime Error. Proceeding to Refine. ---
+2025-11-05 16:37:10.863 | INFO     | app.service.graph_agent:_refine_script_on_error:150 - --- 5. [Node] Refining Script (Attempt 1) ---
+2025-11-05 16:38:07.300 | DEBUG    | app.service.graph_agent:_refine_script_on_error:188 -    [+] Script refined (length: 5870)
+2025-11-05 16:38:07.301 | INFO     | app.service.graph_agent:_check_bad_request:103 - --- 2. [Node] Checking for Bad Request ---
+2025-11-05 16:38:07.306 | DEBUG    | app.service.graph_agent:_check_bad_request:105 -    [+] Code security check: Passed
+2025-11-05 16:38:07.306 | DEBUG    | app.service.graph_agent:_after_bad_request_check:204 - --- [Branch] Secure. Proceeding to Lint. ---
+2025-11-05 16:38:07.306 | INFO     | app.service.graph_agent:_execute_and_handle_errors:116 - --- 4. [Node] Executing Manim ---
+2025-11-05 16:38:07.307 | INFO     | app.service.base_agent:_save_script:139 - Script saved to tmp/015dd4ca-683c-4daf-b8c2-b643c7acbfaa.py
+2025-11-05 16:38:13.469 | INFO     | app.service.base_agent:_execute_script:238 - Script executed successfully: tmp/015dd4ca-683c-4daf-b8c2-b643c7acbfaa.py
+2025-11-05 16:38:13.470 | INFO     | app.service.graph_agent:_execute_and_handle_errors:123 -    [+] Script executed successfully.
+2025-11-05 16:38:13.470 | INFO     | app.service.graph_agent:_after_execution:227 - --- [Branch] Execution Succeeded. Ending Graph. ---
+2025-11-05 16:38:13.471 | INFO     | app.service.graph_agent:generate_video:278 - --- Graph Finished: Success ---
+2025-11-05 16:42:33.531 | INFO     | app.service.base_agent:_load_prompt:99 - Prompts loaded from /workspaces/ai_agent/back/app/service/prompt/prompts.toml

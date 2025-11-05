@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { VideoResult } from '../../app/datas/Video'
+import type { VideoResult } from '@/app/datas/Video'
 import { VideoPlayer } from './VideoPlayer'
 
 interface ResultProps {
@@ -135,7 +135,7 @@ export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
                         </div>
                         <div className="p-3 overflow-y-auto flex-1">
                             <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                                {result.prompt.prompt}
+                                {result.prompt.planningPrompt}
                             </p>
                         </div>
                     </div>

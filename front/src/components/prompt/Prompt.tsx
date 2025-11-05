@@ -1,6 +1,6 @@
 'use client'
 
-import type { VideoGenerationPrompt, VideoResult } from '../../app/datas/Video'
+import type { VideoGenerationPrompt, VideoResult } from '@/app/datas/Video'
 import { PromptEditor } from './PromptEditor'
 
 interface PromptProps {

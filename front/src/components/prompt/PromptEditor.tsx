@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { VideoGenerationPrompt, VideoResult } from '../../app/datas/Video'
+import type { VideoGenerationPrompt, VideoResult } from '@/app/datas/Video'
 
 interface PromptEditorProps {
     prompt: VideoGenerationPrompt
@@ -13,16 +13,13 @@ interface PromptEditorProps {
  * Presentation層: プロンプト編集コンポーネント
  */
 export function PromptEditor({ prompt, isGenerating, onGenerate }: PromptEditorProps) {
-    const [editedPrompt, setEditedPrompt] = useState(prompt.prompt)
-    const [editedManimCode, setEditedManimCode] = useState(prompt.manimCode || '')
+    const [editedPrompt, setEditedPrompt] = useState(prompt.planningPrompt)
     const [showOriginal, setShowOriginal] = useState(false)
-    const [showManimCode, setShowManimCode] = useState(false)
 
     const handleGenerate = () => {
         onGenerate({
             ...prompt,
-            prompt: editedPrompt,
-            manimCode: editedManimCode || undefined,
+            planningPrompt: editedPrompt,
         })
     }
 
@@ -89,39 +86,17 @@ export function PromptEditor({ prompt, isGenerating, onGenerate }: PromptEditorP
                             )}
                         </div>
 
-                        {/* Manimコード表示 */}
-                        {prompt.manimCode && (
+                        {/* 動画への追加指示表示 */}
+                        {prompt.videoPrompt && (
                             <div className="bg-gray-50 border border-gray-200 rounded p-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowManimCode(!showManimCode)}
-                                    className="w-full flex items-center justify-between text-sm font-medium text-gray-700 hover:text-gray-900"
-                                >
-                                    <span>Manimコード</span>
-                                    <svg
-                                        className={`w-4 h-4 transition-transform ${showManimCode ? 'rotate-180' : ''}`}
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <title>{showManimCode ? '閉じる' : '開く'}</title>
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                            {showManimCode && (
-                                <div className="mt-2 pt-2 border-t border-gray-200">
-                                    <textarea
-                                        id="manim-code-editor"
-                                        value={editedManimCode}
-                                        onChange={(e) => setEditedManimCode(e.target.value)}
-                                        className="w-full p-2 bg-gray-900 text-green-400 rounded border border-gray-700 h-48 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-xs overflow-x-auto resize-none"
-                                        disabled={isGenerating}
-                                        spellCheck={false}
-                                    />
+                                <div className="text-sm font-medium text-gray-700 mb-1">
+                                    動画への追加指示
                                 </div>
-                            )}
-                        </div>
-                    )}
+                                <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                                    {prompt.videoPrompt}
+                                </p>
+                            </div>
+                        )}
                 </div>
 
                 {/* 動画生成ボタン（固定位置） */}

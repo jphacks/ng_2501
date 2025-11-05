@@ -1,0 +1,122 @@
+
+import { useCallback } from 'react';
+
+// Type definitions based on the backend Pydantic models
+interface ConceptInput {
+  text: string;
+  additional_instructions?: string;
+}
+
+interface PlanResponse {
+  plan: string;
+  generation_id: number | null;
+}
+
+interface GeneratingPlan {
+  generation_id: number;
+  planning: string;
+}
+
+interface EditPrompt {
+  db_id: string;
+  prior_inner_video_id: string;
+  enhance_prompt: string;
+}
+
+interface SuccessResponse {
+  ok: boolean;
+  message?: string;
+  video_path?: string;
+  prompt_path?: string;
+  manim_code_path?: string;
+  video_id?: string; // Changed to string to match backend UUID
+}
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL+'api' ;
+
+/**
+ * Custom hook for interacting with the database and animation generation APIs.
+ */
+export const useDB = () => {
+  const handleError = (error: unknown) => {
+    console.error("API call failed:", error);
+    // In a real app, you might want to set an error state here
+    throw error;
+  };
+
+  /**
+   * Creates a new animation plan and gets a generation_id.
+   */
+  const planAnimation = useCallback(async (input: ConceptInput): Promise<PlanResponse> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/plan_animation`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(input),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`HTTP error! status: ${response.status}, details: ${errorData.detail}`);
+      }
+      return await response.json();
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
+  }, []);
+
+  /**
+   * Generates a video from a prompt.
+   */
+  const generateAnimation = useCallback(async (prompt: GeneratingPlan): Promise<SuccessResponse> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/animation`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(prompt),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`HTTP error! status: ${response.status}, details: ${errorData.detail}`);
+      }
+      return await response.json();
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
+  }, []);
+
+  /**
+   * Edits an existing animation.
+   */
+  const editAnimation = useCallback(async (editData: EditPrompt): Promise<SuccessResponse> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/concept_to_animation`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editData),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`HTTP error! status: ${response.status}, details: ${errorData.detail}`);
+      }
+      return await response.json();
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
+  }, []);
+
+
+  return {
+    planAnimation,
+    generateAnimation,
+    editAnimation,
+  };
+};

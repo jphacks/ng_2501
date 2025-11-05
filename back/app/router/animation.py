@@ -10,8 +10,9 @@ from pydantic import BaseModel
 from typing import Optional
 
 
-from app.service.graph_agent import ManimGraphAnimationService
-from back.app.service.agent import ManimRegacyAgentService
+# from app.service.graph_agent import ManimGraphAnimationService
+# from back.app.service.agent import ManimRegacyAgentService
+from back.app.service.fast_ai_agent import ManimFastAnimationService
 from back.app.service.base_agent import SuccessResponse
 from back.app.model.model import VideoDatabase, get_video_db
 
@@ -43,7 +44,8 @@ class EditPrompt(BaseModel):
 
 
 # ---------- Service ----------
-service = ManimGraphAnimationService()
+# service = ManimGraphAnimationService()
+service = ManimFastAnimationService()
 
 
 

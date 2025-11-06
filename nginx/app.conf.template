@@ -2,83 +2,50 @@
 # {{DOMAIN}} と {{APP_SERVICE_NAME}} が置換されます。
 
 server {
-    listen 80;
-    server_name {{DOMAIN}};
+    listen 80;
+    server_name {{DOMAIN}};
 
-    # Certbot (ACME challenge) 用のパス
-    location /.well-known/acme-challenge/ {
-        root /var/www/certbot;
-    }
+    # Certbot (ACME challenge) 用のパス
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
 
-    # HTTPからHTTPSへのリダイレクト
-    location / {
-        return 301 https://$host$request_uri;
-    }
+    # HTTPからHTTPSへのリダイレクト
+    location / {
+        return 301 https://$host$request_uri;
+    }
 }
 
 server {
-    listen 443 ssl http2;
-    server_name {{DOMAIN}};
+    listen 443 ssl http2;
+    server_name {{DOMAIN}};
 
-    # SSL 証明書
-    ssl_certificate /etc/letsencrypt/live/{{DOMAIN}}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/{{DOMAIN}}/privkey.pem;
+    # SSL 証明書
+    ssl_certificate /etc/letsencrypt/live/{{DOMAIN}}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{DOMAIN}}/privkey.pem;
 
-    # SSL 設定 (セキュリティ強化)
-    include /etc/letsencrypt/options-ssl-nginx.conf;
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
-    ssl_session_cache shared:SSL:10m;
-    ssl_session_timeout 10m;
-    ssl_ciphers HIGH:!aNULL:!MD5;
-  *   ssl_prefer_server_ciphers on;
+    # SSL 設定 (セキュリティ強化)
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
 
-    # HSTS (Strict Transport Security)
-    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+    # HSTS (Strict Transport Security)
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
 
-    # リバースプロキシ設定
-    location / {
-
-        # --- ★ここからCORS設定を追加★ ---
-
-        # 1. プリフライトリクエスト(OPTIONS)への対応
-        if ($request_method = 'OPTIONS') {
-            # 許可するオリジン（あなたのVercelフロントエンド）
-            add_header 'Access-Control-Allow-Origin' 'https://ng2501.vercel.app';
-            
-            # 許可するメソッド
-            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE, PATCH';
-            
-            # 許可するヘッダー (Content-TypeやAuthorizationなど)
-            # 必要なヘッダーをここに追加してください
-            add_header 'Access-Control-Allow-Headers' 'Origin, Content-Type, Accept, Authorization, X-Requested-With';
-            
-            # Cookieなどの認証情報を許可する
-            add_header 'Access-Control-Allow-Credentials' 'true';
-            
-            # このプリフライトリクエストの結果を24時間キャッシュする
-            add_header 'Access-Control-Max-Age' 86400;
-            
-            # ヘッダーだけを付けて 204 No Content を返す (バックエンドに転送しない)
-            return 204;
-        }
-
-        # 2. 実際のリクエスト (GET, POSTなど) の応答へのCORSヘッダー付加
-        # 'always' を付けると、バックエンドがエラー(4xx, 5xx)を返した時もヘッダーが付与される
-        add_header 'Access-Control-Allow-Origin' 'https://ng2501.vercel.app' always;
-        add_header 'Access-Control-Allow-Credentials' 'true' always;
-
-        # --- ★ここまでCORS設定★ ---
-
-
-        proxy_pass http://{{APP_SERVICE_NAME}}:8000; # appコンテナ (サービス名:ポート)
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        
-        # WebSocket (もし使用する場合)
-        # proxy_http_version 1.1;
-        # proxy_set_header Upgrade $http_upgrade;
-        # proxy_set_header Connection "upgrade";
-    }
+    # リバースプロキシ設定
+    location / {
+        proxy_pass http://{{APP_SERVICE_NAME}}:8000; # appコンテナ (サービス名:ポート)
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # WebSocket (もし使用する場合)
+        # proxy_http_version 1.1;
+        # proxy_set_header Upgrade $http_upgrade;
+        # proxy_set_header Connection "upgrade";
+    }
 }

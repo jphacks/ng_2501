@@ -1,18 +1,19 @@
 'use client'
 
 import { useState } from 'react'
-import type { VideoGenerationPrompt, VideoResult } from '@/app/datas/Video'
+import type { VideoGenerationPrompt, VideoResult } from '../../app/datas/Video'
 
 interface PromptEditorProps {
     prompt: VideoGenerationPrompt
     isGenerating: boolean
     onGenerate: (prompt: VideoGenerationPrompt) => Promise<VideoResult>
+    onReset?: () => void
 }
 
 /**
  * Presentation層: プロンプト編集コンポーネント
  */
-export function PromptEditor({ prompt, isGenerating, onGenerate }: PromptEditorProps) {
+export function PromptEditor({ prompt, isGenerating, onGenerate, onReset }: PromptEditorProps) {
     const [editedPrompt, setEditedPrompt] = useState(prompt.planningPrompt)
     const [showOriginal, setShowOriginal] = useState(false)
 
@@ -26,8 +27,26 @@ export function PromptEditor({ prompt, isGenerating, onGenerate }: PromptEditorP
     return (
         <div className="flex flex-col h-full min-w-0 w-full">
             {/* ヘッダー */}
-            <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-200">
-                <h3 className="text-lg font-bold text-gray-800">SUDO<span className="text-xs text-gray-500 ml-5">ー プロンプト確認・編集</span></h3>
+            <div className="flex items-center mb-2 pb-2 border-b border-[#0A3B7E]/20">
+                {onReset && (
+                    <button
+                        type="button"
+                        onClick={onReset}
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm text-[#030405]/70 hover:text-[#030405] hover:bg-[#0A3B7E]/5 rounded transition-colors"
+                    >
+                        <div className="hidden min-[426px]:block">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <title>戻る</title>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                        </div>
+                        戻る
+                    </button>
+                )}
+                <div className="flex-1 text-center">
+                    <span className="text-md text-[#030405]/50">ー プロンプト確認・編集 ー</span>
+                </div>
+                <h3 className="text-lg font-bold text-[#030405]">SUDO</h3>
             </div>
 
             {/* メインコンテンツ: 2カラムレイアウト（右は常に固定幅） */}
@@ -38,7 +57,7 @@ export function PromptEditor({ prompt, isGenerating, onGenerate }: PromptEditorP
                     <div className="flex-1 min-h-0 flex flex-col overflow-auto w-full">{/* 左側は内部スクロール */}
                         <label
                             htmlFor="prompt-editor"
-                            className="block text-xs font-medium text-gray-700 mb-1 flex-shrink-0"
+                            className="block text-xs font-medium text-[#030405]/70 mb-1 flex-shrink-0"
                         >
                             動画生成プロンプト
                         </label>
@@ -46,10 +65,10 @@ export function PromptEditor({ prompt, isGenerating, onGenerate }: PromptEditorP
                             id="prompt-editor"
                             value={editedPrompt}
                             onChange={(e) => setEditedPrompt(e.target.value)}
-                            className="w-full flex-1 p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm resize-none"
+                            className="w-full flex-1 p-3 border border-[#0A3B7E]/20 rounded focus:ring-2 focus:ring-[#0A3B7E] focus:border-transparent font-mono text-sm resize-none"
                             disabled={isGenerating}
                         />
-                        <p className="text-xs text-gray-500 mt-1 flex-shrink-0">
+                        <p className="text-xs text-[#0A3B7E]/70 mt-1 flex-shrink-0">
                             このプロンプトから動画が生成されます
                         </p>
                     </div>
@@ -58,54 +77,62 @@ export function PromptEditor({ prompt, isGenerating, onGenerate }: PromptEditorP
                 {/* 右側: 操作エリア（固定幅・常に100%に見える） */}
                 <div className="flex flex-col min-h-0 min-w-0 w-full lg:w-[420px]">
                     {/* スクロール可能エリア */}
-                    <div className="overflow-y-auto flex-1 min-h-0 pr-1 space-y-2">{/* 右側も内部スクロール */}
+                    <div className="overflow-y-auto flex-1 min-h-0 pr-1">{/* 右側も内部スクロール */}
                         {/* 原文表示 */}
-                        <div className="bg-gray-50 border border-gray-200 rounded p-2">
-                            <button
-                                type="button"
-                                onClick={() => setShowOriginal(!showOriginal)}
-                                className="w-full flex items-center justify-between text-sm font-medium text-gray-700 hover:text-gray-900"
-                            >
-                                <span>動画の原文</span>
-                                <svg
-                                    className={`w-4 h-4 transition-transform ${showOriginal ? 'rotate-180' : ''}`}
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <title>{showOriginal ? '閉じる' : '開く'}</title>
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                            {showOriginal && (
-                                <div className="mt-2 pt-2 border-t border-gray-200">
-                                    <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                                        {prompt.originalText}
-                                    </p>
-                                </div>
-                            )}
+                        <label
+                            htmlFor="prompt-editor"
+                            className="block text-xs font-medium text-[#030405]/70 mb-1 flex-shrink-0"
+                        >
+                            入力テキスト
+                        </label>
+                        <div className="bg-[#0A3B7E]/10 border border-[#0A3B7E]/20 rounded p-2">
+                            <p className="text-sm text-[#030405]/70 whitespace-pre-wrap">
+                                {prompt.originalText}
+                            </p>
                         </div>
 
-                        {/* 動画への追加指示表示 */}
-                        {prompt.videoPrompt && (
-                            <div className="bg-gray-50 border border-gray-200 rounded p-2">
-                                <div className="text-sm font-medium text-gray-700 mb-1">
-                                    動画への追加指示
+                        {/* Manimコード表示 */}
+                        {/* {prompt.manimCode && ( */}
+                            {/* // <div className="bg-gray-50 border border-gray-200 rounded p-2"> */}
+                                {/* <button
+                                    type="button"
+                                    onClick={() => setShowManimCode(!showManimCode)}
+                                    className="w-full flex items-center justify-between text-sm font-medium text-gray-700 hover:text-gray-900"
+                                >
+                                    <span>Manimコード</span>
+                                    <svg
+                                        className={`w-4 h-4 transition-transform ${showManimCode ? 'rotate-180' : ''}`}
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <title>{showManimCode ? '閉じる' : '開く'}</title>
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button> */}
+                            {/* {showManimCode && (
+                                <div className="mt-2 pt-2 border-t border-gray-200">
+                                    <textarea
+                                        id="manim-code-editor"
+                                        value={editedManimCode}
+                                        onChange={(e) => setEditedManimCode(e.target.value)}
+                                        className="w-full p-2 bg-gray-900 text-green-400 rounded border border-gray-700 h-48 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-xs overflow-x-auto resize-none"
+                                        disabled={isGenerating}
+                                        spellCheck={false}
+                                    />
                                 </div>
-                                <p className="text-sm text-gray-600 whitespace-pre-wrap">
-                                    {prompt.videoPrompt}
-                                </p>
-                            </div>
-                        )}
+                            )} */}
+                        {/* // </div>
+                    )} */}
                 </div>
 
                 {/* 動画生成ボタン（固定位置） */}
-                <div className="pt-2 border-t border-gray-200 mt-2">
+                <div className="pt-2 border-t border-[#0A3B7E]/20 mt-2">
                         <button
                             type="button"
                             onClick={handleGenerate}
                             disabled={!editedPrompt.trim() || isGenerating}
-                            className="w-full bg-green-600 text-white py-3 px-4 rounded text-base font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-sm flex items-center justify-center gap-2"
+                            className="w-full bg-[#3A947C] text-white py-3 px-4 rounded text-base font-semibold hover:bg-[#3A947C]/90 disabled:bg-[#030405]/30 disabled:cursor-not-allowed transition-colors shadow-sm flex items-center justify-center gap-2"
                         >
                             {isGenerating ? (
                                 <>

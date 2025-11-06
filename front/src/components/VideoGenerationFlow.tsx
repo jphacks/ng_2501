@@ -50,7 +50,7 @@ export function VideoGenerationFlow() {
             )}
 
             {/* 状態2: プロンプト確認・編集 */}
-            {isPromptScreen && prompt && <Prompt prompt={prompt} isGenerating={isGenerating} onGenerate={handlePromptGenerate} />}
+            {isPromptScreen && prompt && <Prompt prompt={prompt} isGenerating={isGenerating} onGenerate={handlePromptGenerate} onReset={clearResult} />}
 
             {/* 状態3: 動画生成中 */}
             {isGeneratingScreen && <Generating />}

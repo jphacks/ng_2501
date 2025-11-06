@@ -38,23 +38,26 @@ export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
     return (
         <div className="flex flex-col h-full">
             {/* ヘッダー */}
-            <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-200">
-                <h3 className="text-lg font-bold text-gray-800">SUDO<span className="text-xs text-gray-500 ml-5">ー 数学テキスト入力</span></h3>
+            <div className="flex items-center mb-3 pb-3 border-b border-[#0A3B7E]/20">
                 {onReset && (
                     <button
                         type="button"
                         onClick={onReset}
-                        className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm text-[#030405]/70 hover:text-[#030405] hover:bg-[#0A3B7E]/5 rounded transition-colors"
                     >
                         <div className="hidden min-[426px]:block">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <title>最初に戻る</title>
+                                <title>戻る</title>
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                             </svg>
                         </div>
-                        最初に戻る
+                        戻る
                     </button>
                 )}
+                <div className="flex-1 text-center">
+                    <span className="text-md text-[#030405]/50">ー 動画結果 ー</span>
+                </div>
+                <h3 className="text-lg font-bold text-[#030405]">SUDO</h3>
             </div>
 
             {/* メインコンテンツ: 2カラムレイアウト */}
@@ -67,7 +70,7 @@ export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
                     <button
                         type="button"
                         onClick={handleDownload}
-                        className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm rounded"
+                        className="w-full py-2 px-4 bg-[#0A3B7E]/10 hover:bg-[#0A3B7E]/20 text-[#030405] text-sm rounded"
                     >
                         動画をダウンロード
                     </button>
@@ -82,18 +85,18 @@ export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
                         disabled={isGenerating}
                         className={`w-full py-3 px-4 rounded font-medium transition-all mb-3 ${
                             showEditPanel 
-                                ? 'bg-gray-600 text-white hover:bg-gray-700' 
-                                : 'bg-blue-600 text-white hover:bg-blue-700'
-                        } disabled:bg-gray-400 disabled:cursor-not-allowed`}
+                                ? 'bg-[#CE632C] text-white hover:bg-[#CE632C]/90' 
+                                : 'bg-[#0A3B7E] text-white hover:bg-[#0A3B7E]/90'
+                        } disabled:bg-[#030405]/30 disabled:cursor-not-allowed`}
                     >
                         {showEditPanel ? '編集をキャンセル' : '動画を編集する'}
                     </button>
 
                     {/* 編集パネル */}
                     {showEditPanel && (
-                        <div className="p-4 bg-blue-50 border border-blue-200 rounded space-y-3 animate-fade-in mb-3">
+                        <div className="p-4 bg-[#0A3B7E]/5 border border-[#0A3B7E]/20 rounded space-y-3 animate-fade-in mb-3">
                                 <div>
-                                    <label htmlFor="edit-prompt" className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label htmlFor="edit-prompt" className="block text-sm font-medium text-[#030405]/70 mb-2">
                                         修正指示
                                     </label>
                                     <textarea
@@ -101,7 +104,7 @@ export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
                                         value={editPrompt}
                                         onChange={(e) => setEditPrompt(e.target.value)}
                                         placeholder="例: 図と式が重なっているので、図を左にずらしてください"
-                                        className="w-full p-3 border border-gray-300 rounded text-sm h-32 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                        className="w-full p-3 border border-[#0A3B7E]/20 rounded text-sm h-32 focus:ring-2 focus:ring-[#0A3B7E] focus:border-transparent resize-none"
                                         disabled={isGenerating}
                                     />
                                 </div>
@@ -110,7 +113,7 @@ export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
                                     type="button"
                                     onClick={handleEdit}
                                     disabled={!editPrompt.trim() || isGenerating}
-                                    className="w-full bg-blue-600 text-white py-2.5 px-4 rounded font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                                    className="w-full bg-[#3A947C] text-white py-2.5 px-4 rounded font-medium hover:bg-[#3A947C]/90 disabled:bg-[#030405]/30 disabled:cursor-not-allowed transition-colors"
                                 >
                                     {isGenerating ? (
                                         <span className="flex items-center justify-center gap-2">
@@ -129,12 +132,12 @@ export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
                     )}
 
                     {/* 使用されたプロンプト */}
-                    <div className="flex flex-col border border-gray-200 rounded bg-white flex-1 min-h-0">
-                        <div className="p-3 bg-gray-50 border-b border-gray-200">
-                            <h4 className="text-sm font-medium text-gray-700">使用されたプロンプト</h4>
+                    <div className="flex flex-col border border-[#0A3B7E]/20 rounded bg-[#0A3B7E]/5 flex-1 min-h-0">
+                        <div className="p-3 bg-[#0A3B7E]/10 border-b border-[#0A3B7E]/20">
+                            <h4 className="text-sm font-medium text-[#030405]/70">使用されたプロンプト</h4>
                         </div>
                         <div className="p-3 overflow-y-auto flex-1">
-                            <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                            <p className="text-sm text-[#030405]/70 whitespace-pre-wrap">
                                 {result.prompt.planningPrompt}
                             </p>
                         </div>

@@ -27,13 +27,13 @@ export function PromptEditor({ prompt, isGenerating, onGenerate, onReset }: Prom
     return (
         <div className="flex flex-col h-full min-w-0 w-full">
             {/* ヘッダー */}
-            <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-200">
-                <h3 className="text-lg font-bold text-gray-800">SUDO<span className="text-xs text-gray-500 ml-5">ー プロンプト確認・編集</span></h3>
+            <div className="flex items-center justify-between mb-2 pb-2 border-b border-[#0A3B7E]/20">
+                <h3 className="text-lg font-bold text-[#030405]">SUDO<span className="text-xs text-[#030405]/50 ml-5">ー プロンプト確認・編集</span></h3>
                 {onReset && (
                     <button
                         type="button"
                         onClick={onReset}
-                        className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm text-[#030405]/70 hover:text-[#030405] hover:bg-[#0A3B7E]/5 rounded transition-colors"
                     >
                         <div className="hidden min-[426px]:block">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,7 +54,7 @@ export function PromptEditor({ prompt, isGenerating, onGenerate, onReset }: Prom
                     <div className="flex-1 min-h-0 flex flex-col overflow-auto w-full">{/* 左側は内部スクロール */}
                         <label
                             htmlFor="prompt-editor"
-                            className="block text-xs font-medium text-gray-700 mb-1 flex-shrink-0"
+                            className="block text-xs font-medium text-[#030405]/70 mb-1 flex-shrink-0"
                         >
                             動画生成プロンプト
                         </label>
@@ -62,10 +62,10 @@ export function PromptEditor({ prompt, isGenerating, onGenerate, onReset }: Prom
                             id="prompt-editor"
                             value={editedPrompt}
                             onChange={(e) => setEditedPrompt(e.target.value)}
-                            className="w-full flex-1 p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm resize-none"
+                            className="w-full flex-1 p-3 border border-[#0A3B7E]/20 rounded focus:ring-2 focus:ring-[#0A3B7E] focus:border-transparent font-mono text-sm resize-none"
                             disabled={isGenerating}
                         />
-                        <p className="text-xs text-gray-500 mt-1 flex-shrink-0">
+                        <p className="text-xs text-[#0A3B7E]/70 mt-1 flex-shrink-0">
                             このプロンプトから動画が生成されます
                         </p>
                     </div>
@@ -76,11 +76,11 @@ export function PromptEditor({ prompt, isGenerating, onGenerate, onReset }: Prom
                     {/* スクロール可能エリア */}
                     <div className="overflow-y-auto flex-1 min-h-0 pr-1 space-y-2">{/* 右側も内部スクロール */}
                         {/* 原文表示 */}
-                        <div className="bg-gray-50 border border-gray-200 rounded p-2">
+                        <div className="bg-[#0A3B7E]/10 border border-[#0A3B7E]/20 rounded p-2">
                             <button
                                 type="button"
                                 onClick={() => setShowOriginal(!showOriginal)}
-                                className="w-full flex items-center justify-between text-sm font-medium text-gray-700 hover:text-gray-900"
+                                className="w-full flex items-center justify-between text-sm font-medium text-[#030405]/70 hover:text-[#030405]"
                             >
                                 <span>動画の原文</span>
                                 <svg
@@ -94,8 +94,8 @@ export function PromptEditor({ prompt, isGenerating, onGenerate, onReset }: Prom
                                 </svg>
                             </button>
                             {showOriginal && (
-                                <div className="mt-2 pt-2 border-t border-gray-200">
-                                    <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                                <div className="mt-2 pt-2 border-t border-[#0A3B7E]/20 bg-[#0A3B7E]/5 -m-2 p-2 rounded-b">
+                                    <p className="text-sm text-[#030405]/70 whitespace-pre-wrap">
                                         {prompt.originalText}
                                     </p>
                                 </div>
@@ -138,12 +138,12 @@ export function PromptEditor({ prompt, isGenerating, onGenerate, onReset }: Prom
                 </div>
 
                 {/* 動画生成ボタン（固定位置） */}
-                <div className="pt-2 border-t border-gray-200 mt-2">
+                <div className="pt-2 border-t border-[#0A3B7E]/20 mt-2">
                         <button
                             type="button"
                             onClick={handleGenerate}
                             disabled={!editedPrompt.trim() || isGenerating}
-                            className="w-full bg-green-600 text-white py-3 px-4 rounded text-base font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-sm flex items-center justify-center gap-2"
+                            className="w-full bg-[#3A947C] text-white py-3 px-4 rounded text-base font-semibold hover:bg-[#3A947C]/90 disabled:bg-[#030405]/30 disabled:cursor-not-allowed transition-colors shadow-sm flex items-center justify-center gap-2"
                         >
                             {isGenerating ? (
                                 <>

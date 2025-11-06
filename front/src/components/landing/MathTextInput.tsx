@@ -540,8 +540,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                 )}
 
                 {/* ヘッダー */}
-                <div className="flex items-center justify-between mb-3 pb-3 border-b border-[#0A3B7E]/20">
-                    <h3 className="text-lg font-bold text-[#030405]">SUDO<span className="text-xs text-[#0A3B7E]/70 ml-5">ー 数学テキスト入力</span></h3>
+                <div className="flex items-center mb-3 pb-3 border-b border-[#0A3B7E]/20">
                     {/* モバイル版: 追加項目設定切替ボタン */}
                     <button
                         type="button"
@@ -555,6 +554,10 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                         </svg>
                         <span>{isOptionalSettingsOpen ? '閉じる' : '追加項目'}</span>
                     </button>
+                    <div className="flex-1 text-center">
+                        <span className="text-md text-[#030405]/50">ー 数学テキスト入力 ー</span>
+                    </div>
+                    <h3 className="text-lg font-bold text-[#030405]">SUDO</h3>
                 </div>
 
                 {/* メイン */}

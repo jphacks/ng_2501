@@ -38,8 +38,7 @@ export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
     return (
         <div className="flex flex-col h-full">
             {/* ヘッダー */}
-            <div className="flex items-center justify-between mb-3 pb-3 border-b border-[#0A3B7E]/20">
-                <h3 className="text-lg font-bold text-[#030405]">SUDO<span className="text-xs text-[#030405]/50 ml-5">ー 数学テキスト入力</span></h3>
+            <div className="flex items-center mb-3 pb-3 border-b border-[#0A3B7E]/20">
                 {onReset && (
                     <button
                         type="button"
@@ -48,13 +47,17 @@ export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
                     >
                         <div className="hidden min-[426px]:block">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <title>最初に戻る</title>
+                                <title>戻る</title>
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                             </svg>
                         </div>
-                        最初に戻る
+                        戻る
                     </button>
                 )}
+                <div className="flex-1 text-center">
+                    <span className="text-md text-[#030405]/50">ー 動画結果 ー</span>
+                </div>
+                <h3 className="text-lg font-bold text-[#030405]">SUDO</h3>
             </div>
 
             {/* メインコンテンツ: 2カラムレイアウト */}

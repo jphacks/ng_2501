@@ -305,9 +305,8 @@ class BaseManimAgent(ABC):
         このコードの中には動画生成のために必要なロジックを実装する。
         このメソッドの中では、
         video_id: 動画の一意な識別子
-        content: 動画生成のための教材
+        content: manimコード生成のための計画立案（planであることに注意する）
         enhance_prompt:動画作成をするための追加プロンプト
-        animation_plan: manimコード生成のための計画立案
         
         を受け取る。
 

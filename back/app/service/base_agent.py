@@ -19,6 +19,7 @@ from typing import Optional
 from loguru import logger
 
 from app.tools.secure import is_code_safe
+from app.tools.manim_linter import ManimLinter
 from app.tools.manim_lint import parse_manim_or_python_traceback, format_error_for_llm
 
 
@@ -66,6 +67,7 @@ class BaseManimAgent(ABC):
         self.pro_llm = self._load_llm("gemini-2.5-pro")
         self.flash_llm = self._load_llm("gemini-2.5-flash")
         self.lite_llm = self._load_llm("gemini-2.5-flash-lite")
+        self.manim_linter = ManimLinter()
 
         # ローカル関数のpath関連
         self.workspace_path = Path(os.getenv("WORKSPACE_PATH"))
@@ -217,6 +219,10 @@ class BaseManimAgent(ABC):
     def _check_code_security(self, code: str) -> bool:
         """[Helper] manimコードの安全性チェック"""
         return is_code_safe(code)
+
+    def _check_code_lint(self, code: str) -> dict:
+        """[Helper] manimコードのリンターチェック"""
+        return self.manim_linter.check_code(code)
 
     def _execute_script_low_res(self, script: str, video_id: str) -> str:
         """[Helper] 最低解像度での実行チェック

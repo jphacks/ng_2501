@@ -126,6 +126,29 @@ class ManimFastAnimationService(BaseManimAgent):
             return {"is_bad_request": True}
         return {"is_bad_request": False}
 
+    def _run_linter_check(self, state: ManimGraphState):
+        self.base_logger.info("--- 3. [Node] Running Manim Linter ---")
+        lint_result = self._check_code_lint(state["current_script"])
+        status = lint_result.get("status")
+        issue_count = lint_result.get(
+            "issue_count", len(lint_result.get("issues", []))
+        )
+
+        if status == "pass":
+            self.base_logger.debug("   [+] Linter check passed with no warnings.")
+            return {"last_error": "", "error_type": ""}
+
+        self.base_logger.warning(
+            f"   [-] Linter detected {issue_count} issue(s). Initiating refinement."
+        )
+        for issue in lint_result.get("issues", []):
+            self.base_logger.debug(
+                f"      -> {issue.get('filename')}:{issue.get('lineno')} "
+                f"[{issue.get('code')}] {issue.get('message')}"
+            )
+        summary = lint_result.get("summary") or ""
+        return {"last_error": summary, "error_type": "lint"}
+
     def _handle_execution_result(self, execution_result: str, *, stage: str):
         if execution_result == "Success":
             self.base_logger.info(f"   [+] {stage} succeeded.")
@@ -155,13 +178,13 @@ class ManimFastAnimationService(BaseManimAgent):
         }
 
     def _execute_and_handle_errors(self, state: ManimGraphState):
-        """[Node 3] スクリプトを実行し、エラーを処理する
+        """[Node 4] スクリプトを実行し、エラーを処理する
         解像度を落とした事前実行 -> 本実行の2段階での実行
         """
 
         script = state["current_script"]
         video_id = state["video_id"]
-        self.base_logger.info("--- 3. [Node] Preflight Execution Check ---")
+        self.base_logger.info("--- 4. [Node] Preflight Execution Check ---")
         preflight_result = self._handle_execution_result(
             self._execute_script_low_res(script, video_id),
             stage="Preflight execution",
@@ -169,7 +192,7 @@ class ManimFastAnimationService(BaseManimAgent):
         if preflight_result["error_type"]:
             return preflight_result
 
-        self.base_logger.info("--- 3. [Node] Executing Manim ---")
+        self.base_logger.info("--- 4. [Node] Executing Manim ---")
         runtime_result = self._handle_execution_result(
             self._execute_script(script, video_id),
             stage="Runtime execution",
@@ -177,9 +200,9 @@ class ManimFastAnimationService(BaseManimAgent):
         return runtime_result
 
     def _refine_script_on_error(self, state: ManimGraphState):
-        """[Node 4] エラーに基づきスクリプトを修正"""
+        """[Node 5] エラーに基づきスクリプトを修正"""
         self.base_logger.info(
-            f"--- 4. [Node] Refining Script (Attempt {state['current_retry'] + 1}) ---"
+            f"--- 5. [Node] Refining Script (Attempt {state['current_retry'] + 1}) ---"
         )
 
         repair_prompt = PromptTemplate.from_template(
@@ -225,7 +248,7 @@ class ManimFastAnimationService(BaseManimAgent):
             self.base_logger.error("--- [Branch] Bad Request. Ending Graph. ---")
             return "end_with_error"
         self.base_logger.debug("--- [Branch] Secure. Proceeding to Lint. ---")
-        return "execute"
+        return "lint"
 
     def _after_lint_check(self, state: ManimGraphState):
         """[Conditional Edge] リンターエラーか、リトライ上限か"""
@@ -263,6 +286,7 @@ class ManimFastAnimationService(BaseManimAgent):
         workflow = StateGraph(ManimGraphState)
         workflow.add_node("generate_initial", self._generate_initial_script)
         workflow.add_node("check_bad_request", self._check_bad_request)
+        workflow.add_node("lint", self._run_linter_check)
         workflow.add_node("execute", self._execute_and_handle_errors)
         workflow.add_node("refine", self._refine_script_on_error)
         workflow.set_entry_point("generate_initial")
@@ -271,7 +295,12 @@ class ManimFastAnimationService(BaseManimAgent):
         workflow.add_conditional_edges(
             "check_bad_request",
             self._after_bad_request_check,
-            {"end_with_error": END, "execute": "execute"},
+            {"end_with_error": END, "lint": "lint"},
+        )
+        workflow.add_conditional_edges(
+            "lint",
+            self._after_lint_check,
+            {"refine": "refine", "execute": "execute", "end_with_error": END},
         )
         workflow.add_conditional_edges(
             "execute",

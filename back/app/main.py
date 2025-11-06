@@ -1,25 +1,10 @@
 from fastapi import FastAPI
 from app.router import animation
-from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="AI Agent Backend",
     description="Modern FastAPI application with clean architecture",
     version="1.0.0",
-)
-
-# CORS（Vercelなどからのアクセス許可）
-app.add_middleware(
-    CORSMiddleware,
-    # 末尾のスラッシュなしのオリジンを明記（または両方併記）
-    allow_origins=[
-        "https://ng2501.vercel.app", 
-        "https://ng2501.vercel.app/",
-        "http://localhost:3000"
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
 )
 
 

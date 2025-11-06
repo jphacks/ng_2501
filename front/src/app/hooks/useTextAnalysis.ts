@@ -301,7 +301,7 @@ export const useVideoGeneration = () => {
      */
     const loadExistingVideo = async (videoId: string, promptText: string) => {
         if (testHook) {
-            return await testHook.loadExistingVideo(Number(videoId), promptText)
+            return await testHook.loadExistingVideo(videoId, promptText)
         }
         throw new Error('テストモードは開発環境でのみ利用可能です')
     }

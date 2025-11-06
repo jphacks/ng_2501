@@ -19,7 +19,7 @@ export default function RootLayout({
         <html lang="ja">
             <head>
                 <Script
-                    src="https://unpkg.com/mathlive@0.107.1/dist/mathlive.min.js"
+                    src="//unpkg.com/mathlive"
                     strategy="beforeInteractive"
                 />
             </head>

@@ -218,7 +218,36 @@ class BaseManimAgent(ABC):
         """[Helper] manimコードの安全性チェック"""
         return is_code_safe(code)
 
-    def _execute_script(self, script: str, video_id: str) -> str:
+    def _execute_script_low_res(self, script: str, video_id: str) -> str:
+        """[Helper] 最低解像度での実行チェック
+        副作用: video_idのファイルにスクリプトが保存される
+        """
+        tmp_path = self._save_script(video_id, script)
+
+        try:
+            # -sで最後のフレームのみを保存、-rで解像度を大幅に下げる
+            subprocess.run(
+                ["manim", "-s", "-r", "64,36", str(tmp_path), "GeneratedScene"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                check=True,
+                encoding="utf-8",
+            )
+            self.base_logger.info(f"Low-res script executed successfully: {tmp_path}")
+            return "Success"
+        except FileNotFoundError:
+            self.base_logger.error(f"File not found: {tmp_path}")
+            return "FileNotFoundError"
+
+        except subprocess.CalledProcessError as e:
+            parsed_error  = e.stderr
+            # parsed_error = parse_manim_or_python_traceback(e.stderr)
+            # parsed_error = format_error_for_llm(parsed_error)
+            self.base_logger.error(f"Low-res execution failed: {parsed_error}")
+            return parsed_error
+    
+    def _execute_script(self,script:str,video_id:str) -> str:
         """[Helper] manimスクリプトの実行
         副作用: video_idのファイルにスクリプトが保存される
 
@@ -228,7 +257,7 @@ class BaseManimAgent(ABC):
 
         try:
             subprocess.run(
-                ["manim", "-pql", str(tmp_path), "GeneratedScene"],
+                ["manim", "-ql", str(tmp_path), "GeneratedScene"], 
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
@@ -242,8 +271,9 @@ class BaseManimAgent(ABC):
             return "FileNotFoundError"
 
         except subprocess.CalledProcessError as e:
-            parsed_error = parse_manim_or_python_traceback(e.stderr)
-            parsed_error = format_error_for_llm(parsed_error)
+            parsed_error  = e.stderr
+            # parsed_error  = parse_manim_or_python_traceback(e.stderr)
+            # parsed_error =  format_error_for_llm(parsed_error)
             self.base_logger.error(f"Script execution failed: {parsed_error}")
             return parsed_error
 
@@ -268,18 +298,16 @@ class BaseManimAgent(ABC):
         pass
 
     @abstractmethod
-    def generate_video(
-        self, video_id: str, content: str, enhance_prompt: str, max_loop: int = 3
-    ) -> str:
+    def generate_video(self,video_id:str,content:str,enhance_prompt:str,maxloop:int=3)->str:
         """
         サブクラスで実装されるべき抽象的なメソッド
 
         このコードの中には動画生成のために必要なロジックを実装する。
         このメソッドの中では、
         video_id: 動画の一意な識別子
-        content: 動画生成のための教材
+        content: manimコード生成のための計画立案（planであることに注意する）
         enhance_prompt:動画作成をするための追加プロンプト
-
+        
         を受け取る。
 
         return:
@@ -339,6 +367,7 @@ class BaseManimAgent(ABC):
         """
         # video_id(DBに保存するためのpathを一意にするためのID)
         video_id = str(uuid.uuid4())
+
         # save prompt
         prompt_path = self._save_prompt(generation_id, content, enhance_prompt)
 

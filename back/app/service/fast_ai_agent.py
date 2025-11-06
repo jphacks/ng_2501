@@ -116,23 +116,11 @@ class ManimFastAnimationService(BaseManimAgent):
         else:
             return self._generate_initial_script_generate(state)
 
-    def _check_bad_request(self, state: ManimGraphState):
-        self.base_logger.info("--- 2. [Node] Checking for Bad Request ---")
-        is_safe = self._check_code_security(state["current_script"])
-        self.base_logger.debug(
-            f"   [+] Code security check: {'Passed' if is_safe else 'Failed'}"
-        )
-        if not is_safe:
-            return {"is_bad_request": True}
-        return {"is_bad_request": False}
-
     def _run_linter_check(self, state: ManimGraphState):
-        self.base_logger.info("--- 3. [Node] Running Manim Linter ---")
+        self.base_logger.info("--- 2. [Node] Running Manim Linter ---")
         lint_result = self._check_code_lint(state["current_script"])
         status = lint_result.get("status")
-        issue_count = lint_result.get(
-            "issue_count", len(lint_result.get("issues", []))
-        )
+        issue_count = lint_result.get("issue_count", len(lint_result.get("issues", [])))
 
         if status == "pass":
             self.base_logger.debug("   [+] Linter check passed with no warnings.")
@@ -148,6 +136,16 @@ class ManimFastAnimationService(BaseManimAgent):
             )
         summary = lint_result.get("summary") or ""
         return {"last_error": summary, "error_type": "lint"}
+
+    def _check_bad_request(self, state: ManimGraphState):
+        self.base_logger.info("--- 3. [Node] Checking for Bad Request ---")
+        is_safe = self._check_code_security(state["current_script"])
+        self.base_logger.debug(
+            f"   [+] Code security check: {'Passed' if is_safe else 'Failed'}"
+        )
+        if not is_safe:
+            return {"is_bad_request": True}
+        return {"is_bad_request": False}
 
     def _handle_execution_result(self, execution_result: str, *, stage: str):
         if execution_result == "Success":
@@ -242,14 +240,6 @@ class ManimFastAnimationService(BaseManimAgent):
 
         # --- 5. グラフの配線 (エッジと条件分岐) ---
 
-    def _after_bad_request_check(self, state: ManimGraphState):
-        """[Conditional Edge] 不正リクエストか"""
-        if state["is_bad_request"]:
-            self.base_logger.error("--- [Branch] Bad Request. Ending Graph. ---")
-            return "end_with_error"
-        self.base_logger.debug("--- [Branch] Secure. Proceeding to Lint. ---")
-        return "lint"
-
     def _after_lint_check(self, state: ManimGraphState):
         """[Conditional Edge] リンターエラーか、リトライ上限か"""
         if state["error_type"] == "lint":
@@ -262,7 +252,17 @@ class ManimFastAnimationService(BaseManimAgent):
                 "--- [Branch] Linter Failed. Proceeding to Refine. ---"
             )
             return "refine"
-        self.base_logger.debug("--- [Branch] Linter Passed. Proceeding to Execute. ---")
+        self.base_logger.debug(
+            "--- [Branch] Linter Passed. Proceeding to Security Check. ---"
+        )
+        return "check_bad_request"
+
+    def _after_bad_request_check(self, state: ManimGraphState):
+        """[Conditional Edge] 不正リクエストか"""
+        if state["is_bad_request"]:
+            self.base_logger.error("--- [Branch] Bad Request. Ending Graph. ---")
+            return "end_with_error"
+        self.base_logger.debug("--- [Branch] Secure. Proceeding to Execute. ---")
         return "execute"
 
     def _after_execution(self, state: ManimGraphState):
@@ -285,22 +285,26 @@ class ManimFastAnimationService(BaseManimAgent):
         """LangGraphのワークフローを定義・構築する"""
         workflow = StateGraph(ManimGraphState)
         workflow.add_node("generate_initial", self._generate_initial_script)
-        workflow.add_node("check_bad_request", self._check_bad_request)
         workflow.add_node("lint", self._run_linter_check)
+        workflow.add_node("check_bad_request", self._check_bad_request)
         workflow.add_node("execute", self._execute_and_handle_errors)
         workflow.add_node("refine", self._refine_script_on_error)
         workflow.set_entry_point("generate_initial")
-        workflow.add_edge("generate_initial", "check_bad_request")
-        workflow.add_edge("refine", "check_bad_request")
-        workflow.add_conditional_edges(
-            "check_bad_request",
-            self._after_bad_request_check,
-            {"end_with_error": END, "lint": "lint"},
-        )
+        workflow.add_edge("generate_initial", "lint")
+        workflow.add_edge("refine", "lint")
         workflow.add_conditional_edges(
             "lint",
             self._after_lint_check,
-            {"refine": "refine", "execute": "execute", "end_with_error": END},
+            {
+                "refine": "refine",
+                "check_bad_request": "check_bad_request",
+                "end_with_error": END,
+            },
+        )
+        workflow.add_conditional_edges(
+            "check_bad_request",
+            self._after_bad_request_check,
+            {"execute": "execute", "end_with_error": END},
         )
         workflow.add_conditional_edges(
             "execute",

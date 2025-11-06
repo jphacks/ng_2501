@@ -24,6 +24,7 @@ from manim import *
 class GeneratedScene(Scene):
     def construct(self):
         japanese_font = "Noto Sans JP"
+        self.camera.background_color = BLACK
         # ...
 ```
 """
@@ -54,15 +55,14 @@ fast_ai_refine_patch = """
 上記の診断で指摘された すべてのエラーを修正してください。
 説明は一切書かず、有効な Python コードのみを出力してください。
 
-出力形式（必ず以下の書き出しで始めてください）:
+出力形式:
 ```python
 from manim import *
-import numpy as np
-
 class GeneratedScene(Scene):
     def construct(self):
         japanese_font = "Noto Sans JP"
         self.camera.background_color = BLACK
+        # ...
 ```
 """
 

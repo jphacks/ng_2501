@@ -7,12 +7,13 @@ interface PromptEditorProps {
     prompt: VideoGenerationPrompt
     isGenerating: boolean
     onGenerate: (prompt: VideoGenerationPrompt) => Promise<VideoResult>
+    onReset?: () => void
 }
 
 /**
  * Presentation層: プロンプト編集コンポーネント
  */
-export function PromptEditor({ prompt, isGenerating, onGenerate }: PromptEditorProps) {
+export function PromptEditor({ prompt, isGenerating, onGenerate, onReset }: PromptEditorProps) {
     const [editedPrompt, setEditedPrompt] = useState(prompt.planningPrompt)
     const [showOriginal, setShowOriginal] = useState(false)
 
@@ -28,6 +29,21 @@ export function PromptEditor({ prompt, isGenerating, onGenerate }: PromptEditorP
             {/* ヘッダー */}
             <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-200">
                 <h3 className="text-lg font-bold text-gray-800">SUDO<span className="text-xs text-gray-500 ml-5">ー プロンプト確認・編集</span></h3>
+                {onReset && (
+                    <button
+                        type="button"
+                        onClick={onReset}
+                        className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                    >
+                        <div className="hidden min-[426px]:block">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <title>最初に戻る</title>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                        </div>
+                        最初に戻る
+                    </button>
+                )}
             </div>
 
             {/* メインコンテンツ: 2カラムレイアウト（右は常に固定幅） */}

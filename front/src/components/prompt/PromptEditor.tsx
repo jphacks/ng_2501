@@ -74,32 +74,18 @@ export function PromptEditor({ prompt, isGenerating, onGenerate, onReset }: Prom
                 {/* 右側: 操作エリア（固定幅・常に100%に見える） */}
                 <div className="flex flex-col min-h-0 min-w-0 w-full lg:w-[420px]">
                     {/* スクロール可能エリア */}
-                    <div className="overflow-y-auto flex-1 min-h-0 pr-1 space-y-2">{/* 右側も内部スクロール */}
+                    <div className="overflow-y-auto flex-1 min-h-0 pr-1">{/* 右側も内部スクロール */}
                         {/* 原文表示 */}
+                        <label
+                            htmlFor="prompt-editor"
+                            className="block text-xs font-medium text-[#030405]/70 mb-1 flex-shrink-0"
+                        >
+                            入力テキスト
+                        </label>
                         <div className="bg-[#0A3B7E]/10 border border-[#0A3B7E]/20 rounded p-2">
-                            <button
-                                type="button"
-                                onClick={() => setShowOriginal(!showOriginal)}
-                                className="w-full flex items-center justify-between text-sm font-medium text-[#030405]/70 hover:text-[#030405]"
-                            >
-                                <span>動画の原文</span>
-                                <svg
-                                    className={`w-4 h-4 transition-transform ${showOriginal ? 'rotate-180' : ''}`}
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <title>{showOriginal ? '閉じる' : '開く'}</title>
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                            {showOriginal && (
-                                <div className="mt-2 pt-2 border-t border-[#0A3B7E]/20 bg-[#0A3B7E]/5 -m-2 p-2 rounded-b">
-                                    <p className="text-sm text-[#030405]/70 whitespace-pre-wrap">
-                                        {prompt.originalText}
-                                    </p>
-                                </div>
-                            )}
+                            <p className="text-sm text-[#030405]/70 whitespace-pre-wrap">
+                                {prompt.originalText}
+                            </p>
                         </div>
 
                         {/* Manimコード表示 */}

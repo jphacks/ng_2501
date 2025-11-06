@@ -32,6 +32,12 @@ dependencies = [
     "pydantic>=2.12.0",
     "pyright>=1.1.406",
     "ruff>=0.14.0",
+    "sentencepiece>=0.2.1",
     "sqlalchemy>=2.0.43",
+    "torch>=2.9.0",
+    "transformers>=4.57.1",
     "uvicorn>=0.37.0",
 ]
+
+[[tool.uv.index]]
+url = "https://pypi.org/simple"

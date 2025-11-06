@@ -15,7 +15,7 @@ class ManimGraphState(TypedDict):
     # --- 初期入力 ---
     user_request: str           # `content` (構造化説明)
     generation_instructions: str # `enhance_prompt` (動画の指示)
-    animation_plan :str
+    animation_plan :str         # 生成されたアニメーションプラン
     video_id: str               # `video_id` (ファイル名用)
     
     # --- 変化する状態 ---
@@ -254,6 +254,7 @@ class ManimGraphAnimationService(BaseManimAgent):
         initial_state: ManimGraphState = {
             "user_request": content,
             "generation_instructions": enhance_prompt,
+            "animation_plan": content,
             "video_id": video_id,
             "current_script": "",
             "last_error": "",
@@ -261,7 +262,6 @@ class ManimGraphAnimationService(BaseManimAgent):
             "is_bad_request": False,
             "max_retries": maxloop,
             "current_retry": 0,
-            "animation_plan": ""
         }
         
         final_state = self.app.invoke(initial_state)
@@ -288,6 +288,7 @@ class ManimGraphAnimationService(BaseManimAgent):
         initial_state: ManimGraphState = {
             "user_request": edit_instructions,
             "generation_instructions": "",
+            "animation_plan": "",
             "video_id": video_id,
             "current_script": original_script,
             "last_error": "",
@@ -295,7 +296,6 @@ class ManimGraphAnimationService(BaseManimAgent):
             "is_bad_request": False,
             "max_retries": maxloop,
             "current_retry": 0,
-            "animation_plan": ""
         }
         
         final_state = self.app.invoke(initial_state)

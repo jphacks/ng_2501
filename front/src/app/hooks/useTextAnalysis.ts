@@ -271,7 +271,11 @@ export const useVideoGeneration = () => {
         try {
             
             // ② バックエンドに動画生成をリクエスト
-            const videoId =  await requestAnimation(editedPrompt.generationId, editedPrompt.originalText, editedPrompt.planningPrompt)
+            const videoId =  await requestAnimation(
+                editedPrompt.generationId,
+                editedPrompt.planningPrompt,
+                editedPrompt.videoPrompt
+            )
             if (!videoId) {
                 throw new Error('動画生成に失敗しました')
             }
@@ -331,12 +335,12 @@ export const useVideoGeneration = () => {
             throw err
         }
         try {
-            await requestEditAnimation(generationId!, videoId, enhancePrompt )
-            const videoUrl = await replaceVideoUrl(videoId)
+            const newVideoId = await requestEditAnimation(generationId!, videoId, enhancePrompt )
+            const videoUrl = await replaceVideoUrl(newVideoId)
             const updatedPrompt = createVideoGenerationPrompt(generationId, baseRequest, enhancePrompt)
 
             const updatedResult: VideoResult = {
-                videoId,
+                videoId: newVideoId,
                 videoUrl,
                 prompt: updatedPrompt,
                 generatedAt: new Date(),

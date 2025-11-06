@@ -28,7 +28,7 @@ export const useTestVideoGeneration = () => {
     const [result, setResult] = useState<VideoResult | null>(null)
     const [error, setError] = useState<string | null>(null)
     const videoUrlRef = useRef<string | null>(null)
-    const testVideoIdRef = useRef<number | null>(null)
+    const testVideoIdRef = useRef<string | null>(null)
 
     useEffect(() => {
         return () => {
@@ -41,13 +41,13 @@ export const useTestVideoGeneration = () => {
     /**
      * 既存動画IDを保持してPrompt画面を表示
      */
-    const loadExistingVideo = async (generateId: number, promptText: string = '既存の動画') => {
+    const loadExistingVideo = async (videoId: string, promptText: string = '既存の動画') => {
         try {
             // テスト用: videoIdを保持（generateVideoで使用）
-            testVideoIdRef.current = generateId
+            testVideoIdRef.current = videoId
 
             const generatedPrompt: VideoGenerationPrompt = {
-                generationId: generateId,  // セッションIDとして使用
+                generationId: 0,  // テスト用のダミーID
                 planningPrompt: promptText,
                 originalText: promptText,
             }
@@ -80,7 +80,7 @@ export const useTestVideoGeneration = () => {
 
         try {
             // 既存動画を取得
-            const videoUrl = await fetchVideo(String(videoId))
+            const videoUrl = await fetchVideo(videoId)
             if (!videoUrl) {
                 throw new Error('動画の取得に失敗しました')
             }

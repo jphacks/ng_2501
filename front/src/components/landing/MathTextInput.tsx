@@ -500,7 +500,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                 {/* 数式エディタポップアップ */}
                 {showInlinePopup && showMathEditor && popupPosition && (
                     <div
-                        className="fixed z-50 bg-[#0A3B7E]/5 border border-[#0A3B7E]/30 rounded shadow-xl w-[500px]"
+                        className="fixed z-50 bg-white border border-[#0A3B7E]/30 rounded shadow-xl w-[500px]"
                         style={{ top: `${popupPosition.top}px`, left: `${popupPosition.left}px` }}
                     >
                         {/* ヘッダー */}

@@ -506,7 +506,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                         {/* ヘッダー */}
                         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50">
                             <h3 className="text-sm font-semibold text-gray-800">数式を入力</h3>
-                            <button
+                            {/* <button
                                 type="button"
                                 onClick={handleMathCancel}
                                 className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -516,7 +516,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                     <title>閉じる</title>
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                 </svg>
-                            </button>
+                            </button> */}
                         </div>
 
                         {/* コンテンツ */}

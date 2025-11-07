@@ -48,7 +48,7 @@ manim_planer_with_instruct = """
 
 
 fast_ai_refine_patch = """
-あなたはプロの Manim 開発者です。
+あなたはプロの Manim0.19.0 の開発者です。
 1.エラー内容: {lint_summary}
 2. 失敗したスクリプト: {original_script}
 タスク:
@@ -71,7 +71,7 @@ fast_ai_refine_patch = """
 """
 
 fast_ai_edit_initial = """
-あなたはプロの Manim 開発者です。
+あなたはプロの Manim0.19.0 の開発者です。
 既存の Manim スクリプト ({original_script}) を、以下の編集指示 ({edit_instructions}) に基づいて更新してください。
 
 要件:

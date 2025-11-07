@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-
+import os
 from dotenv import load_dotenv
 from fastapi import APIRouter, HTTPException ,Depends
 from fastapi.responses import FileResponse, JSONResponse 
@@ -24,7 +24,8 @@ router = APIRouter(tags=["animation"])
 
 
 
-workspace_path = Path("/workspaces/ai_agent/back/media/videos") 
+script_path = Path(os.getenv("MANIM_SCRIPTS_PATH"))
+video_path = Path(os.getenv("VIDEO_OUTPUT_PATH")) 
 
 # ---------- Pydantic Models ----------
 class ConceptInput(BaseModel):
@@ -45,26 +46,10 @@ class EditPrompt(BaseModel):
     enhance_prompt: str
 
 class SearchRequest(BaseModel):
-    """
-    既存コード検索のリクエストボディ。
-    Attributes
-    ----------
-    query:
-        類似検索に用いる文章。
-    threshold:
-        類似度の下限値 (0.0 - 1.0)。
-    max_gets:
-        返却する件数の上限。
-    """
+    content : str 
 
-    query: str = (
-        "単位円を使って、角度θに対応する点P(cosθ, sinθ)が円周上を動く様子を左側に表示してください。"
-        "右側にはθを0°から360°まで30°刻みで変化させたときのsinθとcosθの値を表にして表示し、"
-        "現在のθの行をハイライトしてください。また、sinθとcosθの符号がどの象限で変わるのか"
-        "（第1象限は+,+、第2象限は-,+、第3象限は-,-、第4象限は+,-）を色分けして示してください。"
-    )
-    threshold: float = 0.8
-    max_gets: int = 3
+
+
 
 class AddTemplateRequest(BaseModel):
     """
@@ -142,12 +127,45 @@ async def get_animation(
     最終 mp4 が確定パスにない場合でも、サブディレクトリを走査して最新の mp4 を返す。
     """
     # まずは一般的な完成パスを優先的に見る
-    common_path = workspace_path / video_id / "480p15" / "GeneratedScene.mp4"
+    common_path = video_path / video_id / "480p15" / "GeneratedScene.mp4"
     print(common_path)
     if common_path.is_file():
         return FileResponse(common_path, media_type="video/mp4", filename="GeneratedScene.mp4")
 
     return JSONResponse(status_code=404, content={"message": "Video not found"})
+
+@router.post("/api/register_rag/{video_id}", summary="RAG用動画登録API")
+async def register_rag_video(
+    video_id: str,
+    db: VideoDatabase = Depends(get_video_db)
+    ):
+    """
+    RAG用に動画を登録する。
+    """
+    try:
+        # scriptを取得する
+        with open(script_path / video_id / f"{video_id}.py", "r") as f:
+            manim_code = f.read()
+        
+        # TODO ここにRAGに登録する add_rag関数を実装する
+        
+        
+        return JSONResponse(status_code=200, content={"message": f"Video {video_id} registered for RAG."})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"RAG video registration failed: {str(e)}")
+
+@router.post("/api/serch_animation")
+async def search_animation(
+    SearchRequest:str
+):
+    # TODO serch_rag関数を実装する video_idとcontentを返す
+    
+    
+    # 仮のレスポンス
+    
+    video_id = ["sample_video_id","another_video_id"]
+    content = " Sample content related to the video."
+    # ここは実際に返却されたら作ります
 
 
 @router.post("/api/animation")

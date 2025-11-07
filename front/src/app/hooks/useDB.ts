@@ -31,8 +31,25 @@ interface SuccessResponse {
   manim_code_path?: string;
   video_id?: string; // Changed to string to match backend UUID
 }
+type SendResponse = {
+    ok: boolean;
+    video_id?: string;
+    message?: string;
+}
+
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL+'api' ;
+
+const stripWrappingQuotes = (value: string) => value.replace(/^['"]|['"]$/g, '')
+
+const resolveBackendUrl = () => {
+    const raw = process.env.NEXT_PUBLIC_API_URL ?? ''
+    const sanitized = stripWrappingQuotes(raw).trim().replace(/\/$/, '')
+    if (!sanitized) {
+        throw new Error('バックエンドのURLが設定されていません')
+    }
+    return sanitized
+}
 
 /**
  * Custom hook for interacting with the database and animation generation APIs.
@@ -113,10 +130,38 @@ export const useDB = () => {
     }
   }, []);
 
+  const sendVideoId = useCallback(async (videoId: string): Promise<SendResponse> => {
+    const baseUrl = resolveBackendUrl()
+    const response = await fetch(`${baseUrl}/api/register_rag/${videoId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+          videoId: videoId,
+      }),
+    })
+
+    let data: SendResponse | null = null
+    try {
+        data = (await response.json()) as SendResponse
+    } catch {
+        data = null
+    }
+
+    if (!response.ok) {
+        throw new Error(data?.message ?? '動画ID送信リクエストに失敗しました')
+    }
+
+    if (!data?.ok) {
+        throw new Error(data?.message ?? '動画ID送信に失敗しました')
+    }
+
+    return await response.json();
+  }, []);
 
   return {
     planAnimation,
     generateAnimation,
     editAnimation,
+    sendVideoId,
   };
 };

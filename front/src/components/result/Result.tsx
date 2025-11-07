@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { VideoResult } from '@/app/datas/Video'
 import { VideoPlayer } from './VideoPlayer'
+import { useDB } from '@/app/hooks/useDB'
 
 interface ResultProps {
     result: VideoResult
@@ -18,6 +19,7 @@ interface ResultProps {
 export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
     const [showEditPanel, setShowEditPanel] = useState(false)
     const [editPrompt, setEditPrompt] = useState('')
+    const { sendVideoId } = useDB()
 
     const handleEdit = async () => {
         if (!editPrompt.trim()) return
@@ -66,14 +68,23 @@ export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
                 <div className="lg:col-span-2 flex flex-col min-h-0 min-w-0 w-full gap-2">
                     <VideoPlayer videoUrl={result.videoUrl} />
                     
-                    {/* 動画ダウンロードボタン */}
-                    <button
-                        type="button"
-                        onClick={handleDownload}
-                        className="w-full py-2 px-4 bg-[#0A3B7E]/10 hover:bg-[#0A3B7E]/20 text-[#030405] text-sm rounded"
-                    >
-                        動画をダウンロード
-                    </button>
+                    <div className="flex gap-2">
+                        {/* 動画ダウンロードボタン */}
+                        <button
+                            type="button"
+                            onClick={handleDownload}
+                            className="w-full py-2 px-4 bg-[#0A3B7E]/10 hover:bg-[#0A3B7E]/20 text-[#030405] text-sm rounded"
+                        >
+                            動画をダウンロード
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => sendVideoId(result.videoId)}
+                            className="w-full py-2 px-4 bg-[#3A947C] hover:bg-[#3A947C]/90 text-white text-sm rounded"
+                        >
+                            いいね！
+                        </button>
+                    </div>
                 </div>
 
                 {/* 右側: 編集エリア */}

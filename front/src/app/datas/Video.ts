@@ -94,3 +94,10 @@ export class ValidationError extends Error {
         this.name = 'ValidationError'
     }
 }
+
+export interface VideoInfo {
+  video_id: string;
+  video_path: string;
+  generate_time: string; // Assuming from JSON it will be a string
+  edit_count: number;
+}

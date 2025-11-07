@@ -1,5 +1,6 @@
 
 import { useCallback } from 'react';
+import type { VideoInfo } from '../datas/Video';
 
 // Type definitions based on the backend Pydantic models
 interface ConceptInput {
@@ -130,6 +131,9 @@ export const useDB = () => {
     }
   }, []);
 
+  /**
+   * Sends a video ID to the backend. For RAG registration.
+   */
   const sendVideoId = useCallback(async (videoId: string): Promise<SendResponse> => {
     const baseUrl = resolveBackendUrl()
     const response = await fetch(`${baseUrl}/api/register_rag/${videoId}`, {
@@ -158,10 +162,34 @@ export const useDB = () => {
     return await response.json();
   }, []);
 
+  /**
+   * Fetches the animation history for a given generation ID.
+   * Returns an array of VideoInfo objects.
+   */
+  const getAnimationHistory = useCallback(async (generationId: number): Promise<VideoInfo[]> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/history/${generationId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`HTTP error! status: ${response.status}, details: ${errorData.detail}`);
+      }
+      return await response.json();
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
+  }, []);
+
   return {
     planAnimation,
     generateAnimation,
     editAnimation,
     sendVideoId,
+    getAnimationHistory,
   };
 };

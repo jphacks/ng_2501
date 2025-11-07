@@ -4,7 +4,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langgraph.graph import StateGraph, END
 
 # LangGraphのコンポーネント
-from typing import TypedDict, Literal, Optional, List, Tuple, Dict, Any
+from typing import TypedDict, Literal
 
 from app.service.base_agent import BaseManimAgent
 
@@ -221,8 +221,6 @@ class ManimFastAnimationService(BaseManimAgent):
             "last_error": "",
             "error_type": "",
         }
-
-        # --- 5. グラフの配線 (エッジと条件分岐) ---
 
     def _after_lint_check(self, state: ManimGraphState):
         """[Conditional Edge] リンターエラーか、リトライ上限か"""

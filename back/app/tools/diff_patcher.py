@@ -140,9 +140,9 @@ class DiffPatcher:
                     hunks.append(current_hunk)
 
                 source_start = int(m.group(1))
-                source_len = int(m.group(2) or "0")
+                source_len = int(m.group(2) or "1")
                 target_start = int(m.group(3))
-                target_len = int(m.group(4) or "0")
+                target_len = int(m.group(4) or "1")
 
                 # 新しいハンクの器を作成
                 current_hunk = {

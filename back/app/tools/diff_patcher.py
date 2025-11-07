@@ -15,11 +15,9 @@ class DiffPatcher:
 
     フロー概要：
       1) 応答から diff ブロック（```diff ...``` / *** Begin Patch ... ***）を抽出
-      2) unified diff をハンクへ分解し、行の“完全一致”によるパターンマッチで適用
-         - 行番号は “探索ウィンドウの目安” として扱う（厳密には信用しない）
+      2) unified diff をハンクへ分解し、行の"完全一致"によるパターンマッチで適用
+         - 行番号はほとんどずれて返ってくるため "探索ウィンドウの目安" として扱う
       3) いずれでもなければ、元スクリプトをそのまま返す（安全側）
-
-    ※ ロガー（loguru など）を渡すと内部ログをミラー出力します。
     """
 
     def __init__(self, logger=None):
@@ -101,11 +99,11 @@ class DiffPatcher:
     def _parse_unified_diff_to_hunks(self, diff_text: str) -> List[Dict[str, Any]]:
         """
         unified diff テキスト（複数ファイル・複数ハンク可）を、
-        構造化された “ハンク” の配列へ変換する。
+        構造化された "ハンク" の配列へ変換する。
 
         ハンクとは：
           @@ -<src_start>,<src_len> +<dst_start>,<dst_len> @@
-          に続く “+/-/ 空白” の行ブロック（追加/削除/コンテキスト）のこと。
+          に続く "+/-/ 空白" の行ブロック（追加/削除/コンテキスト）のこと。
         """
         text = self._normalize_newlines(diff_text)
 
@@ -152,7 +150,7 @@ class DiffPatcher:
                     "source_len": source_len,
                     "target_start": target_start,
                     "target_len": target_len,
-                    "lines": [],  # (“+/-/ ”, 行文字列) のタプル列
+                    "lines": [],  # ("+/-/ ", 行文字列) のタプル列
                     "file_from": file_from,
                     "file_to": file_to,
                 }
@@ -164,11 +162,11 @@ class DiffPatcher:
                     # 次のハンクヘッダが来たら本体終わり
                     if hunk_re.match(body_line):
                         break
-                    # “No newline at end of file” 行は無視
+                    # "No newline at end of file" 行は無視
                     if body_line.startswith("\\ No newline at end of file"):
                         i += 1
                         continue
-                    # 空行（""）は “コンテキスト行” とみなす
+                    # 空行（""）は "コンテキスト行" とみなす
                     if body_line.startswith((" ", "+", "-")) or body_line == "":
                         if body_line == "":
                             current_hunk["lines"].append((" ", ""))
@@ -194,74 +192,24 @@ class DiffPatcher:
     def _finalize_hunk(hunk: Dict[str, Any]) -> None:
         """
         ハンクに対して、適用に使う補助配列を作る。
-          - from_lines: “削除＋コンテキスト”（= 置き換え対象に一致させる元の並び）
-          - to_lines  : “追加＋コンテキスト”（= 置き換え後の並び）
-          - lead_ctx  : 先頭側の連続コンテキスト
-          - tail_ctx  : 末尾側の連続コンテキスト
-        ※ 現在の適用ロジックは lead/tail_ctx は未使用（将来の拡張余地）
+          - from_lines: "削除＋コンテキスト"（= 置き換え対象に一致させる元の並び）
+          - to_lines  : "追加＋コンテキスト"（= 置き換え後の並び）
         """
         body = hunk.get("lines", [])
         from_lines: List[str] = []
         to_lines: List[str] = []
 
-        # “空白/削除” は from_lines に、“空白/追加” は to_lines に入れる
+        # "空白/削除" は from_lines に、"空白/追加" は to_lines に入れる
         for tag, content in body:
             if tag in (" ", "-"):
                 from_lines.append(content)
             if tag in (" ", "+"):
                 to_lines.append(content)
 
-        # 連続する先頭コンテキスト
-        lead_ctx: List[str] = []
-        for tag, content in body:
-            if tag == " ":
-                lead_ctx.append(content)
-            else:
-                break
-
-        # 連続する末尾コンテキスト
-        tail_ctx: List[str] = []
-        for tag, content in reversed(body):
-            if tag == " ":
-                tail_ctx.insert(0, content)
-            else:
-                break
-
         hunk["from_lines"] = from_lines
         hunk["to_lines"] = to_lines
-        hunk["lead_ctx"] = lead_ctx
-        hunk["tail_ctx"] = tail_ctx
 
     # ---------- Pattern Matching Engine ----------
-
-    @staticmethod
-    def _find_subsequence(
-        haystack: List[str],
-        needle: List[str],
-        start: int = 0,
-        end: Optional[int] = None,
-    ) -> int:
-        """
-        行配列 haystack 内で、needle（連続部分列）が一致する最初の位置を返す。
-        素朴な O(n*m) 線形探索。完全一致のみ（空白差は無視しない）。
-        """
-        if end is None:
-            end = len(haystack)
-        n = len(needle)
-        if n == 0:
-            return start
-        limit = max(start, 0)
-        while limit + n <= end:
-            ok = True
-            for j in range(n):
-                if haystack[limit + j] != needle[j]:
-                    ok = False
-                    break
-            if ok:
-                return limit
-            limit += 1
-        return -1
-
     @staticmethod
     def _find_all_subsequence(
         haystack: List[str],
@@ -271,7 +219,6 @@ class DiffPatcher:
     ) -> List[int]:
         """
         連続部分列 needle が一致するすべての開始位置を返す（重なりなし進行）。
-        複数候補の列挙に使える。※ 現行ロジックでは未使用。
         """
         if end is None:
             end = len(haystack)
@@ -292,34 +239,6 @@ class DiffPatcher:
             else:
                 i += 1
         return idxs
-
-    def _find_subsequence_centered(
-        self,
-        haystack: List[str],
-        needle: List[str],
-        center: int,
-        start: int,
-        end: int,
-    ) -> int:
-        """
-        start..end の範囲で needle を探し、候補が複数あれば center に最も近い位置を選ぶ。
-        もし複数見つかった場合は、logで警告を出す。
-        → LLM の “大体この辺”（行番号）というヒントを弱く活用するための戦略。
-        """
-        n = len(needle)
-        if n == 0:
-            return start
-        start = max(start, 0)
-        end = min(end, len(haystack))
-        candidates: List[int] = []
-        i = start
-        while i + n <= end:
-            if haystack[i : i + n] == needle:
-                candidates.append(i)
-            i += 1
-        if not candidates:
-            return -1
-        return min(candidates, key=lambda p: abs(p - center))
 
     def _apply_hunk_within_window(
         self,
@@ -342,7 +261,7 @@ class DiffPatcher:
         # ウィンドウ中央（優先探索の基準点）
         center = (window_start + window_end) // 2
 
-        # 1) “追加だけ”のハンク（アンカーなし）はウィンドウ中央へ挿入
+        # 1) "追加だけ"のハンク（アンカーなし）はウィンドウ中央へ挿入
         if len(src) == 0:
             pos = max(window_start, min(center, window_end))
             self._warning(f"   [~] Hunk has empty from_lines; inserting at {pos} (window {window_start}:{window_end}).")
@@ -351,6 +270,7 @@ class DiffPatcher:
 
         # 2) ウィンドウ内探索：複数候補があるかチェック
         cands = self._find_all_subsequence(lines, src, start=window_start, end=window_end)
+        pos = -1
         if len(cands) > 1:
             chosen = min(cands, key=lambda p: abs(p - center))
             self._warning(
@@ -360,9 +280,6 @@ class DiffPatcher:
             pos = chosen
         elif len(cands) == 1:
             pos = cands[0]
-        else:
-            # 3) 候補が無い場合は中心優先探索（従来のロジック）
-            pos = self._find_subsequence_centered(lines, src, center, start=window_start, end=window_end)
 
         if pos != -1:
             self._debug(f"   [+] Matched at {pos}..{pos + len(src)} (window {window_start}:{window_end}).")
@@ -373,7 +290,7 @@ class DiffPatcher:
 
     def _apply_diff_by_pattern(self, original_script: str, diff_text: str) -> Tuple[str, int, int]:
         """
-        ハンクを上から順に“最良努力”で適用していく本体。
+        ハンクを上から順に"最良努力"で適用していく本体。
         戻り値: (更新後スクリプト, 適用できたハンク数, 総ハンク数)
         """
         if not diff_text.strip():
@@ -424,7 +341,7 @@ class DiffPatcher:
 
     def _apply_unified_diff(self, original_script: str, diff_text: str) -> str:
         """
-        外向けの“diff 適用”API（互換性保持）。
+        外向けの"diff 適用"API（互換性保持）。
         1 つもハンクが当たらなければ DiffApplyError を投げる。
         """
         updated, applied, total = self._apply_diff_by_pattern(original_script, diff_text)

@@ -8,3 +8,4 @@ tmp/
 media/
 .ruff_chache
 prompts/
+*.log

@@ -25,6 +25,7 @@ router = APIRouter(tags=["animation"])
 
 
 workspace_path = Path("/workspaces/ai_agent/back/media/videos") 
+import datetime
 
 # ---------- Pydantic Models ----------
 class ConceptInput(BaseModel):
@@ -43,6 +44,12 @@ class EditPrompt(BaseModel):
     generation_id: int
     prior_video_id: str
     enhance_prompt: str
+
+class VideoInfo(BaseModel):
+    video_id: str
+    video_path: str
+    generate_time: datetime.datetime
+    edit_count: int
 
 class SearchRequest(BaseModel):
     """
@@ -148,6 +155,28 @@ async def get_animation(
         return FileResponse(common_path, media_type="video/mp4", filename="GeneratedScene.mp4")
 
     return JSONResponse(status_code=404, content={"message": "Video not found"})
+
+
+@router.get("/api/history/{generation_id}", response_model=list[VideoInfo], summary="同一生成IDを持つ動画履歴の取得")
+async def get_animation_history(
+    generation_id: int,
+    db: VideoDatabase = Depends(get_video_db)
+):
+    """
+    同一の生成IDを持つ動画の履歴を取得する。
+    """
+    try:
+        videos = db.get_videos_by_generation(generation_id)
+        return [
+            VideoInfo(
+                video_id=str(v.video_id),
+                video_path=v.video_path,
+                generate_time=v.generate_time,
+                edit_count=v.edit_count
+            ) for v in videos
+        ]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting video history: {str(e)}")
 
 
 @router.post("/api/animation")

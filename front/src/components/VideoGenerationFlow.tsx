@@ -8,6 +8,11 @@ import { Result } from './result/Result'
 
 // ⚠️ テスト用import（Issue#58）
 // この import を削除すると、テスト用ボタンが表示されなくなります
+import { History } from './history/history'
+import { useState } from 'react'
+
+// ⚠️ テスト用import（Issue#58）
+// この import を削除すると、テスト用ボタンが表示されなくなります
 import { TestVideoLoader } from './__test_utils__/TestVideoLoader'
 
 /**
@@ -17,6 +22,7 @@ import { TestVideoLoader } from './__test_utils__/TestVideoLoader'
  */
 export function VideoGenerationFlow() {
     const { isGenerating, prompt, result, error, generatePrompt, generateVideo, editVideo, loadExistingVideo, clearResult } = useVideoGeneration()
+    const [currentView, setCurrentView] = useState<'result' | 'history'>('result')
 
     // Landing画面で送信時：プロンプトを生成してPrompt画面に遷移
     const handleLandingSubmit = async (text: string, videoPrompt?: string) => {
@@ -32,6 +38,9 @@ export function VideoGenerationFlow() {
     const handleLoadExistingVideo = async (videoId: string, promptText: string) => {
         await loadExistingVideo(videoId, promptText)
     }
+
+    const showHistory = () => setCurrentView('history')
+    const showResult = () => setCurrentView('result')
 
     const isLanding = !isGenerating && !prompt && !result
     const isPromptScreen = !isGenerating && !!prompt && !result
@@ -55,8 +64,14 @@ export function VideoGenerationFlow() {
             {/* 状態3: 動画生成中 */}
             {isGeneratingScreen && <Generating />}
 
-            {/* 状態4: リザルト */}
-            {isResult && result && <Result result={result} isGenerating={isGenerating} onEdit={editVideo} onReset={clearResult} />}
+            {/* 状態4: リザルト or 履歴 */}
+            {isResult && result && (
+                currentView === 'result' ? (
+                    <Result result={result} isGenerating={isGenerating} onEdit={editVideo} onReset={clearResult} onShowHistory={showHistory} />
+                ) : (
+                    <History generationId={result.prompt.generationId} onBack={showResult} />
+                )
+            )}
         </div>
     )
 }

@@ -170,7 +170,6 @@ async def search_animation(
     try:
         results = template_service.search(
             query=search_content,
-            threshold=0.0,
             max_gets=10,
         )
     except ValueError as e:
@@ -231,4 +230,3 @@ async def edit_video(
     except Exception as e:
         # サービス内例外は 500 で返却
         raise HTTPException(status_code=500, detail=str(e))
-    

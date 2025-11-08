@@ -32,6 +32,8 @@ class TemplateService:
             self._summary_llm = ChatGoogleGenerativeAI(
                 model=self.summary_model,
                 google_api_key=self.google_api_key,
+                temperature=0.2,
+                max_output_tokens=180,
             )
         return self._summary_llm
 
@@ -101,12 +103,9 @@ class TemplateService:
         self,
         *,
         query: str,
-        threshold: float = 0.8,
         max_gets: int = 3,
-    ) -> List[Dict[str, str]]:
+    ) -> List[Dict[str, Any]]:
         """RAGストアから類似テンプレートを検索する。"""
         if not query:
             return []
-        return self._rag_store.search(
-            query=query, threshold=threshold, max_gets=max_gets
-        )
+        return self._rag_store.search(query=query, max_gets=max_gets)

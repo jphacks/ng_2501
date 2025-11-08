@@ -158,13 +158,14 @@ export const useDB = () => {
     }
   }, []);
 
-  const searchVideo = useCallback(async (query: string): Promise<any> => {
+  const searchVideo = useCallback(async (content: string): Promise<any> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/data/search?query=${encodeURIComponent(query)}`, {
-          method: 'GET',
+      const response = await fetch(`${API_BASE_URL}/data/search_animation`, {
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
+          body: JSON.stringify({ content }),
       });
       if (!response.ok) {
           const errorData = await response.json();

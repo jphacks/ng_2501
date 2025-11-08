@@ -26,7 +26,7 @@ export interface VideoGenerationPrompt {
 export interface VideoData {
     videoId: string
     videoPath: string
-    script: string
+    content: string
 }
 
 /**

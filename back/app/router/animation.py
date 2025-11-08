@@ -118,12 +118,14 @@ async def get_animation_info(
         db: VideoDatabase = Depends(get_video_db)
     ):
     """
-    生成済み動画の全情報を取得する。
+    生成済み動画のオブジェクトにある情報を取得する。
     """
     video_info = db.get_video(video_id)
     if not video_info:
         raise HTTPException(status_code=404, detail="Video not found")
     return video_info
+
+
 @router.post("/api/register_rag/{video_id}", summary="RAG用動画登録API")
 async def register_rag_video(
     video_id: str,

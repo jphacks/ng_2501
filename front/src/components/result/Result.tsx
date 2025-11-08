@@ -19,6 +19,7 @@ interface ResultProps {
 export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
     const [showEditPanel, setShowEditPanel] = useState(false)
     const [editPrompt, setEditPrompt] = useState('')
+    const [isLiked, setIsLiked] = useState(false)
     const { sendVideoId } = useDB()
 
     const handleEdit = async () => {
@@ -26,6 +27,12 @@ export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
         await onEdit(result.videoId, editPrompt)
         setEditPrompt('')
         setShowEditPanel(false)
+    }
+
+    const handleLike = () => {
+        if (isLiked) return
+        sendVideoId(result.videoId)
+        setIsLiked(true)
     }
 
     const handleDownload = () => {
@@ -79,8 +86,9 @@ export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
                         </button>
                         <button
                             type="button"
-                            onClick={() => sendVideoId(result.videoId)}
-                            className="w-full py-2 px-4 bg-[#3A947C] hover:bg-[#3A947C]/90 text-white text-sm rounded"
+                            onClick={handleLike}
+                            disabled={isLiked}
+                            className="w-full py-2 px-4 bg-[#3A947C] hover:bg-[#3A947C]/90 text-white text-sm rounded transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                         >
                             いいね！
                         </button>

@@ -1,9 +1,11 @@
 'use client'
 
 import { MathTextInput } from './MathTextInput'
+import { SearchBar } from '../search/SearchBar'
 
 interface LandingProps {
     onSubmit: (text: string, videoPrompt?: string) => Promise<void>
+    onSearch: (query: string) => void
     isGenerating: boolean
     error: string | null
     children?: React.ReactNode // テスト用コンポーネント挿入用
@@ -12,7 +14,7 @@ interface LandingProps {
 /**
  * Presentation層: ランディングページ全体
  */
-export function Landing({ onSubmit, isGenerating, error, children }: LandingProps) {
+export function Landing({ onSubmit, onSearch, isGenerating, error, children }: LandingProps) {
     return (
         <div className="flex flex-col h-full min-w-0">
             {/* エラー表示 */}
@@ -22,6 +24,9 @@ export function Landing({ onSubmit, isGenerating, error, children }: LandingProp
                     <p className="text-sm text-red-700 mt-1">{error}</p>
                 </div>
             )}
+
+            {/* 検索バー */}
+            <SearchBar onSearch={onSearch} isGenerating={isGenerating} />
 
             {/* テスト用コンポーネント挿入スロット */}
             {children}

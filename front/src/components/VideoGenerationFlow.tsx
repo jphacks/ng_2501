@@ -1,10 +1,14 @@
 'use client'
 
+import { useState } from 'react'
+import type { VideoData } from '@/app/datas/Video'
 import { useVideoGeneration } from '../app/hooks/useTextAnalysis'
 import { Generating } from './generating/Generating'
 import { Landing } from './landing/Landing'
 import { Prompt } from './prompt/Prompt'
 import { Result } from './result/Result'
+import { useDB } from '../app/hooks/useDB'
+import { Search } from './search/Search'
 
 // ⚠️ テスト用import（Issue#58）
 // この import を削除すると、テスト用ボタンが表示されなくなります
@@ -16,7 +20,9 @@ import { TestVideoLoader } from './__test_utils__/TestVideoLoader'
  * 状態遷移とルーティングを担当
  */
 export function VideoGenerationFlow() {
-    const { isGenerating, prompt, result, error, generatePrompt, generateVideo, editVideo, loadExistingVideo, clearResult } = useVideoGeneration()
+    const { isGenerating, prompt, result, error, generatePrompt, generateVideo, editVideo, loadExistingVideoTest, loadExistingVideo, clearResult } = useVideoGeneration()
+    const [searchResult, setSearchResult] = useState<VideoData[] | null>(null)
+    const { searchVideo } = useDB()
 
     // Landing画面で送信時：プロンプトを生成してPrompt画面に遷移
     const handleLandingSubmit = async (text: string, videoPrompt?: string) => {
@@ -29,12 +35,26 @@ export function VideoGenerationFlow() {
     }
 
     // ⚠️ テスト用（Issue#58）
-    const handleLoadExistingVideo = async (videoId: string, promptText: string) => {
-        await loadExistingVideo(videoId, promptText)
+    const handleLoadExistingVideoTest = async (videoId: string, promptText: string) => {
+        await loadExistingVideoTest(videoId, promptText)
     }
 
-    const isLanding = !isGenerating && !prompt && !result
+    const handleSearch = async (query: string) => {
+        if (!query) {
+            setSearchResult(null)
+            return
+        }
+        const results = await searchVideo(query)
+        setSearchResult(results)
+    }
+
+    const clearSearchResult = () => {
+        setSearchResult(null)
+    }
+
+    const isLanding = !isGenerating && !prompt && !result && !searchResult
     const isPromptScreen = !isGenerating && !!prompt && !result
+    const isSearchResultsScreen = !isGenerating && !!searchResult && !result
     const isGeneratingScreen = isGenerating
     const isResult = !!result && !isGenerating
     const containerOverflowClass = isLanding ? 'overflow-hidden' : 'overflow-auto'
@@ -43,14 +63,19 @@ export function VideoGenerationFlow() {
         <div className={`h-full flex flex-col w-full min-w-0 ${containerOverflowClass}`}>
             {/* 状態1: ランディング（テキスト入力） */}
             {isLanding && (
-                <Landing onSubmit={handleLandingSubmit} isGenerating={isGenerating} error={error}>
+                <Landing onSubmit={handleLandingSubmit} onSearch={handleSearch} isGenerating={isGenerating} error={error}>
                     {/* ⚠️ テスト用（Issue#58） */}
-                    <TestVideoLoader onLoadVideo={handleLoadExistingVideo} isLoading={isGenerating} />
+                    <TestVideoLoader onLoadVideo={handleLoadExistingVideoTest} isLoading={isGenerating} />
                 </Landing>
             )}
 
-            {/* 状態2: プロンプト確認・編集 */}
+            {/* 状態2-1: プロンプト確認・編集 */}
             {isPromptScreen && prompt && <Prompt prompt={prompt} isGenerating={isGenerating} onGenerate={handlePromptGenerate} onReset={clearResult} />}
+
+            {/* 状態2-2: 検索結果 */}
+            {isSearchResultsScreen && searchResult && (
+                <Search result={searchResult} isGenerating={isGenerating} onLoadVideo={loadExistingVideo} onReset={clearSearchResult} />
+            )}
 
             {/* 状態3: 動画生成中 */}
             {isGeneratingScreen && <Generating />}

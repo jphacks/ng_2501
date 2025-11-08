@@ -23,7 +23,7 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=https://ani-math.jp/api
+      - NEXT_PUBLIC_API_URL=https://ani-math.jp
     # ports: は削除します (Nginx経由でのみアクセスさせるため)
 
   db:

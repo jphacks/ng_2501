@@ -140,6 +140,7 @@ async def register_rag_video(
             return JSONResponse(
                 status_code=200,
                 content={
+                    "ok": True,
                     "message": "RAG video registration successful.",
                 },
             )

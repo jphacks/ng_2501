@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { VideoResult } from '@/app/datas/Video'
+import { Header } from '../common/Header'
 import { VideoPlayer } from './VideoPlayer'
 import { useDB } from '@/app/hooks/useDB'
 
@@ -19,6 +20,7 @@ interface ResultProps {
 export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
     const [showEditPanel, setShowEditPanel] = useState(false)
     const [editPrompt, setEditPrompt] = useState('')
+    const [isLiked, setIsLiked] = useState(false)
     const { sendVideoId } = useDB()
 
     const handleEdit = async () => {
@@ -26,6 +28,12 @@ export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
         await onEdit(result.videoId, editPrompt)
         setEditPrompt('')
         setShowEditPanel(false)
+    }
+
+    const handleLike = () => {
+        if (isLiked) return
+        sendVideoId(result.videoId)
+        setIsLiked(true)
     }
 
     const handleDownload = () => {
@@ -40,27 +48,7 @@ export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
     return (
         <div className="flex flex-col h-full">
             {/* ヘッダー */}
-            <div className="flex items-center mb-3 pb-3 border-b border-[#0A3B7E]/20">
-                {onReset && (
-                    <button
-                        type="button"
-                        onClick={onReset}
-                        className="flex items-center gap-1 px-3 py-1.5 text-sm text-[#030405]/70 hover:text-[#030405] hover:bg-[#0A3B7E]/5 rounded transition-colors"
-                    >
-                        <div className="hidden min-[426px]:block">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <title>戻る</title>
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                            </svg>
-                        </div>
-                        戻る
-                    </button>
-                )}
-                <div className="flex-1 text-center">
-                    <span className="text-md text-[#030405]/50">ー 動画結果 ー</span>
-                </div>
-                <h3 className="text-lg font-bold text-[#030405]">SUDO</h3>
-            </div>
+            <Header statusText="動画結果" showBackButton={!!onReset} onBack={onReset} />
 
             {/* メインコンテンツ: 2カラムレイアウト */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:flex-1 min-h-0 min-w-0">
@@ -79,8 +67,9 @@ export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
                         </button>
                         <button
                             type="button"
-                            onClick={() => sendVideoId(result.videoId)}
-                            className="w-full py-2 px-4 bg-[#3A947C] hover:bg-[#3A947C]/90 text-white text-sm rounded"
+                            onClick={handleLike}
+                            disabled={isLiked}
+                            className="w-full py-2 px-4 bg-[#3A947C] hover:bg-[#3A947C]/90 text-white text-sm rounded transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                         >
                             いいね！
                         </button>

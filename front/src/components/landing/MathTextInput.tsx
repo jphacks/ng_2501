@@ -10,6 +10,7 @@ import { MathExpression, getMathExpressionAtPosition, replaceMathExpression } fr
 import { ErrorProvider } from '@/app/contexts/ErrorContext'
 import { generateMathNoteFromTitle } from '@/app/hooks/useGeminiAPI'
 import { GeminiError } from '@/app/datas/GeminiConfig'
+import { Header } from '../common/Header'
 
 interface MathTextInputProps {
     onSubmit: (text: string, videoPrompt?: string) => Promise<void>
@@ -540,25 +541,23 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                 )}
 
                 {/* ヘッダー */}
-                <div className="flex items-center mb-3 pb-3 border-b border-[#0A3B7E]/20">
-                    {/* モバイル版: 追加項目設定切替ボタン */}
-                    <button
-                        type="button"
-                        onClick={() => setIsOptionalSettingsOpen(!isOptionalSettingsOpen)}
-                        className="lg:hidden px-3 py-1.5 text-xs font-medium bg-[#0A3B7E]/5 text-[#0A3B7E] border border-[#0A3B7E]/30 rounded hover:bg-[#0A3B7E]/10 transition-colors flex items-center gap-1.5"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <title>追加項目設定</title>
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <span>{isOptionalSettingsOpen ? '閉じる' : '追加項目'}</span>
-                    </button>
-                    <div className="flex-1 text-center">
-                        <span className="text-md text-[#030405]/50">ー 数学テキスト入力 ー</span>
-                    </div>
-                    <h3 className="text-lg font-bold text-[#030405]">SUDO</h3>
-                </div>
+                <Header
+                    statusText="数学テキスト入力"
+                    leftContent={
+                        <button
+                            type="button"
+                            onClick={() => setIsOptionalSettingsOpen(!isOptionalSettingsOpen)}
+                            className="lg:hidden px-3 py-1.5 text-xs font-medium bg-[#0A3B7E]/5 text-[#0A3B7E] border border-[#0A3B7E]/30 rounded hover:bg-[#0A3B7E]/10 transition-colors flex items-center gap-1.5"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <title>追加項目設定</title>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span>{isOptionalSettingsOpen ? '閉じる' : '追加項目'}</span>
+                        </button>
+                    }
+                />
 
                 {/* メイン */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0 min-w-0">

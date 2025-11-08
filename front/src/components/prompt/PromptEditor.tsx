@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { VideoGenerationPrompt, VideoResult } from '../../app/datas/Video'
+import { Header } from '../common/Header'
 
 interface PromptEditorProps {
     prompt: VideoGenerationPrompt
@@ -27,27 +28,7 @@ export function PromptEditor({ prompt, isGenerating, onGenerate, onReset }: Prom
     return (
         <div className="flex flex-col h-full min-w-0 w-full">
             {/* ヘッダー */}
-            <div className="flex items-center mb-2 pb-2 border-b border-[#0A3B7E]/20">
-                {onReset && (
-                    <button
-                        type="button"
-                        onClick={onReset}
-                        className="flex items-center gap-1 px-3 py-1.5 text-sm text-[#030405]/70 hover:text-[#030405] hover:bg-[#0A3B7E]/5 rounded transition-colors"
-                    >
-                        <div className="hidden min-[426px]:block">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <title>戻る</title>
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                            </svg>
-                        </div>
-                        戻る
-                    </button>
-                )}
-                <div className="flex-1 text-center">
-                    <span className="text-md text-[#030405]/50">ー プロンプト確認・編集 ー</span>
-                </div>
-                <h3 className="text-lg font-bold text-[#030405]">SUDO</h3>
-            </div>
+            <Header statusText="プロンプト確認・編集" showBackButton={!!onReset} onBack={onReset} />
 
             {/* メインコンテンツ: 2カラムレイアウト（右は常に固定幅） */}
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-3 flex-1 min-h-0 min-w-0 w-full">

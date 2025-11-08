@@ -27,7 +27,7 @@ export function Generating() {
                 
                 {/* コンテンツ */}
                 <div className="relative z-10">
-                    <div className="flex justify-center mb-4 relative">
+                    <div className="flex justify-center relative">
                         {/* 白い光源（多層構造で強調） */}
                         <div className="absolute inset-0 flex items-center justify-center">
                             {/* 外側の大きな光 */}
@@ -41,7 +41,7 @@ export function Generating() {
                         <img 
                             src="/sudo-generating.gif" 
                             alt="生成中" 
-                            className="w-48 h-48 object-contain drop-shadow-2xl relative z-10"
+                            className="w-56 h-56 md:w-64 md:h-64 object-contain drop-shadow-2xl relative z-10"
                             style={{ filter: 'brightness(1.3) saturate(1.4) contrast(1.1)' }}
                         />
                     </div>

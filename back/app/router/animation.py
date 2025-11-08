@@ -1,31 +1,27 @@
-
-
 from pathlib import Path
 
 import os
 from dotenv import load_dotenv
 from fastapi import APIRouter, HTTPException ,Depends
 from fastapi.responses import FileResponse, JSONResponse 
-from pydantic import BaseModel 
+from pydantic import BaseModel
 from typing import Optional
-
 
 # from app.service.graph_agent import ManimGraphAnimationService
 # from back.app.service.agent import ManimRegacyAgentService
 from back.app.service.fast_ai_agent import ManimFastAnimationService
 from back.app.service.base_agent import SuccessResponse , PlanResponse
 from back.app.model.model import VideoDatabase, get_video_db
-# from back.app.service.search_existing_code import SearchExistingCodeService
+from back.app.service.template_service import TemplateService
 
 load_dotenv()
 
 router = APIRouter(tags=["animation"])
 
 
-
-
 script_path = Path(os.getenv("MANIM_SCRIPTS_PATH"))
 video_path = Path(os.getenv("VIDEO_OUTPUT_PATH")) 
+
 
 # ---------- Pydantic Models ----------
 class ConceptInput(BaseModel):
@@ -45,33 +41,14 @@ class EditPrompt(BaseModel):
     prior_video_id: str
     enhance_prompt: str
 
-class SearchRequest(BaseModel):
-    content : str 
-
-
-
-
-class AddTemplateRequest(BaseModel):
-    """
-    テンプレートリストに新しいコードを追加するリクエスト。
-
-    Attributes
-    ----------
-    theme:
-        追加するテンプレートの説明・テーマ概要。
-    code:
-        登録する Manim コード本体。
-    """
-
-    theme: str
-    code: str
-
+class SearchPrompt(BaseModel):
+    content: str
+    
 
 # ---------- Service ----------
 # service = ManimGraphAnimationService()
 service = ManimFastAnimationService()
-# search_service = SearchExistingCodeService()
-
+template_service = TemplateService()
 
 
 @router.post("/api/plan_animation", response_model=PlanResponse, summary="動画生成の計画立案")
@@ -134,38 +111,74 @@ async def get_animation(
 
     return JSONResponse(status_code=404, content={"message": "Video not found"})
 
+
 @router.post("/api/register_rag/{video_id}", summary="RAG用動画登録API")
 async def register_rag_video(
     video_id: str,
     db: VideoDatabase = Depends(get_video_db)
     ):
     """
-    RAG用に動画を登録する。
+    テンプレート動画を探すRAG用に動画を登録する
+    1. manim_codeの内容をgemini2.5-flash-liteで要約する
+    2. 要約した内容を埋め込みベクトル化する
+    3. 埋め込みベクトル化した内容を、video_idと要約内容とともにRAGに登録する
     """
     try:
-        # scriptを取得する
-        with open(script_path / video_id / f"{video_id}.py", "r") as f:
-            manim_code = f.read()
-        
-        # TODO ここにRAGに登録する add_rag関数を実装する
-        
-        
-        return JSONResponse(status_code=200, content={"message": f"Video {video_id} registered for RAG."})
+        # script_file = script_path / video_id / f"{video_id}.py"
+        script_file = script_path / f"{video_id}.py"
+
+        if not script_file.is_file():
+            raise HTTPException(status_code=404, detail=f"Script for video_id {video_id} not found.")
+
+        manim_code = script_file.read_text(encoding="utf-8").strip()
+        if not manim_code:
+            raise HTTPException(status_code=400, detail="manim_code is empty. Cannot register to RAG.")
+
+        is_success = template_service.add(video_id=video_id, manim_code=manim_code)
+
+        if is_success:
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "message": "RAG video registration successful.",
+                },
+            )
+        else:
+            raise HTTPException(status_code=500, detail="RAG video registration failed.")
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"RAG video registration failed: {str(e)}")
 
-@router.post("/api/serch_animation")
+
+@router.post("/api/search_animation", summary="RAG用動画検索API")
 async def search_animation(
-    SearchRequest:str
+    search_prompt: SearchPrompt
 ):
-    # TODO serch_rag関数を実装する video_idとcontentを返す
-    
-    
-    # 仮のレスポンス
-    
-    video_id = ["sample_video_id","another_video_id"]
-    content = " Sample content related to the video."
-    # ここは実際に返却されたら作ります
+    """
+    content(ユーザーが入力した検索内容)と類似度が高いvideo_idと説明文をリスト形式で返す
+    例:
+    results = [
+        {"video_id": "video1", "content": "content1"},
+        {"video_id": "video2", "content": "content2"},
+    ]
+    """
+    search_content = search_prompt.content.strip()
+    if not search_content:
+        raise HTTPException(status_code=400, detail="content must not be empty.")
+
+    try:
+        results = template_service.search(
+            query=search_content,
+            max_gets=10,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    return JSONResponse(
+        status_code=200,
+        content={"results": results},
+    )
 
 
 @router.post("/api/animation")
@@ -217,61 +230,3 @@ async def edit_video(
     except Exception as e:
         # サービス内例外は 500 で返却
         raise HTTPException(status_code=500, detail=str(e))
-
-
-# @router.post("/api/animation/search")
-# async def search_existing_animation(request: SearchRequest):
-#     """
-#     既存のテンプレートから類似するテーマを検索して返す。
-#     類似度が threshold 以上のテーマ概要を最大 max_gets 件返却する。
-#     """
-#     try:
-#         results = search_service.search(
-#             contents=request.query,
-#             thres=request.threshold,
-#             max_get=request.max_gets,
-#         )
-#         themes = [
-#             {
-#                 "similar": round(score, 4),
-#                 "theme": theme,
-#             }
-#             for theme, score in results
-#         ]
-#         return {"results": themes}
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-    
-
-# @router.delete("/api/animation/search")
-# async def delete_latest_template():
-#     """
-#     テンプレートリストから最新のエントリを削除する。
-#     """
-#     try:
-#         entry = search_service.delete_latest()
-#         return {
-#             "template_id": entry.template_id,
-#             "theme": entry.theme,
-#         }
-#     except ValueError as e:
-#         raise HTTPException(status_code=404, detail=str(e))
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-
-# @router.post("/api/animation/search/add")
-# async def add_animation_template(request: AddTemplateRequest):
-#     """
-#     テンプレートリストに新しいテーマとコードを追加し、埋め込みを更新する。
-#     """
-#     try:
-#         entry = search_service.add(
-#             contents=request.theme,
-#             code=request.code,
-#         )
-#         return {
-#             "template_id": entry.template_id,
-#             "theme": entry.theme,
-#         }
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))

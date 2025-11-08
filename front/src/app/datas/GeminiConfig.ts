@@ -50,22 +50,11 @@ export const buildMathContinuationPrompt = (latex: string): string => {
 
 // プロンプト生成: タイトルから数学ノート生成
 export const buildCompletionPrompt = (title: string): string => {
-    const hasJapanese = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]/.test(title);
-    const targetLanguage = hasJapanese ? 'Japanese' : 'English';
-
-    return [
-        `You are preparing structured math-learning content titled "${title}".`,
-        `Respond in ${targetLanguage}.`,
-        'Produce concise markdown with exactly 3 sections.',
-        'Each section must:',
-        '1. Start with a level-2 heading (##).',
-        '2. Reuse and analyze a single primary LaTeX equation; show the full equation once and refer to its components or rearrangements rather than introducing unrelated formulas.',
-        'Ensure each section includes at least one LaTeX expression derived from that primary equation (inline $...$ or block $$...$$).',
-        '3. Focus purely on mathematical definitions, symbolic manipulation, and planar (2D) interpretations that can be readily visualized; avoid 3D topics.',
-        'Keep prose minimal—prioritize the equation, its derivation, term-by-term explanations, and a short worked numeric example when possible.',
-        'End the final section with a bullet list titled "Tips" that briefly notes at least one real-world or computational use case of the equation.',
-        'Limit the entire response to roughly 1,000 characters; stay concise while fulfilling the requirements.',
-        'Do not modify or restate the provided title, and avoid adding placeholder text or unrelated English filler.',
-    ].join('\n');
+  return [
+    '高校数学のテーマから説明するためのアニメーションを考えてください。',
+    `理解を助ける具体的手順を120〜150字の一文で書いてください。`,
+    '高校数学の用語を使って、解説をしてください。',
+    '出力は一文のみ・前置きや箇条書き禁止・必ず「〜してください」で終えてください。',
+    `テーマ: ${title}`,
+  ].join('\n');
 };
-

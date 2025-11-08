@@ -41,9 +41,7 @@ export const predictMathContinuation = async (
             },
         ],
         generationConfig: {
-            temperature: 0.3,
-            topP: 0.95,
-            topK: 40,
+            temperature: 0.2,
             maxOutputTokens: AUTOCOMPLETE_MAX_OUTPUT_TOKENS,
         },
     };
@@ -130,9 +128,7 @@ export const generateMathNoteFromTitle = async (
             },
         ],
         generationConfig: {
-            temperature: 0.7,
-            topP: 0.9,
-            topK: 40,
+            temperature: 0.0,
             maxOutputTokens: COMPLETION_MAX_OUTPUT_TOKENS,
         },
     };

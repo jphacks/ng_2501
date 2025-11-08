@@ -19,6 +19,8 @@ services:
     build:
       context: .
       dockerfile: front/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: https://ani-math.jp
     container_name: ai_agent_prod_frontend
     restart: unless-stopped
     environment:

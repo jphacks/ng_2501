@@ -8,3 +8,5 @@ tmp/
 media/
 .ruff_chache
 prompts/
+*.log
+template_chroma_db/

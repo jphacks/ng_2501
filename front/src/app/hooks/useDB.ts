@@ -31,6 +31,11 @@ interface SuccessResponse {
   manim_code_path?: string;
   video_id?: string; // Changed to string to match backend UUID
 }
+type SendResponse = {
+    ok: boolean;
+    message?: string;
+}
+
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL+'api' ;
 
@@ -113,10 +118,31 @@ export const useDB = () => {
     }
   }, []);
 
+  const sendVideoId = useCallback(async (videoId: string): Promise<SendResponse> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/register_rag/${videoId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      const data = (await response.json()) as SendResponse
+
+      if (!response.ok) {
+        throw new Error(data?.message ?? '動画ID送信リクエストに失敗しました')
+      }
+      if (!data?.ok) {
+        throw new Error(data?.message ?? '動画ID送信に失敗しました')
+      }
+      return data
+    } catch (error) {
+      handleError(error)
+      throw error
+    }
+  }, []);
 
   return {
     planAnimation,
     generateAnimation,
     editAnimation,
+    sendVideoId,
   };
 };

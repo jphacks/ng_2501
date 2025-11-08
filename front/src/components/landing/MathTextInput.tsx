@@ -10,6 +10,7 @@ import { MathExpression, getMathExpressionAtPosition, replaceMathExpression } fr
 import { ErrorProvider } from '@/app/contexts/ErrorContext'
 import { generateMathNoteFromTitle } from '@/app/hooks/useGeminiAPI'
 import { GeminiError } from '@/app/datas/GeminiConfig'
+import { Header } from '../common/Header'
 
 interface MathTextInputProps {
     onSubmit: (text: string, videoPrompt?: string) => Promise<void>
@@ -45,24 +46,24 @@ const findScrollableContainer = (element: HTMLElement | null): HTMLElement | nul
  */
 function PreviewPanel({ text, className = '' }: { text: string; className?: string }) {
     return (
-        <div className={`w-full p-4 border border-gray-300 rounded-lg overflow-y-auto bg-white prose prose-sm max-w-none ${className}`}>
+        <div className={`w-full p-4 border border-[#0A3B7E]/20 rounded-lg overflow-y-auto bg-[#0A3B7E]/5 prose prose-sm max-w-none ${className}`}>
             {text.trim() ? (
                 <ReactMarkdown
                     remarkPlugins={[remarkMath, remarkGfm]}
                     rehypePlugins={[rehypeKatex]}
                     components={{
-                        h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mb-4 text-gray-900" {...props} />,
-                        h2: ({ node, ...props }) => <h2 className="text-xl font-bold mb-3 text-gray-900" {...props} />,
-                        h3: ({ node, ...props }) => <h3 className="text-lg font-bold mb-2 text-gray-900" {...props} />,
-                        p: ({ node, ...props }) => <p className="mb-3 text-gray-700 leading-relaxed" {...props} />,
-                        ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-3 text-gray-700" {...props} />,
-                        ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-3 text-gray-700" {...props} />,
+                        h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mb-4 text-[#030405]" {...props} />,
+                        h2: ({ node, ...props }) => <h2 className="text-xl font-bold mb-3 text-[#030405]" {...props} />,
+                        h3: ({ node, ...props }) => <h3 className="text-lg font-bold mb-2 text-[#030405]" {...props} />,
+                        p: ({ node, ...props }) => <p className="mb-3 text-[#030405]/70 leading-relaxed" {...props} />,
+                        ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-3 text-[#030405]/70" {...props} />,
+                        ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-3 text-[#030405]/70" {...props} />,
                         code: ({ node, className, ...props }) => {
                             const isInline = !className || !className.startsWith('language-')
                             return isInline ? (
-                                <code className="px-1 py-0.5 bg-gray-100 text-pink-600 rounded text-sm font-mono" {...props} />
+                                <code className="px-1 py-0.5 bg-[#0A3B7E]/10 text-[#CE632C] rounded text-sm font-mono" {...props} />
                             ) : (
-                                <code className="block p-3 bg-gray-100 rounded text-sm font-mono overflow-x-auto" {...props} />
+                                <code className="block p-3 bg-[#0A3B7E]/10 rounded text-sm font-mono overflow-x-auto" {...props} />
                             )
                         },
                     }}
@@ -70,7 +71,7 @@ function PreviewPanel({ text, className = '' }: { text: string; className?: stri
                     {text}
                 </ReactMarkdown>
             ) : (
-                <p className="text-gray-400 italic">プレビューするテキストを入力してください</p>
+                <p className="text-[#030405]/30 italic">プレビューするテキストを入力してください</p>
             )}
         </div>
     )
@@ -402,58 +403,28 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
         }, 100)
     }
 
-    const placeholderText = `# 二次方程式の解の公式
-
-二次方程式 $ax^2 + bx + c = 0$ の解は、次の公式で求められます：
-
-$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
-
-## 導出過程
-
-1. 両辺を $a$ で割る
-2. 平方完成を行う
-3. 両辺の平方根をとる
-
-判別式 $D = b^2 - 4ac$ の値によって、解の個数が決まります。`
+    const placeholderText = `2つのベクトルAとBを2次元平面に表示してください。
+Aを固定し、Bの向きをゆっくり回転させてください。
+    
+そのとき、Aに対するBの射影（BをA方向に落とした影）を描き、
+この影の長さが内積の大きさに対応することを示してください。
+        
+BがAとほぼ同じ方向のときは影が長く、90°に近いときはほぼ0になり、逆向きのときは負になることを、色と数値で示してください。
+右パネルには 'A・B = |A||B|cosθ' の現在値を表示してください。`
 
     const loadSampleText = () => {
         if (text.trim() && !window.confirm('現在の入力内容が削除されます。サンプルを読み込みますか？')) {
             return
         }
 
-        const sample = `# 三角関数の"動き"を単位円で体感しよう
-## 1. 単位円で三角関数スタート！
-
-まず半径1（原点中心）の円＝**単位円**を用意しよう。  
-
-- x軸の正の方向（右向き）を0°、そこから反時計回りに角度 $\\theta$ をとる。
-- このとき単位円上の点 $P$ の座標は
-
-$$P(\\cos\\theta,\\,\\sin\\theta)$$
-
-  - 横：$\\cos\\theta$
-  - 縦：$\\sin\\theta$
-
-**POINT:** どの $\\theta$ でも $\\cos^2\\theta+\\sin^2\\theta=1$。  
-これは**三角関数の基本式**だね！
-
----
-
-## 2. "角度を90°（$\\frac{\\pi}{2}$）ずらす"ってどういうこと？
-
-次に、点 $P$ を角度90°、つまり $\\frac{\\pi}{2}$ 進めてみよう。
-
-- 回転後の座標
-
-$$Q\\left(\\cos\\left(\\theta+\\frac{\\pi}{2}\\right),\\,\\sin\\left(\\theta+\\frac{\\pi}{2}\\right)\\right)$$
-
-- 実は、これは
-
-$$Q(-\\sin\\theta,\\,\\cos\\theta)$$
-
-となる！
-
-**POINT:** "$\\cos\\theta$"の成分が"$-\\sin\\theta$"に、"$\\sin\\theta$"が"$\\cos\\theta$"に。それぞれ"入れ替わり、横はマイナス"されてるね。`
+        const sample = `2つのベクトルAとBを2次元平面に表示してください。
+Aを固定し、Bの向きをゆっくり回転させてください。
+    
+そのとき、Aに対するBの射影（BをA方向に落とした影）を描き、
+この影の長さが内積の大きさに対応することを示してください。
+        
+BがAとほぼ同じ方向のときは影が長く、90°に近いときはほぼ0になり、逆向きのときは負になることを、色と数値で示してください。
+右パネルには 'A・B = |A||B|cosθ' の現在値を表示してください。`
 
         setText(sample)
         setCursorPosition(sample.length)
@@ -500,23 +471,23 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                 {/* 数式エディタポップアップ */}
                 {showInlinePopup && showMathEditor && popupPosition && (
                     <div
-                        className="fixed z-50 bg-white border border-gray-300 rounded shadow-xl w-[500px]"
+                        className="fixed z-50 bg-white border border-[#0A3B7E]/30 rounded shadow-xl w-[500px]"
                         style={{ top: `${popupPosition.top}px`, left: `${popupPosition.left}px` }}
                     >
                         {/* ヘッダー */}
-                        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50">
-                            <h3 className="text-sm font-semibold text-gray-800">数式を入力</h3>
-                            <button
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-[#0A3B7E]/20 bg-[#0A3B7E]/5">
+                            <h3 className="text-sm font-semibold text-[#030405]">数式を入力</h3>
+                            {/* <button
                                 type="button"
                                 onClick={handleMathCancel}
-                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                                className="text-[#030405]/30 hover:text-[#030405]/50 transition-colors"
                                 title="閉じる（Esc）"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <title>閉じる</title>
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                 </svg>
-                            </button>
+                            </button> */}
                         </div>
 
                         {/* コンテンツ */}
@@ -529,10 +500,10 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                 isVisible={true}
                             />
 
-                            <div className="mt-4 pt-4 border-t border-gray-200">
-                                <p className="text-xs text-gray-500">
-                                    <kbd className="px-2 py-1 bg-gray-100 border border-gray-300 rounded text-xs font-mono">Enter</kbd> 確定 /
-                                    <kbd className="px-2 py-1 bg-gray-100 border border-gray-300 rounded text-xs font-mono ml-2">Esc</kbd> キャンセル
+                            <div className="mt-4 pt-4 border-t border-[#0A3B7E]/20">
+                                <p className="text-xs text-[#0A3B7E]/70">
+                                    <kbd className="px-2 py-1 bg-[#0A3B7E]/5 border border-[#0A3B7E]/30 rounded text-xs font-mono">Enter</kbd> 確定 /
+                                    <kbd className="px-2 py-1 bg-[#0A3B7E]/5 border border-[#0A3B7E]/30 rounded text-xs font-mono ml-2">Esc</kbd> キャンセル
                                 </p>
                             </div>
                         </div>
@@ -540,30 +511,31 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                 )}
 
                 {/* ヘッダー */}
-                <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-200">
-                    <h3 className="text-lg font-bold text-gray-800">SUDO<span className="text-xs text-gray-500 ml-5">ー 数学テキスト入力</span></h3>
-                    {/* モバイル版: 追加項目設定切替ボタン */}
-                    <button
-                        type="button"
-                        onClick={() => setIsOptionalSettingsOpen(!isOptionalSettingsOpen)}
-                        className="lg:hidden px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-700 border border-gray-300 rounded hover:bg-gray-200 transition-colors flex items-center gap-1.5"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <title>追加項目設定</title>
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <span>{isOptionalSettingsOpen ? '閉じる' : '追加項目'}</span>
-                    </button>
-                </div>
+                <Header
+                    statusText="数学テキスト入力"
+                    leftContent={
+                        <button
+                            type="button"
+                            onClick={() => setIsOptionalSettingsOpen(!isOptionalSettingsOpen)}
+                            className="lg:hidden px-3 py-1.5 text-xs font-medium bg-[#0A3B7E]/5 text-[#0A3B7E] border border-[#0A3B7E]/30 rounded hover:bg-[#0A3B7E]/10 transition-colors flex items-center gap-1.5"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <title>追加項目設定</title>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span>{isOptionalSettingsOpen ? '閉じる' : '追加項目'}</span>
+                        </button>
+                    }
+                />
 
                 {/* メイン */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0 min-w-0">
                     {/* モバイル版: 追加項目設定表示エリア */}
                     <div className={`lg:hidden ${isOptionalSettingsOpen ? 'flex' : 'hidden'} flex-col overflow-y-auto space-y-4 pb-4 lg:col-span-1`}>
-                        <div className="bg-gray-50 border border-gray-200 rounded p-4">
-                            <h5 className="text-sm font-medium text-gray-800 mb-3 flex items-center gap-2">
-                                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="bg-[#0A3B7E]/5 border border-[#0A3B7E]/20 rounded p-4">
+                            <h5 className="text-sm font-medium text-[#030405] mb-3 flex items-center gap-2">
+                                <svg className="w-5 h-5 text-[#0A3B7E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <title>AI</title>
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                 </svg>
@@ -574,26 +546,26 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                     type="text"
                                     value={titleInput}
                                     onChange={(e) => setTitleInput(e.target.value)}
-                                    placeholder="例: 積分の方法、微分の公式"
-                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="例: ベクトルの合成、積分の公式"
+                                    className="w-full px-3 py-2 text-sm border border-[#0A3B7E]/20 rounded focus:ring-2 focus:ring-[#0A3B7E] focus:border-transparent"
                                     disabled={isGeneratingContent || isGenerating}
                                 />
                                 <button
                                     type="button"
                                     onClick={handleGenerateFromTitle}
                                     disabled={!titleInput.trim() || isGeneratingContent || isGenerating}
-                                    className="w-full px-4 py-2 text-sm font-medium text-white bg-gray-700 rounded hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                                    className="w-full px-4 py-2 text-sm font-medium text-white bg-[#0A3B7E] rounded hover:bg-[#0A3B7E]/90 disabled:bg-[#030405]/30 disabled:cursor-not-allowed transition-colors"
                                 >
                                     {isGeneratingContent ? '生成中...' : '生成'}
                                 </button>
                             </div>
-                            {generationError && <p className="mt-2 text-xs text-red-600">{generationError}</p>}
-                            <p className="mt-2 text-xs text-gray-600">トピックのタイトルを入力すると、Markdown + LaTeX形式の解説を生成します</p>
+                            {generationError && <p className="mt-2 text-xs text-[#CE632C]">{generationError}</p>}
+                            <p className="mt-2 text-xs text-[#0A3B7E]/70">トピックのタイトルを入力すると、Markdown + LaTeX形式の解説を生成します</p>
                         </div>
 
-                        <div className="bg-gray-50 border border-gray-200 rounded p-4">
-                            <h5 className="text-sm font-medium text-gray-800 mb-3 flex items-center gap-2">
-                                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="bg-[#0A3B7E]/5 border border-[#0A3B7E]/20 rounded p-4">
+                            <h5 className="text-sm font-medium text-[#030405] mb-3 flex items-center gap-2">
+                                <svg className="w-5 h-5 text-[#0A3B7E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <title>動画</title>
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                 </svg>
@@ -604,22 +576,22 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                 value={videoPrompt}
                                 onChange={(e) => setVideoPrompt(e.target.value)}
                                 placeholder="例: 積分記号を赤色で強調、文字サイズを大きく"
-                                className="w-full p-3 text-sm border border-gray-300 rounded h-32 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                className="w-full p-3 text-sm border border-[#0A3B7E]/20 rounded h-32 focus:ring-2 focus:ring-[#0A3B7E] focus:border-transparent resize-none"
                                 disabled={isGenerating}
                             />
-                            <p className="mt-2 text-xs text-gray-500">動画の見た目や演出について具体的に指示できます</p>
+                            <p className="mt-2 text-xs text-[#0A3B7E]/70">動画の見た目や演出について具体的に指示できます</p>
                         </div>
                     </div>
                     <div className={`lg:col-span-2 flex-col space-y-3 min-h-0 min-w-0 ${isOptionalSettingsOpen ? 'hidden lg:flex' : 'flex'}`}>
                         {/* 表示モード切り替え */}
-                        <div className="flex gap-1 sm:bg-gray-100 p-1 rounded">
+                        <div className="flex gap-1 sm:bg-[#0A3B7E]/5 p-1 rounded">
                             {/* Desktop: 3 buttons */}
                             <button
                                 type="button"
                                 onClick={() => setViewMode('edit')}
                                 disabled={isGenerating}
                                 className={`hidden sm:flex px-3 py-2 text-xs font-medium rounded transition-all items-center gap-1.5 ${
-                                    viewMode === 'edit' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                                    viewMode === 'edit' ? 'bg-[#0A3B7E]/5 text-[#0A3B7E] shadow-sm' : 'text-[#030405]/60 hover:text-[#030405]'
                                 } disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -641,7 +613,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                 onClick={() => setViewMode('split')}
                                 disabled={isGenerating || !text.trim()}
                                 className={`hidden sm:flex px-3 py-2 text-xs font-medium rounded transition-all items-center gap-1.5 ${
-                                    viewMode === 'split' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                                    viewMode === 'split' ? 'bg-[#0A3B7E]/5 text-[#0A3B7E] shadow-sm' : 'text-[#030405]/60 hover:text-[#030405]'
                                 } disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -663,7 +635,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                 onClick={() => setViewMode('preview')}
                                 disabled={isGenerating || !text.trim()}
                                 className={`hidden sm:flex px-3 py-2 text-xs font-medium rounded transition-all items-center gap-1.5 ${
-                                    viewMode === 'preview' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                                    viewMode === 'preview' ? 'bg-[#0A3B7E]/5 text-[#0A3B7E] shadow-sm' : 'text-[#030405]/60 hover:text-[#030405]'
                                 } disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -691,7 +663,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                 type="button"
                                 onClick={() => setViewMode(viewMode === 'edit' ? 'preview' : 'edit')}
                                 disabled={isGenerating || (viewMode === 'edit' && !text.trim())}
-                                className="flex sm:hidden flex-1 min-w-0 px-2 py-2 text-xs font-medium bg-white text-gray-700 border border-gray-300 rounded hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors items-center justify-center gap-1"
+                                className="flex sm:hidden flex-1 min-w-0 px-2 py-2 text-xs font-medium bg-[#0A3B7E]/5 text-[#030405] border border-[#0A3B7E]/20 rounded hover:bg-[#0A3B7E]/10 hover:border-[#0A3B7E]/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors items-center justify-center gap-1"
                             >
                                 {viewMode === 'edit' ? (
                                     <>
@@ -727,7 +699,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                 type="button"
                                 onClick={loadSampleText}
                                 disabled={isGenerating}
-                                className="flex-1 min-w-0 px-2 py-2 text-xs font-medium bg-white text-gray-700 border border-gray-300 rounded hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1"
+                                className="flex-1 min-w-0 px-2 py-2 text-xs font-medium bg-[#0A3B7E]/5 text-[#030405] border border-[#0A3B7E]/20 rounded hover:bg-[#0A3B7E]/10 hover:border-[#0A3B7E]/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1"
                             >
                                 <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <title>サンプル</title>
@@ -739,7 +711,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                 type="button"
                                 onClick={handleMathEditorOpen}
                                 disabled={isGenerating || viewMode === 'preview'}
-                                className="flex-1 min-w-0 px-2 py-2 text-xs font-medium bg-white text-gray-700 border border-gray-300 rounded hover:bg-gray-50 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1"
+                                className="flex-1 min-w-0 px-2 py-2 text-xs font-medium bg-[#0A3B7E]/5 text-[#030405] border border-[#0A3B7E]/20 rounded hover:bg-[#0A3B7E]/10 hover:border-[#0A3B7E]/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1"
                                 title={viewMode === 'preview' ? 'プレビューモードでは使用できません' : '数式を挿入'}
                             >
                                 <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -761,7 +733,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                     onClick={handleTextAreaClick}
                                     onKeyDown={handleTextAreaKeyDown}
                                     placeholder={placeholderText}
-                                    className="w-full h-full p-4 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm resize-none"
+                                    className="w-full h-full p-4 border border-[#0A3B7E]/20 rounded focus:ring-2 focus:ring-[#0A3B7E] focus:border-transparent font-mono text-sm resize-none"
                                     disabled={isGenerating}
                                 />
                             )}
@@ -779,7 +751,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                             onClick={handleTextAreaClick}
                                             onKeyDown={handleTextAreaKeyDown}
                                             placeholder={placeholderText}
-                                            className="w-full h-full p-4 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm resize-none"
+                                            className="w-full h-full p-4 border border-[#0A3B7E]/20 rounded focus:ring-2 focus:ring-[#0A3B7E] focus:border-transparent font-mono text-sm resize-none"
                                             disabled={isGenerating}
                                         />
                                     </div>
@@ -790,7 +762,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                             )}
                         </div>
 
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-[#0A3B7E]/70">
                             {viewMode === 'split' ? (
                                 <>左側で編集すると右側にリアルタイムでプレビューが表示されます</>
                             ) : viewMode === 'preview' ? (
@@ -806,9 +778,9 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                         <div className="overflow-y-auto flex-1 min-h-0 pr-2">
                             <div className="flex flex-col gap-4 lg:block lg:space-y-3">
                                 {/* デスクトップ版: 通常表示 */}
-                                <div className="hidden lg:block order-1 bg-gray-50 border border-gray-200 rounded p-3">
-                                    <h5 className="text-sm font-medium text-gray-800 mb-2 flex items-center gap-2">
-                                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div className="hidden lg:block order-1 bg-[#0A3B7E]/5 border border-[#0A3B7E]/20 rounded p-3">
+                                    <h5 className="text-sm font-medium text-[#030405] mb-2 flex items-center gap-2">
+                                        <svg className="w-5 h-5 text-[#0A3B7E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <title>AI</title>
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                         </svg>
@@ -819,25 +791,25 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                             type="text"
                                             value={titleInput}
                                             onChange={(e) => setTitleInput(e.target.value)}
-                                            placeholder="例: 積分の方法、微分の公式"
-                                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="例: ベクトルの合成、積分の公式"
+                                            className="w-full px-3 py-2 text-sm border border-[#0A3B7E]/20 rounded focus:ring-2 focus:ring-[#0A3B7E] focus:border-transparent"
                                             disabled={isGeneratingContent || isGenerating}
                                         />
                                         <button
                                             type="button"
                                             onClick={handleGenerateFromTitle}
                                             disabled={!titleInput.trim() || isGeneratingContent || isGenerating}
-                                            className="w-full px-4 py-2 text-sm font-medium text-white bg-gray-700 rounded hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                                            className="w-full px-4 py-2 text-sm font-medium text-white bg-[#0A3B7E] rounded hover:bg-[#0A3B7E]/90 disabled:bg-[#030405]/30 disabled:cursor-not-allowed transition-colors"
                                         >
                                             {isGeneratingContent ? '生成中...' : '生成'}
                                         </button>
                                     </div>
-                                    {generationError && <p className="mt-2 text-xs text-red-600">{generationError}</p>}
-                                    <p className="mt-2 text-xs text-gray-600">トピックのタイトルを入力すると、Markdown + LaTeX形式の解説を生成します</p>
+                                    {generationError && <p className="mt-2 text-xs text-[#CE632C]">{generationError}</p>}
+                                    <p className="mt-2 text-xs text-[#0A3B7E]/70">トピックのタイトルを入力すると、Markdown + LaTeX形式の解説を生成します</p>
                                 </div>
-                                <div className="hidden lg:block order-2 bg-gray-50 border border-gray-200 rounded p-3">
-                                    <h5 className="text-sm font-medium text-gray-800 mb-2 flex items-center gap-2">
-                                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div className="hidden lg:block order-2 bg-[#0A3B7E]/5 border border-[#0A3B7E]/20 rounded p-3">
+                                    <h5 className="text-sm font-medium text-[#030405] mb-2 flex items-center gap-2">
+                                        <svg className="w-5 h-5 text-[#0A3B7E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <title>動画</title>
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                         </svg>
@@ -848,18 +820,18 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                         value={videoPrompt}
                                         onChange={(e) => setVideoPrompt(e.target.value)}
                                         placeholder="例: 積分記号を赤色で強調、文字サイズを大きく"
-                                        className="w-full p-3 text-sm border border-gray-300 rounded h-24 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                        className="w-full p-3 text-sm border border-[#0A3B7E]/20 rounded h-24 focus:ring-2 focus:ring-[#0A3B7E] focus:border-transparent resize-none"
                                         disabled={isGenerating}
                                     />
-                                    <p className="mt-1 text-xs text-gray-500">動画の見た目や演出について具体的に指示できます</p>
+                                    <p className="mt-1 text-xs text-[#0A3B7E]/70">動画の見た目や演出について具体的に指示できます</p>
                                 </div>
 
                                 {/* 動画生成ボタン */}
-                                <div className="order-1 lg:order-3 lg:pt-3 lg:border-t border-gray-200">
+                                <div className="order-1 lg:order-3 lg:pt-3 lg:border-t border-[#0A3B7E]/20">
                                     <button
                                         type="submit"
                                         disabled={!text.trim() || isGenerating}
-                                        className="w-full bg-green-600 text-white py-3 px-4 rounded text-base font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-sm flex items-center justify-center gap-2"
+                                        className="w-full bg-[#3A947C] text-white py-3 px-4 rounded text-base font-semibold hover:bg-[#3A947C]/90 disabled:bg-[#030405]/30 disabled:cursor-not-allowed transition-colors shadow-sm flex items-center justify-center gap-2"
                                     >
                                         {isGenerating ? (
                                             <>

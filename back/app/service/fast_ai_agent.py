@@ -55,19 +55,13 @@ class ManimFastAnimationService(BaseManimAgent):
         script_result = script_chain.invoke({"instructions": animation_plan})
 
         # LLMが出力するマークダウンを削除
-        script_result_cleaned = (
-            script_result.strip().replace("```python", "").replace("```", "").strip()
-        )
+        script_result_cleaned = script_result.strip().replace("```python", "").replace("```", "").strip()
 
         return script_result_cleaned
 
     def _generate_initial_script_edit(self, state: ManimGraphState):
-        self.base_logger.info(
-            "   [+] Edit mode detected. Applying targeted adjustments."
-        )
-        edit_prompt = PromptTemplate.from_template(
-            self.prompts["chain"]["fast_ai_edit_initial"]
-        )
+        self.base_logger.info("   [+] Edit mode detected. Applying targeted adjustments.")
+        edit_prompt = PromptTemplate.from_template(self.prompts["chain"]["fast_ai_edit_initial"])
         parser = StrOutputParser()
         chain = edit_prompt | self.pro_llm | parser
         llm_response = chain.invoke(
@@ -76,18 +70,17 @@ class ManimFastAnimationService(BaseManimAgent):
                 "original_script": state["current_script"],
             }
         )
-        updated_script = (
-            llm_response.strip().replace("```python", "").replace("```", "").strip()
+        self.base_logger.debug(f"llm_response: {llm_response}")
+
+        updated_script = self._process_edit_response(
+            original_script=state["current_script"],
+            llm_response=llm_response,
         )
-        if updated_script:
-            self.base_logger.debug(
-                f"   [+] Generated edited script (length: {len(updated_script)})"
-            )
+
+        if updated_script != state["current_script"]:
+            self.base_logger.debug(f"   [+] Applied edit diff (length: {len(updated_script)})")
         else:
-            self.base_logger.warning(
-                "   [-] Edit response empty. Keeping original script."
-            )
-            updated_script = state["current_script"]
+            self.base_logger.info("   [=] Edit diff produced no changes. Keeping original script.")
 
         return {
             "current_script": updated_script,
@@ -99,9 +92,7 @@ class ManimFastAnimationService(BaseManimAgent):
     def _generate_initial_script_generate(self, state: ManimGraphState):
         script = self.generate_script_with_prompt(state["animation_plan"])
 
-        self.base_logger.debug(
-            f"   [+] Initial script generated (length: {len(script)})"
-        )
+        self.base_logger.debug(f"   [+] Initial script generated (length: {len(script)})")
         return {
             "current_script": script,
             "current_retry": 0,
@@ -116,12 +107,28 @@ class ManimFastAnimationService(BaseManimAgent):
         else:
             return self._generate_initial_script_generate(state)
 
+    def _run_linter_check(self, state: ManimGraphState):
+        self.base_logger.info("--- 2. [Node] Running Manim Linter ---")
+        lint_result = self._check_code_lint(state["current_script"])
+        status = lint_result.get("status")
+        issue_count = lint_result.get("issue_count", len(lint_result.get("issues", [])))
+
+        if status == "pass":
+            self.base_logger.debug("   [+] Linter check passed with no warnings.")
+            return {"last_error": "", "error_type": ""}
+
+        self.base_logger.warning(f"   [-] Linter detected {issue_count} issue(s). Initiating refinement.")
+        for issue in lint_result.get("issues", []):
+            self.base_logger.debug(
+                f"      -> {issue.get('filename')}:{issue.get('lineno')} [{issue.get('code')}] {issue.get('message')}"
+            )
+        summary = lint_result.get("summary") or ""
+        return {"last_error": summary, "error_type": "lint"}
+
     def _check_bad_request(self, state: ManimGraphState):
-        self.base_logger.info("--- 2. [Node] Checking for Bad Request ---")
+        self.base_logger.info("--- 3. [Node] Checking for Bad Request ---")
         is_safe = self._check_code_security(state["current_script"])
-        self.base_logger.debug(
-            f"   [+] Code security check: {'Passed' if is_safe else 'Failed'}"
-        )
+        self.base_logger.debug(f"   [+] Code security check: {'Passed' if is_safe else 'Failed'}")
         if not is_safe:
             return {"is_bad_request": True}
         return {"is_bad_request": False}
@@ -140,9 +147,7 @@ class ManimFastAnimationService(BaseManimAgent):
                 "error_type": "runtime",
             }
         if execution_result == "FileNotFoundError":
-            self.base_logger.error(
-                f"   [-] {stage} failed: Manim executable not found."
-            )
+            self.base_logger.error(f"   [-] {stage} failed: Manim executable not found.")
             return {
                 "last_error": "Manim executable not found.",
                 "error_type": "runtime",
@@ -155,13 +160,13 @@ class ManimFastAnimationService(BaseManimAgent):
         }
 
     def _execute_and_handle_errors(self, state: ManimGraphState):
-        """[Node 3] スクリプトを実行し、エラーを処理する
+        """[Node 4] スクリプトを実行し、エラーを処理する
         解像度を落とした事前実行 -> 本実行の2段階での実行
         """
 
         script = state["current_script"]
         video_id = state["video_id"]
-        self.base_logger.info("--- 3. [Node] Preflight Execution Check ---")
+        self.base_logger.info("--- 4. [Node] Preflight Execution Check ---")
         preflight_result = self._handle_execution_result(
             self._execute_script_low_res(script, video_id),
             stage="Preflight execution",
@@ -169,7 +174,7 @@ class ManimFastAnimationService(BaseManimAgent):
         if preflight_result["error_type"]:
             return preflight_result
 
-        self.base_logger.info("--- 3. [Node] Executing Manim ---")
+        self.base_logger.info("--- 4. [Node] Executing Manim ---")
         runtime_result = self._handle_execution_result(
             self._execute_script(script, video_id),
             stage="Runtime execution",
@@ -177,14 +182,10 @@ class ManimFastAnimationService(BaseManimAgent):
         return runtime_result
 
     def _refine_script_on_error(self, state: ManimGraphState):
-        """[Node 4] エラーに基づきスクリプトを修正"""
-        self.base_logger.info(
-            f"--- 4. [Node] Refining Script (Attempt {state['current_retry'] + 1}) ---"
-        )
+        """[Node 5] エラーに基づきスクリプトを修正"""
+        self.base_logger.info(f"--- 5. [Node] Refining Script (Attempt {state['current_retry'] + 1}) ---")
 
-        repair_prompt = PromptTemplate.from_template(
-            self.prompts["chain"]["fast_ai_refine_patch"]
-        )
+        repair_prompt = PromptTemplate.from_template(self.prompts["chain"]["fast_ai_refine_patch"])
 
         parser = StrOutputParser()
 
@@ -196,19 +197,23 @@ class ManimFastAnimationService(BaseManimAgent):
             self.base_logger.debug("   [+] Using pro_llm for subsequent refinements.")
             chain = repair_prompt | self.pro_llm | parser
 
-        fixed_script = chain.invoke(
+        fixed_script_response = chain.invoke(
             {
                 "lint_summary": state["last_error"],
                 "original_script": state["current_script"],
             }
         )
+        self.base_logger.debug(f"llm_response: {fixed_script_response}")
 
-        # LLMが出力するマークダウンを削除
-        fixed_script = (
-            fixed_script.strip().replace("```python", "").replace("```", "").strip()
+        fixed_script = self._process_edit_response(
+            original_script=state["current_script"],
+            llm_response=fixed_script_response,
         )
 
-        self.base_logger.debug(f"   [+] Script refined (length: {len(fixed_script)})")
+        if fixed_script != state["current_script"]:
+            self.base_logger.debug(f"   [+] Script refined via diff (length: {len(fixed_script)})")
+        else:
+            self.base_logger.info("   [=] Refinement diff produced no changes. Retaining previous script.")
 
         return {
             "current_script": fixed_script,
@@ -217,42 +222,32 @@ class ManimFastAnimationService(BaseManimAgent):
             "error_type": "",
         }
 
-        # --- 5. グラフの配線 (エッジと条件分岐) ---
+    def _after_lint_check(self, state: ManimGraphState):
+        """[Conditional Edge] リンターエラーか、リトライ上限か"""
+        if state["error_type"] == "lint":
+            if state["current_retry"] >= state["max_retries"]:
+                self.base_logger.warning("--- [Branch] Max Retries Reached (Lint Error). Ending. ---")
+                return "end_with_error"
+            self.base_logger.info("--- [Branch] Linter Failed. Proceeding to Refine. ---")
+            return "refine"
+        self.base_logger.debug("--- [Branch] Linter Passed. Proceeding to Security Check. ---")
+        return "check_bad_request"
 
     def _after_bad_request_check(self, state: ManimGraphState):
         """[Conditional Edge] 不正リクエストか"""
         if state["is_bad_request"]:
             self.base_logger.error("--- [Branch] Bad Request. Ending Graph. ---")
             return "end_with_error"
-        self.base_logger.debug("--- [Branch] Secure. Proceeding to Lint. ---")
-        return "execute"
-
-    def _after_lint_check(self, state: ManimGraphState):
-        """[Conditional Edge] リンターエラーか、リトライ上限か"""
-        if state["error_type"] == "lint":
-            if state["current_retry"] >= state["max_retries"]:
-                self.base_logger.warning(
-                    "--- [Branch] Max Retries Reached (Lint Error). Ending. ---"
-                )
-                return "end_with_error"
-            self.base_logger.info(
-                "--- [Branch] Linter Failed. Proceeding to Refine. ---"
-            )
-            return "refine"
-        self.base_logger.debug("--- [Branch] Linter Passed. Proceeding to Execute. ---")
+        self.base_logger.debug("--- [Branch] Secure. Proceeding to Execute. ---")
         return "execute"
 
     def _after_execution(self, state: ManimGraphState):
         """[Conditional Edge] 実行時エラーか、リトライ上限か"""
         if state["error_type"] == "runtime":
             if state["current_retry"] >= state["max_retries"]:
-                self.base_logger.warning(
-                    "--- [Branch] Max Retries Reached (Runtime Error). Ending. ---"
-                )
+                self.base_logger.warning("--- [Branch] Max Retries Reached (Runtime Error). Ending. ---")
                 return "end_with_error"
-            self.base_logger.info(
-                "--- [Branch] Runtime Error. Proceeding to Refine. ---"
-            )
+            self.base_logger.info("--- [Branch] Runtime Error. Proceeding to Refine. ---")
             return "refine"
 
         self.base_logger.info("--- [Branch] Execution Succeeded. Ending Graph. ---")
@@ -262,16 +257,26 @@ class ManimFastAnimationService(BaseManimAgent):
         """LangGraphのワークフローを定義・構築する"""
         workflow = StateGraph(ManimGraphState)
         workflow.add_node("generate_initial", self._generate_initial_script)
+        workflow.add_node("lint", self._run_linter_check)
         workflow.add_node("check_bad_request", self._check_bad_request)
         workflow.add_node("execute", self._execute_and_handle_errors)
         workflow.add_node("refine", self._refine_script_on_error)
         workflow.set_entry_point("generate_initial")
-        workflow.add_edge("generate_initial", "check_bad_request")
-        workflow.add_edge("refine", "check_bad_request")
+        workflow.add_edge("generate_initial", "lint")
+        workflow.add_edge("refine", "lint")
+        workflow.add_conditional_edges(
+            "lint",
+            self._after_lint_check,
+            {
+                "refine": "refine",
+                "check_bad_request": "check_bad_request",
+                "end_with_error": END,
+            },
+        )
         workflow.add_conditional_edges(
             "check_bad_request",
             self._after_bad_request_check,
-            {"end_with_error": END, "execute": "execute"},
+            {"execute": "execute", "end_with_error": END},
         )
         workflow.add_conditional_edges(
             "execute",
@@ -279,6 +284,10 @@ class ManimFastAnimationService(BaseManimAgent):
             {"refine": "refine", "end_with_success": END, "end_with_error": END},
         )
         return workflow
+
+    # ============================================================
+    # ==================   Public APIs (same)   ==================
+    # ============================================================
 
     def generate_video(
         self,
@@ -311,9 +320,7 @@ class ManimFastAnimationService(BaseManimAgent):
             return "bad_request"
 
         if final_state["last_error"]:
-            self.base_logger.error(
-                f"--- Graph Finished: Error (Max Retries Reached) ---"
-            )
+            self.base_logger.error(f"--- Graph Finished: Error (Max Retries Reached) ---")
             return "error"
 
         if not final_state["last_error"] and not final_state["is_bad_request"]:
@@ -354,9 +361,7 @@ class ManimFastAnimationService(BaseManimAgent):
             return "bad_request"
 
         if final_state["last_error"]:
-            self.base_logger.error(
-                f"--- Graph Finished: Error (Max Retries Reached) ---"
-            )
+            self.base_logger.error(f"--- Graph Finished: Error (Max Retries Reached) ---")
             return "error"
 
         if not final_state["last_error"] and not final_state["is_bad_request"]:
@@ -379,8 +384,6 @@ class ManimFastAnimationService(BaseManimAgent):
 
         chain = manim_planer | self.lite_llm | parser
 
-        output: str = chain.invoke(
-            {"user_prompt": content, "video_enhance_prompt": enhance_prompt}
-        )
+        output: str = chain.invoke({"user_prompt": content, "video_enhance_prompt": enhance_prompt})
         self.base_logger.info(f"Manim planner output: {output}")
         return output

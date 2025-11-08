@@ -8,6 +8,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Prevent body scroll and ensure full height layout */
+@layer base {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+}
+
 /* カスタムアニメーション */
 @layer utilities {
   .animate-fade-in {

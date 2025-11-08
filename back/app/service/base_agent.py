@@ -19,7 +19,9 @@ from typing import Optional
 from loguru import logger
 
 from app.tools.secure import is_code_safe
+from app.tools.manim_linter import ManimLinter
 from app.tools.manim_lint import parse_manim_or_python_traceback, format_error_for_llm
+from app.tools.diff_patcher import DiffPatcher
 
 
 load_dotenv()
@@ -59,6 +61,7 @@ class BaseManimAgent(ABC):
     def __init__(self, prompt_path: str = "prompt/prompts.toml"):
         # ログのセットアップ
         self.base_logger = self._setup_logger(logger_name=self.__class__.__name__)
+        self.diff_patcher = DiffPatcher(self.base_logger)
 
         # プロンプトの読み込み
         self.prompts = self._load_prompt(path=prompt_path)
@@ -66,12 +69,21 @@ class BaseManimAgent(ABC):
         self.pro_llm = self._load_llm("gemini-2.5-pro")
         self.flash_llm = self._load_llm("gemini-2.5-flash")
         self.lite_llm = self._load_llm("gemini-2.5-flash-lite")
+        self.manim_linter = ManimLinter()
 
         # ローカル関数のpath関連
         self.workspace_path = Path(os.getenv("WORKSPACE_PATH"))
         self.manim_scripts_path = Path(os.getenv("MANIM_SCRIPTS_PATH"))
         self.video_output_path = Path(os.getenv("VIDEO_OUTPUT_PATH"))
         self.user_instruction_path = Path(os.getenv("USER_INSTRUCTION_PATH"))
+
+    def _process_edit_response(self, *, original_script: str, llm_response: str) -> str:
+        """
+        Delegate to shared diff patcher utility.
+        """
+        return self.diff_patcher.process_edit_response(
+            original_script=original_script, llm_response=llm_response
+        )
 
     def _setup_logger(self, logger_name: str):
         """
@@ -217,6 +229,10 @@ class BaseManimAgent(ABC):
     def _check_code_security(self, code: str) -> bool:
         """[Helper] manimコードの安全性チェック"""
         return is_code_safe(code)
+
+    def _check_code_lint(self, code: str) -> dict:
+        """[Helper] manimコードのリンターチェック"""
+        return self.manim_linter.check_code(code)
 
     def _execute_script_low_res(self, script: str, video_id: str) -> str:
         """[Helper] 最低解像度での実行チェック

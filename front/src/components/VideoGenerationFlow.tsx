@@ -8,7 +8,7 @@ import { Result } from './result/Result'
 
 // ⚠️ テスト用import（Issue#58）
 // この import を削除すると、テスト用ボタンが表示されなくなります
-import { TestVideoLoader } from './__test_utils__/TestVideoLoader'
+// import { TestVideoLoader } from './__test_utils__/TestVideoLoader'
 
 /**
  * Presentation層: 状態管理
@@ -45,12 +45,12 @@ export function VideoGenerationFlow() {
             {isLanding && (
                 <Landing onSubmit={handleLandingSubmit} isGenerating={isGenerating} error={error}>
                     {/* ⚠️ テスト用（Issue#58） */}
-                    <TestVideoLoader onLoadVideo={handleLoadExistingVideo} isLoading={isGenerating} />
+                    {/* <TestVideoLoader onLoadVideo={handleLoadExistingVideo} isLoading={isGenerating} /> */}
                 </Landing>
             )}
 
             {/* 状態2: プロンプト確認・編集 */}
-            {isPromptScreen && prompt && <Prompt prompt={prompt} isGenerating={isGenerating} onGenerate={handlePromptGenerate} />}
+            {isPromptScreen && prompt && <Prompt prompt={prompt} isGenerating={isGenerating} onGenerate={handlePromptGenerate} onReset={clearResult} />}
 
             {/* 状態3: 動画生成中 */}
             {isGeneratingScreen && <Generating />}

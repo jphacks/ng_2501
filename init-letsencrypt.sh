@@ -6,41 +6,25 @@
 set -e
 
 DOMAIN="ani-math.jp"
-EMAIL="admin@${DOMAIN}"  # 管理者のメールアドレスを適切に設定してください
+EMAIL="yumaboda.official@gmail.com"
 STAGING=0  # テスト用証明書を使う場合は 1 に設定
 
 echo "### Let's Encrypt の初期化を開始します ###"
 echo "ドメイン: ${DOMAIN}"
 echo "メールアドレス: ${EMAIL}"
 
-# ダミー証明書ディレクトリの作成
-CERT_PATH="/etc/letsencrypt/live/${DOMAIN}"
-echo "### ダミー証明書の作成 ###"
+# HTTP専用の設定ファイルをコピー
+echo "### HTTP専用の設定ファイルを準備 ###"
+cp ./nginx/conf.d/app-http-only.conf ./nginx/conf.d/app.conf.temp
+mv ./nginx/conf.d/app.conf ./nginx/conf.d/app.conf.https.backup 2>/dev/null || true
+mv ./nginx/conf.d/app.conf.temp ./nginx/conf.d/app.conf
+echo "HTTP専用設定に切り替えました"
 
-mkdir -p "./certbot/conf/live/${DOMAIN}"
-if [ ! -e "./certbot/conf/live/${DOMAIN}/privkey.pem" ]; then
-  echo "ダミー証明書を生成中..."
-  docker compose run --rm --entrypoint "\
-    openssl req -x509 -nodes -newkey rsa:4096 -days 1 \
-      -keyout '/etc/letsencrypt/live/${DOMAIN}/privkey.pem' \
-      -out '/etc/letsencrypt/live/${DOMAIN}/fullchain.pem' \
-      -subj '/CN=localhost'" certbot
-  echo "ダミー証明書を作成しました"
-else
-  echo "ダミー証明書は既に存在します"
-fi
-
-# Nginxの起動
-echo "### Nginxを起動しています ###"
-docker compose up -d nginx
-
-# ダミー証明書の削除
-echo "### ダミー証明書を削除しています ###"
-docker compose run --rm --entrypoint "\
-  rm -rf /etc/letsencrypt/live/${DOMAIN} && \
-  rm -rf /etc/letsencrypt/archive/${DOMAIN} && \
-  rm -rf /etc/letsencrypt/renewal/${DOMAIN}.conf" certbot
-echo "ダミー証明書を削除しました"
+# すべてのサービスを起動（HTTP専用）
+echo "### サービスを起動しています ###"
+docker compose up -d
+sleep 5
+echo "サービスが起動しました"
 
 # Recommended TLS parameters のダウンロード
 echo "### TLSパラメータのダウンロード ###"
@@ -71,12 +55,23 @@ docker compose run --rm certbot certonly --webroot -w /var/www/certbot \
   --email "$EMAIL" \
   --agree-tos \
   --no-eff-email \
-  --force-renewal \
   -d "$DOMAIN"
 
-# Nginxのリロード
-echo "### Nginxをリロードしています ###"
-docker compose exec nginx nginx -s reload
+if [ $? -eq 0 ]; then
+  echo "証明書の取得に成功しました"
 
-echo "### 完了しました！ ###"
-echo "HTTPS が有効になりました: https://${DOMAIN}"
+  # HTTPS設定に切り替え
+  echo "### HTTPS設定に切り替えています ###"
+  mv ./nginx/conf.d/app.conf.https.backup ./nginx/conf.d/app.conf 2>/dev/null || true
+
+  # Nginxをリロード
+  echo "### Nginxをリロードしています ###"
+  docker compose exec nginx nginx -s reload
+
+  echo "### 完了しました！ ###"
+  echo "HTTPS が有効になりました: https://${DOMAIN}"
+else
+  echo "### エラー: 証明書の取得に失敗しました ###"
+  echo "DNS設定やファイアウォールを確認してください"
+  exit 1
+fi

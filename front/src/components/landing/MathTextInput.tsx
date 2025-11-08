@@ -403,58 +403,28 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
         }, 100)
     }
 
-    const placeholderText = `# 二次方程式の解の公式
-
-二次方程式 $ax^2 + bx + c = 0$ の解は、次の公式で求められます：
-
-$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
-
-## 導出過程
-
-1. 両辺を $a$ で割る
-2. 平方完成を行う
-3. 両辺の平方根をとる
-
-判別式 $D = b^2 - 4ac$ の値によって、解の個数が決まります。`
+    const placeholderText = `2つのベクトルAとBを2次元平面に表示してください。
+Aを固定し、Bの向きをゆっくり回転させてください。
+    
+そのとき、Aに対するBの射影（BをA方向に落とした影）を描き、
+この影の長さが内積の大きさに対応することを示してください。
+        
+BがAとほぼ同じ方向のときは影が長く、90°に近いときはほぼ0になり、逆向きのときは負になることを、色と数値で示してください。
+右パネルには 'A・B = |A||B|cosθ' の現在値を表示してください。`
 
     const loadSampleText = () => {
         if (text.trim() && !window.confirm('現在の入力内容が削除されます。サンプルを読み込みますか？')) {
             return
         }
 
-        const sample = `# 三角関数の"動き"を単位円で体感しよう
-## 1. 単位円で三角関数スタート！
-
-まず半径1（原点中心）の円＝**単位円**を用意しよう。  
-
-- x軸の正の方向（右向き）を0°、そこから反時計回りに角度 $\\theta$ をとる。
-- このとき単位円上の点 $P$ の座標は
-
-$$P(\\cos\\theta,\\,\\sin\\theta)$$
-
-  - 横：$\\cos\\theta$
-  - 縦：$\\sin\\theta$
-
-**POINT:** どの $\\theta$ でも $\\cos^2\\theta+\\sin^2\\theta=1$。  
-これは**三角関数の基本式**だね！
-
----
-
-## 2. "角度を90°（$\\frac{\\pi}{2}$）ずらす"ってどういうこと？
-
-次に、点 $P$ を角度90°、つまり $\\frac{\\pi}{2}$ 進めてみよう。
-
-- 回転後の座標
-
-$$Q\\left(\\cos\\left(\\theta+\\frac{\\pi}{2}\\right),\\,\\sin\\left(\\theta+\\frac{\\pi}{2}\\right)\\right)$$
-
-- 実は、これは
-
-$$Q(-\\sin\\theta,\\,\\cos\\theta)$$
-
-となる！
-
-**POINT:** "$\\cos\\theta$"の成分が"$-\\sin\\theta$"に、"$\\sin\\theta$"が"$\\cos\\theta$"に。それぞれ"入れ替わり、横はマイナス"されてるね。`
+        const sample = `2つのベクトルAとBを2次元平面に表示してください。
+Aを固定し、Bの向きをゆっくり回転させてください。
+    
+そのとき、Aに対するBの射影（BをA方向に落とした影）を描き、
+この影の長さが内積の大きさに対応することを示してください。
+        
+BがAとほぼ同じ方向のときは影が長く、90°に近いときはほぼ0になり、逆向きのときは負になることを、色と数値で示してください。
+右パネルには 'A・B = |A||B|cosθ' の現在値を表示してください。`
 
         setText(sample)
         setCursorPosition(sample.length)
@@ -576,7 +546,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                     type="text"
                                     value={titleInput}
                                     onChange={(e) => setTitleInput(e.target.value)}
-                                    placeholder="例: 積分の方法、微分の公式"
+                                    placeholder="例: ベクトルの合成、積分の公式"
                                     className="w-full px-3 py-2 text-sm border border-[#0A3B7E]/20 rounded focus:ring-2 focus:ring-[#0A3B7E] focus:border-transparent"
                                     disabled={isGeneratingContent || isGenerating}
                                 />
@@ -821,7 +791,7 @@ $$Q(-\\sin\\theta,\\,\\cos\\theta)$$
                                             type="text"
                                             value={titleInput}
                                             onChange={(e) => setTitleInput(e.target.value)}
-                                            placeholder="例: 積分の方法、微分の公式"
+                                            placeholder="例: ベクトルの合成、積分の公式"
                                             className="w-full px-3 py-2 text-sm border border-[#0A3B7E]/20 rounded focus:ring-2 focus:ring-[#0A3B7E] focus:border-transparent"
                                             disabled={isGeneratingContent || isGenerating}
                                         />

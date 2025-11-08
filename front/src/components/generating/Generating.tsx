@@ -19,7 +19,7 @@ export function Generating() {
                 </div>
                 <h3 className="text-lg font-semibold text-[#030405] mb-2">動画を生成中...</h3>
                 <p className="text-sm text-[#030405]/70">
-                    数式動画を生成中です（約10〜20分）。しばらくお待ちください。
+                    数式動画を生成中です（約2~5分）。しばらくお待ちください。
                 </p>
             </div>
         </div>

@@ -124,7 +124,9 @@ async def register_rag_video(
     3. 埋め込みベクトル化した内容を、video_idと要約内容とともにRAGに登録する
     """
     try:
-        script_file = script_path / video_id / f"{video_id}.py"
+        # script_file = script_path / video_id / f"{video_id}.py"
+        script_file = script_path / f"{video_id}.py"
+
         if not script_file.is_file():
             raise HTTPException(status_code=404, detail=f"Script for video_id {video_id} not found.")
 
@@ -168,8 +170,8 @@ async def search_animation(
     try:
         results = template_service.search(
             query=search_content,
-            threshold=0.8,
-            max_gets=3,
+            threshold=0.0,
+            max_gets=10,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e

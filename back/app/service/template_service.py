@@ -54,7 +54,7 @@ class TemplateService:
             SystemMessage(
                 content=(
                     "あなたは数学教育向けManimコードの要約アシスタントです。"
-                    "コードから動画の狙いや使っている演出を日本語で150文字程度にまとめ、"
+                    "コードが何を説明しているかを日本語で150文字程度にまとめてください。"
                     "後から類似検索しやすいように数学用語を含めてください。"
                 )
             ),
@@ -69,8 +69,6 @@ class TemplateService:
         ]
         response = llm.invoke(messages)
         summary = self._extract_llm_text(response)
-        if not summary:
-            raise ValueError("LLM summary response was empty.")
         return summary
 
     def add(
@@ -78,7 +76,7 @@ class TemplateService:
         *,
         video_id: str,
         manim_code: str,
-    ) -> Dict[str, Any]:
+    ) -> bool:
         """
         Manimコードを要約し、RAGストアに登録する。
         """
@@ -87,18 +85,17 @@ class TemplateService:
         if not manim_code:
             raise ValueError("manim_code must not be empty.")
 
-        summary_text = self._summarize_manim_code(manim_code)
-        normalized_summary = summary_text.strip()
-        if not normalized_summary:
-            raise ValueError("summary must not be empty.")
-
         try:
+            summary_text = self._summarize_manim_code(manim_code)
+            normalized_summary = summary_text.strip()
+            if not normalized_summary:
+                raise ValueError("summary must not be empty.")
             is_success = self._rag_store.add_summary(
                 video_id=video_id, summary=normalized_summary
             )
             return is_success
         except Exception as e:
-            raise RuntimeError(f"Failed to add summary to RAG store: {e}")
+            raise ValueError(f"Failed to add summary to RAG store: {e}")
 
     def search(
         self,

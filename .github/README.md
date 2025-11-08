@@ -20,6 +20,7 @@ sudo chmod +x /usr/local/bin/docker-compose
 ```
 
 gitからクローンして必要なファイルを取得
+ロジェクトルート（/workspaces/ai_agent）から実行
 ```
 chmod +x .devcontainer/init-letsencrypt.sh
 # ドメイン名とメールアドレスを指定して実行

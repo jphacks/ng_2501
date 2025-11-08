@@ -12,7 +12,7 @@ import { Search } from './search/Search'
 
 // ⚠️ テスト用import（Issue#58）
 // この import を削除すると、テスト用ボタンが表示されなくなります
-import { TestVideoLoader } from './__test_utils__/TestVideoLoader'
+// import { TestVideoLoader } from './__test_utils__/TestVideoLoader'
 
 /**
  * Presentation層: 状態管理
@@ -65,7 +65,7 @@ export function VideoGenerationFlow() {
             {isLanding && (
                 <Landing onSubmit={handleLandingSubmit} onSearch={handleSearch} isGenerating={isGenerating} error={error}>
                     {/* ⚠️ テスト用（Issue#58） */}
-                    <TestVideoLoader onLoadVideo={handleLoadExistingVideoTest} isLoading={isGenerating} />
+                    {/* <TestVideoLoader onLoadVideo={handleLoadExistingVideo} isLoading={isGenerating} /> */}
                 </Landing>
             )}
 

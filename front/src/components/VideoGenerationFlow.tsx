@@ -39,12 +39,12 @@ export function VideoGenerationFlow() {
         await loadExistingVideoTest(videoId, promptText)
     }
 
-    const handleSearch = async (query: string) => {
-        if (!query) {
+    const handleSearch = async (content: string) => {
+        if (!content) {
             setSearchResult(null)
             return
         }
-        const results = await searchVideo(query)
+        const results = await searchVideo(content)
         setSearchResult(results)
     }
 

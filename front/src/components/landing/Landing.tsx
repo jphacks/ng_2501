@@ -1,7 +1,6 @@
 'use client'
 
 import { MathTextInput } from './MathTextInput'
-import { SearchBar } from '../search/SearchBar'
 
 interface LandingProps {
     onSubmit: (text: string, videoPrompt?: string) => Promise<void>
@@ -25,15 +24,12 @@ export function Landing({ onSubmit, onSearch, isGenerating, error, children }: L
                 </div>
             )}
 
-            {/* 検索バー */}
-            <SearchBar onSearch={onSearch} isGenerating={isGenerating} />
-
             {/* テスト用コンポーネント挿入スロット */}
             {children}
 
             {/* テキスト入力フォーム（flex-1で残りスペース占有） */}
             <div className="flex-1 min-h-0 overflow-hidden">
-                <MathTextInput onSubmit={onSubmit} isGenerating={isGenerating} />
+                <MathTextInput onSubmit={onSubmit} onSearch={onSearch} isGenerating={isGenerating} />
             </div>
         </div>
     )

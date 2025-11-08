@@ -59,6 +59,17 @@ services:
   certbot:
     image: certbot/certbot
     container_name: ai_agent_prod_certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    # 証明書取得時はこのサービスを使用（entrypointなし）
+    # 起動しないようにprofilesで分離
+    profiles:
+      - tools
+
+  certbot-renew:
+    image: certbot/certbot
+    container_name: ai_agent_prod_certbot_renew
     restart: unless-stopped
     volumes:
       - ./certbot/conf:/etc/letsencrypt

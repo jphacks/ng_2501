@@ -48,7 +48,7 @@ services:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
     # 証明書の自動更新 (1日2回チェック)
-    command: renew --quiet --deploy-hook "docker-compose -f /workspaces/ai_agent/docker-compose.prod.yml exec nginx nginx -s reload"
+    command: renew --quiet --deploy-hook "docker-compose -f /workspaces/ai_agent/docker-compose.yml exec nginx nginx -s reload"
     # (例: /home/ubuntu/YOUR_REPO/docker-compose.prod.yml)
     # もしくは、init-letsencrypt.sh で cron ジョブとしてホストに登録する方が確実です。
 

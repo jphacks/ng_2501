@@ -231,3 +231,10 @@ cat backup_YYYYMMDD_HHMMSS.sql | docker compose exec -T db psql -U postgres devd
 - [Nginx ドキュメント](https://nginx.org/en/docs/)
 - [Next.js Deployment](https://nextjs.org/docs/deployment)
 - [FastAPI Deployment](https://fastapi.tiangolo.com/deployment/)
+
+
+## 変更方法
+
+再度ビルドすればOKです。
+
+```bash

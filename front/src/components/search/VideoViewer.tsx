@@ -25,7 +25,7 @@ function VideoCard({ video, onLoadVideo }: { video: VideoData; onLoadVideo: (vid
             <button
                 type="button"
                 className="w-full h-full"
-                onClick={() => onLoadVideo(video.videoId, video.script)}
+                onClick={() => onLoadVideo(video.videoId, video.content)}
             >
                 <video
                     src={video.videoPath}
@@ -39,7 +39,7 @@ function VideoCard({ video, onLoadVideo }: { video: VideoData; onLoadVideo: (vid
                 {isHovered && (
                     <div className="absolute inset-0 bg-black bg-opacity-70 p-4 overflow-y-auto text-white animate-fade-in">
                         <h3 className="font-bold mb-2">Script</h3>
-                        <p className="text-sm whitespace-pre-wrap">{video.script}</p>
+                        <p className="text-sm whitespace-pre-wrap">{video.content}</p>
                     </div>
                 )}
             </button>

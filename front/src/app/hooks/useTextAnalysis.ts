@@ -59,7 +59,7 @@ const createVideoGenerationPrompt = (generationId: number, request: VideoGenerat
  * UseCase層: 動画生成のビジネスロジックとAPI処理
  */
 export const useVideoGeneration = () => {
-    const { planAnimation } = useDB();
+    const { planAnimation, getVideoInfo } = useDB();
     // ⚠️ 開発環境: テスト用hookも初期化（本番環境では null）
     const testHook = process.env.NODE_ENV === 'development' ? useTestVideoGeneration() : null
 
@@ -69,15 +69,6 @@ export const useVideoGeneration = () => {
     const [result, setResult] = useState<VideoResult | null>(null)
     const [error, setError] = useState<string | null>(null)
     const lastRequestRef = useRef<VideoGenerationRequest | null>(null)
-    const videoUrlRef = useRef<string | null>(null)
-
-    useEffect(() => {
-        return () => {
-            if (videoUrlRef.current) {
-                URL.revokeObjectURL(videoUrlRef.current)
-            }
-        }
-    }, [])
 
     const setHandledError = (err: unknown, fallbackMessage: string) => {
         const message = err instanceof Error ? err.message : fallbackMessage
@@ -162,11 +153,6 @@ export const useVideoGeneration = () => {
             throw new Error('動画の取得に失敗しました')
         }
 
-        if (videoUrlRef.current) {
-            URL.revokeObjectURL(videoUrlRef.current)
-        }
-
-        videoUrlRef.current = videoUrl
         return videoUrl
     }
 
@@ -357,15 +343,28 @@ export const useVideoGeneration = () => {
         }
     }
     const loadExistingVideo = async (videoId: string, promptText: string) => {
-        const { getVideoInfo } = useDB()
         setIsGenerating(true)
         setError(null)
         try {
             const videoInfo = await getVideoInfo(videoId)
             const videoUrl = await replaceVideoUrl(videoId)
+            const normalizedGenerationId =
+                typeof videoInfo?.generationId === 'number'
+                    ? videoInfo.generationId
+                    : typeof videoInfo?.generation_id === 'number'
+                        ? videoInfo.generation_id
+                        : typeof videoInfo?.generate_id === 'number'
+                            ? videoInfo.generate_id
+                            : null
+            const normalizedPlanningPrompt =
+                videoInfo?.planningPrompt ??
+                videoInfo?.planning_prompt ??
+                videoInfo?.plan ??
+                videoInfo?.promptText ??
+                promptText
             const existingPrompt: VideoGenerationPrompt = {
-                generationId: videoInfo.generationId,
-                planningPrompt: videoInfo.planningPrompt,
+                generationId: normalizedGenerationId ?? 0,
+                planningPrompt: normalizedPlanningPrompt,
                 originalText: promptText,
             }
             const existingResult: VideoResult = {
@@ -377,6 +376,11 @@ export const useVideoGeneration = () => {
 
             setPrompt(existingPrompt)
             setResult(existingResult)
+            setGenerationId(normalizedGenerationId ?? 0)
+            lastRequestRef.current = {
+                text: promptText,
+                videoPrompt: videoInfo?.videoPrompt ?? videoInfo?.video_prompt ?? undefined,
+            }
             return existingResult
         } catch (err) {
             setHandledError(err, '動画読み込み中にエラーが発生しました')
@@ -390,16 +394,11 @@ export const useVideoGeneration = () => {
      * 結果をクリア
      */
     const clearResult = () => {
-        if (videoUrlRef.current) {
-            URL.revokeObjectURL(videoUrlRef.current)
-            videoUrlRef.current = null
-        }
-
         setPrompt(null)
         setResult(null)
         setError(null)
         lastRequestRef.current = null
-        
+
         // ⚠️ テストhookもクリア
         testHook?.clearResult()
     }

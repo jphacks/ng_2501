@@ -32,9 +32,9 @@ function VideoCard({ video, onLoadVideo }: { video: VideoData; onLoadVideo: (vid
                     className="w-full h-full object-cover"
                     playsInline
                     muted
-                    loop={isHovered}
-                    autoPlay={isHovered}
-                    preload="metadata"
+                    autoPlay
+                    loop
+                    preload="auto"
                 />
                 {isHovered && (
                     <div className="absolute inset-0 bg-black bg-opacity-70 p-4 overflow-y-auto text-white animate-fade-in">

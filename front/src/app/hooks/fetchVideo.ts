@@ -2,37 +2,34 @@ const stripWrappingQuotes = (value: string) => value.replace(/^['"]|['"]$/g, '')
 
 const resolveBackendUrl = () => {
     const raw = process.env.NEXT_PUBLIC_API_URL ?? ''
-    return stripWrappingQuotes(raw).trim().replace(/\/$/, '')
+    const sanitized = stripWrappingQuotes(raw).trim().replace(/\/$/, '')
+    if (sanitized) {
+        return sanitized
+    }
+    if (typeof window !== 'undefined') {
+        return window.location.origin
+    }
+    return ''
+}
+
+const buildAnimationUrl = (videoId: string) => {
+    if (!videoId) {
+        return ''
+    }
+    const baseUrl = resolveBackendUrl()
+    if (!baseUrl) {
+        return `/api/animation/${videoId}`
+    }
+    return `${baseUrl}/api/animation/${videoId}`
 }
 
 const fetchVideo = async (videoId: string): Promise<string | null> => { 
-    const baseUrl = resolveBackendUrl()
-    if (!baseUrl) {
-        console.error('Error fetching video: バックエンドのURLが設定されていません')
+    const path = buildAnimationUrl(videoId)
+    if (!path) {
+        console.error('Error fetching video: videoId が無効です')
         return null
     }
-
-    try {
-        const path = `${baseUrl}/api/animation/${videoId}`
-        const response = await fetch(
-            path,
-            {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-            },
-        )
-
-        if (!response.ok) {
-            throw new Error('動画の取得に失敗しました')
-        }
-
-        const blob = await response.blob()
-        const url = URL.createObjectURL(blob)
-        return url
-    } catch (err) {
-        console.error('Error fetching video:', err)
-        return null
-    }
+    return path
 }
 
 export default fetchVideo

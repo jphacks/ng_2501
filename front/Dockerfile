@@ -5,9 +5,9 @@ FROM node:20-alpine AS base
 FROM base AS deps
 WORKDIR /app
 
-# package.jsonとpackage-lock.jsonをコピー
+# package.jsonをコピー
 COPY front/package*.json ./
-RUN npm ci
+RUN npm install
 
 # アプリケーションをビルド
 FROM base AS builder

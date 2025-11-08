@@ -158,10 +158,50 @@ export const useDB = () => {
     return await response.json();
   }, []);
 
+  const getVideoInfo = useCallback(async (videoId: string): Promise<any> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/animation/get_info/${videoId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+      });
+      if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`HTTP error! status: ${response.status}, details: ${errorData.detail}`);
+      }
+      return await response.json();
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
+  }, []);
+
+  const searchVideo = useCallback(async (query: string): Promise<any> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/data/search?query=${encodeURIComponent(query)}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+      });
+      if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`HTTP error! status: ${response.status}, details: ${errorData.detail}`);
+      }
+      return await response.json();
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
+  }, []);
+
   return {
     planAnimation,
     generateAnimation,
     editAnimation,
     sendVideoId,
+    getVideoInfo,
+    searchVideo,
   };
 };

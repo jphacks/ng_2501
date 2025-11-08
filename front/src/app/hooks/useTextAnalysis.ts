@@ -303,7 +303,7 @@ export const useVideoGeneration = () => {
     /**
      * ⚠️ テスト用：既存の動画を読み込む（開発環境のみ）
      */
-    const loadExistingVideo = async (videoId: string, promptText: string) => {
+    const loadExistingVideoTest = async (videoId: string, promptText: string) => {
         if (testHook) {
             return await testHook.loadExistingVideo(videoId, promptText)
         }
@@ -356,6 +356,35 @@ export const useVideoGeneration = () => {
             setIsGenerating(false)
         }
     }
+    const loadExistingVideo = async (videoId: string, promptText: string) => {
+        const { getVideoInfo } = useDB()
+        setIsGenerating(true)
+        setError(null)
+        try {
+            const videoInfo = await getVideoInfo(videoId)
+            const videoUrl = await replaceVideoUrl(videoId)
+            const existingPrompt: VideoGenerationPrompt = {
+                generationId: videoInfo.generationId,
+                planningPrompt: videoInfo.planningPrompt,
+                originalText: promptText,
+            }
+            const existingResult: VideoResult = {
+                videoId,
+                videoUrl,
+                prompt: existingPrompt,
+                generatedAt: videoInfo.generatedAt,
+            }
+
+            setPrompt(existingPrompt)
+            setResult(existingResult)
+            return existingResult
+        } catch (err) {
+            setHandledError(err, '動画読み込み中にエラーが発生しました')
+            throw err
+        } finally {
+            setIsGenerating(false)
+        }
+    }
 
     /**
      * 結果をクリア
@@ -396,7 +425,8 @@ export const useVideoGeneration = () => {
         generatePrompt,
         generateVideo,
         editVideo: editVideoWrapper,
-        loadExistingVideo,  // ⚠️ テスト用
+        loadExistingVideoTest,  // ⚠️ テスト用
+        loadExistingVideo,
         clearResult,
     }
 }

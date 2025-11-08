@@ -21,6 +21,15 @@ export interface VideoGenerationPrompt {
 }
 
 /**
+ * 動画検索結果
+ */
+export interface VideoData {
+    videoId: string
+    videoPath: string
+    script: string
+}
+
+/**
  * 動画生成結果
  */
 export interface VideoResult {

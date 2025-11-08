@@ -24,6 +24,7 @@ from manim import *
 class GeneratedScene(Scene):
     def construct(self):
         japanese_font = "Noto Sans JP"
+        self.camera.background_color = BLACK
         # ...
 ```
 """
@@ -47,32 +48,35 @@ manim_planer_with_instruct = """
 
 
 fast_ai_refine_patch = """
-あなたはプロの Manim 開発者です。
+あなたはプロの Manim0.19.0 の開発者です。
 1.エラー内容: {lint_summary}
 2. 失敗したスクリプト: {original_script}
 タスク:
 上記の診断で指摘された すべてのエラーを修正してください。
-説明は一切書かず、有効な Python コードのみを出力してください。
+出力は diff-fenced コードブロック内の Unified Diff（unidiff）だけとし、説明文や完成コードの全文は書かないでください。
 
-出力形式（必ず以下の書き出しで始めてください）:
-```python
-from manim import *
-import numpy as np
-
-class GeneratedScene(Scene):
-    def construct(self):
-        japanese_font = "Noto Sans JP"
-        self.camera.background_color = BLACK
+出力形式の厳守事項:
+```unidiff
+*** Begin Patch
+*** Update File: script.py
+@@ -<開始行番号>,<削除行数> +<開始行番号>,<追加行数> @@
+ 前後3行以上のコンテキストを含む既存行（先頭に半角スペース）
+-削除する行（先頭に-）
++追加する行（先頭に+）
+*** End Patch
 ```
+- 各ハンクには必ず変更箇所の前後それぞれ3行以上のコンテキスト（` ` で始まる行）を含めてください。
+- `@@` 行には必ず開始行番号と行数を入れてください。
+- `*** Begin Patch` と `*** End Patch` を含めた diff-fenced コードブロック以外は出力しないでください。
 """
 
 fast_ai_edit_initial = """
-あなたはプロの Manim 開発者です。
+あなたはプロの Manim0.19.0 の開発者です。
 既存の Manim スクリプト ({original_script}) を、以下の編集指示 ({edit_instructions}) に基づいて更新してください。
 
 要件:
 1. アニメーションの意図を維持しつつ、編集指示の内容をすべて反映する。
-2. 出力は Manim0.19.0 で実行可能な完全な Python スクリプトのみとし、マークダウンや説明文は含めない。
-3. `from manim import *` を含む冒頭からシーン定義まで、必要なコードはすべて再掲する。
-4. 既存の構造を尊重しながら、必要な場合に限り変更や追加を行う。
+2. 出力は diff-fenced コードブロック内の Unified Diff（unidiff）のみとし、説明や完成コードの全文は含めない。
+3. 各ハンクには変更箇所の前後それぞれ3行以上のコンテキストを必ず含め、`@@ -<開始行番号>,<削除行数> +<開始行番号>,<追加行数> @@` 形式のハンクヘッダーを使用する。
+4. `*** Begin Patch` と `*** End Patch` を含む diff-fenced コードブロック以外は出力しない。
 """

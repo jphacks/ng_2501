@@ -21,6 +21,7 @@ from loguru import logger
 from app.tools.secure import is_code_safe
 from app.tools.manim_linter import ManimLinter
 from app.tools.manim_lint import parse_manim_or_python_traceback, format_error_for_llm
+from app.tools.diff_patcher import DiffPatcher
 
 
 load_dotenv()
@@ -60,6 +61,7 @@ class BaseManimAgent(ABC):
     def __init__(self, prompt_path: str = "prompt/prompts.toml"):
         # ログのセットアップ
         self.base_logger = self._setup_logger(logger_name=self.__class__.__name__)
+        self.diff_patcher = DiffPatcher(self.base_logger)
 
         # プロンプトの読み込み
         self.prompts = self._load_prompt(path=prompt_path)
@@ -74,6 +76,14 @@ class BaseManimAgent(ABC):
         self.manim_scripts_path = Path(os.getenv("MANIM_SCRIPTS_PATH"))
         self.video_output_path = Path(os.getenv("VIDEO_OUTPUT_PATH"))
         self.user_instruction_path = Path(os.getenv("USER_INSTRUCTION_PATH"))
+
+    def _process_edit_response(self, *, original_script: str, llm_response: str) -> str:
+        """
+        Delegate to shared diff patcher utility.
+        """
+        return self.diff_patcher.process_edit_response(
+            original_script=original_script, llm_response=llm_response
+        )
 
     def _setup_logger(self, logger_name: str):
         """

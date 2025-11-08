@@ -59,7 +59,7 @@ $COMPOSE_COMMAND -f $COMPOSE_FILE run --rm certbot certonly \
   --webroot \
   --webroot-path /var/www/certbot \
   --email $EMAIL \
-  --domain $DOMAIN \
+  --d $DOMAIN \
   --rsa-key-size 4096 \
   --agree-tos \
   --non-interactive \
@@ -106,7 +106,7 @@ $COMPOSE_COMMAND -f $COMPOSE_FILE stop nginx
 
 # 5. 本番用のNginx設定ファイル (app.conf) をテンプレートから作成
 echo ">>> 本番用のNginx設定ファイルを作成しています..."
-sudo sed -e "s/{{DOMAIN}}/$DOMAIN/g" -e "s/{{APP_SERVICE_NAME}}/$APP_SERVICE_NAME/g" "$NGINX_TEMPLATE" > "$NGINX_CONF"
+sed -e "s/{{DOMAIN}}/$DOMAIN/g" -e "s/{{APP_SERVICE_NAME}}/$APP_SERVICE_NAME/g" "$NGINX_TEMPLATE" > "$NGINX_CONF"
 
 # 6. 不足しているSSL設定ファイル (options-ssl-nginx.conf) をダウンロード
 # (デバッグで判明したNginx起動エラーの修正)

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any, Dict, List
-import uuid
 
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -43,8 +42,14 @@ class TemplateRAGStore:
         if not video_id:
             raise ValueError("video_id must not be empty.")
 
-        doc_id = f"{video_id}-{uuid.uuid4().hex}"
+        doc_id = video_id  # video_id ごとに常に最新1件
         metadata = {"video_id": video_id}
+
+        try:
+            # 同一 video_id があれば先に削除して最新だけを保持
+            self._vector_store.delete(where={"video_id": video_id})
+        except ValueError:
+            pass
 
         self._vector_store.add_texts(
             texts=[normalized_summary],

@@ -13,25 +13,35 @@ export function Generating() {
                 {/* 粒子的なグラデーション背景 */}
                 <div className="absolute inset-0 opacity-50">
                     {/* 大きい粒子（PCで目立つ） */}
-                    <div className="absolute top-[-20%] left-[-10%] w-64 md:w-96 h-64 md:h-96 rounded-full blur-3xl animate-float-1 bg-[#7ab7a4]/60" />
-                    <div className="absolute bottom-[-20%] right-[-10%] w-72 md:w-[28rem] h-72 md:h-[28rem] rounded-full blur-3xl animate-float-2 bg-[#ea8b63]/60" />
-                    <div className="absolute top-[5%] right-[-10%] w-56 md:w-80 h-56 md:h-80 rounded-full blur-3xl animate-float-3 bg-[#324ea0]/60" />
-                    <div className="absolute bottom-[10%] left-[-10%] w-48 md:w-72 h-48 md:h-72 rounded-full blur-3xl animate-float-4 bg-[#7ab7a4]/50" />
-                    <div className="absolute top-[35%] left-[25%] w-40 md:w-64 h-40 md:h-64 rounded-full blur-3xl animate-float-5 bg-[#ea8b63]/50" />
+                    <div className="absolute top-[-20%] left-[-10%] w-64 md:w-[36rem] h-64 md:h-[36rem] rounded-full blur-3xl animate-float-1 bg-[#5FFBF1]/70" />
+                    <div className="absolute bottom-[-20%] right-[-10%] w-72 md:w-[40rem] h-72 md:h-[40rem] rounded-full blur-3xl animate-float-2 bg-[#FF8C42]/70" />
+                    <div className="absolute top-[5%] right-[-10%] w-56 md:w-[32rem] h-56 md:h-[32rem] rounded-full blur-3xl animate-float-3 bg-[#5B8CFF]/70" />
+                    <div className="absolute bottom-[10%] left-[-10%] w-48 md:w-[28rem] h-48 md:h-[28rem] rounded-full blur-3xl animate-float-4 bg-[#5FFBF1]/60" />
+                    <div className="absolute top-[35%] left-[25%] w-40 md:w-96 h-40 md:h-96 rounded-full blur-3xl animate-float-5 bg-[#FF8C42]/60" />
                     
                     {/* 追加の小さい粒子（密度を上げる） */}
-                    <div className="absolute top-[60%] right-[15%] w-32 md:w-56 h-32 md:h-56 rounded-full blur-2xl animate-float-6 bg-[#324ea0]/45" />
-                    <div className="absolute top-[25%] left-[5%] w-36 md:w-60 h-36 md:h-60 rounded-full blur-2xl animate-float-7 bg-[#7ab7a4]/45" />
-                    <div className="absolute bottom-[35%] right-[5%] w-40 md:w-64 h-40 md:h-64 rounded-full blur-2xl animate-float-8 bg-[#ea8b63]/45" />
+                    <div className="absolute top-[60%] right-[15%] w-32 md:w-80 h-32 md:h-80 rounded-full blur-2xl animate-float-6 bg-[#5B8CFF]/55" />
+                    <div className="absolute top-[25%] left-[5%] w-36 md:w-96 h-36 md:h-96 rounded-full blur-2xl animate-float-7 bg-[#5FFBF1]/55" />
+                    <div className="absolute bottom-[35%] right-[5%] w-40 md:w-96 h-40 md:h-96 rounded-full blur-2xl animate-float-8 bg-[#FF8C42]/55" />
                 </div>
                 
                 {/* コンテンツ */}
                 <div className="relative z-10">
-                    <div className="flex justify-center mb-4">
+                    <div className="flex justify-center mb-4 relative">
+                        {/* 白い光源（多層構造で強調） */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            {/* 外側の大きな光 */}
+                            <div className="absolute w-64 h-64 rounded-full bg-white/50 blur-3xl animate-pulse-slow" />
+                            {/* 中間の光 */}
+                            <div className="absolute w-48 h-48 rounded-full bg-white/70 blur-2xl animate-pulse-slow" style={{ animationDelay: '0.5s' }} />
+                            {/* 内側の強い光 */}
+                            <div className="absolute w-32 h-32 rounded-full bg-white blur-xl animate-pulse-slow" style={{ animationDelay: '1s' }} />
+                        </div>
+                        {/* GIF画像 */}
                         <img 
                             src="/sudo-generating.gif" 
                             alt="生成中" 
-                            className="w-48 h-48 object-contain drop-shadow-lg"
+                            className="w-48 h-48 object-contain drop-shadow-2xl relative z-10"
                         />
                     </div>
                     <h3 className="text-lg font-semibold text-[#030405] mb-2">動画を生成中...</h3>
@@ -74,23 +84,23 @@ export function Generating() {
                     }
                     
                     .animate-float-1 {
-                        animation: float-1 18s ease-in-out infinite;
+                        animation: float-1 9s ease-in-out infinite;
                     }
                     
                     .animate-float-2 {
-                        animation: float-2 16s ease-in-out infinite;
+                        animation: float-2 8s ease-in-out infinite;
                     }
                     
                     .animate-float-3 {
-                        animation: float-3 14s ease-in-out infinite;
+                        animation: float-3 7s ease-in-out infinite;
                     }
                     
                     .animate-float-4 {
-                        animation: float-4 20s ease-in-out infinite;
+                        animation: float-4 10s ease-in-out infinite;
                     }
                     
                     .animate-float-5 {
-                        animation: float-5 22s ease-in-out infinite;
+                        animation: float-5 11s ease-in-out infinite;
                     }
                     
                     @keyframes float-6 {
@@ -113,15 +123,24 @@ export function Generating() {
                     }
                     
                     .animate-float-6 {
-                        animation: float-6 19s ease-in-out infinite;
+                        animation: float-6 9.5s ease-in-out infinite;
                     }
                     
                     .animate-float-7 {
-                        animation: float-7 17s ease-in-out infinite;
+                        animation: float-7 8.5s ease-in-out infinite;
                     }
                     
                     .animate-float-8 {
-                        animation: float-8 21s ease-in-out infinite;
+                        animation: float-8 10.5s ease-in-out infinite;
+                    }
+                    
+                    @keyframes pulse-slow {
+                        0%, 100% { transform: scale(0.95); opacity: 0.7; }
+                        50% { transform: scale(1.2); opacity: 1; }
+                    }
+                    
+                    .animate-pulse-slow {
+                        animation: pulse-slow 3s ease-in-out infinite;
                     }
                 `}</style>
             </div>

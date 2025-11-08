@@ -62,7 +62,7 @@ class TemplateRAGStore:
         self,
         *,
         query: str,
-        max_gets: int = 3,
+        max_gets: int = 12,
     ) -> List[Dict[str, Any]]:
         """
         Chroma 既定の類似度で上位 max_gets 件の結果を返す。

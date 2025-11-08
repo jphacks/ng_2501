@@ -185,7 +185,7 @@ async def search_animation(
     try:
         results = template_service.search(
             query=search_content,
-            max_gets=10,
+            max_gets=12,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e

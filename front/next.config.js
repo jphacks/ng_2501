@@ -5,6 +5,8 @@ const nextConfig = {
         // なぜかESLintの警告が出てしまうので消す
         ignoreDuringBuilds: true,
     },
+    // Docker本番環境用: standaloneモードを有効化
+    output: 'standalone',
 }
 
 module.exports = nextConfig

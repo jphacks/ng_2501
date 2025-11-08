@@ -11,7 +11,11 @@ export function Generating() {
             <Header statusText="生成中" />
             <div className="bg-[#0A3B7E]/5 border border-[#0A3B7E]/20 rounded-lg p-8 text-center">
                 <div className="flex justify-center mb-4">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#3A947C]" />
+                    <img 
+                        src="/sudo-generating.gif" 
+                        alt="生成中" 
+                        className="w-48 h-48 object-contain"
+                    />
                 </div>
                 <h3 className="text-lg font-semibold text-[#030405] mb-2">動画を生成中...</h3>
                 <p className="text-sm text-[#030405]/70">

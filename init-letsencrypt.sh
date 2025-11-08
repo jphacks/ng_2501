@@ -55,23 +55,12 @@ docker compose run --rm certbot certonly --webroot -w /var/www/certbot \
   --email "$EMAIL" \
   --agree-tos \
   --no-eff-email \
+  --force-renewal \
   -d "$DOMAIN"
 
-if [ $? -eq 0 ]; then
-  echo "証明書の取得に成功しました"
+# Nginxのリロード
+echo "### Nginxをリロードしています ###"
+docker compose exec nginx nginx -s reload
 
-  # HTTPS設定に切り替え
-  echo "### HTTPS設定に切り替えています ###"
-  mv ./nginx/conf.d/app.conf.https.backup ./nginx/conf.d/app.conf 2>/dev/null || true
-
-  # Nginxをリロード
-  echo "### Nginxをリロードしています ###"
-  docker compose exec nginx nginx -s reload
-
-  echo "### 完了しました！ ###"
-  echo "HTTPS が有効になりました: https://${DOMAIN}"
-else
-  echo "### エラー: 証明書の取得に失敗しました ###"
-  echo "DNS設定やファイアウォールを確認してください"
-  exit 1
-fi
+echo "### 完了しました！ ###"
+echo "HTTPS が有効になりました: https://${DOMAIN}"

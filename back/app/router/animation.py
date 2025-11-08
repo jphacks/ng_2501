@@ -150,6 +150,20 @@ async def get_animation(
     return JSONResponse(status_code=404, content={"message": "Video not found"})
 
 
+@router.get("/api/animation/get_info/{video_id}", summary="生成済み動画のメタ情報取得")
+async def get_animation_info(
+        video_id: str,
+        db: VideoDatabase = Depends(get_video_db)
+    ):
+    """
+    生成済み動画の全情報を取得する。
+    """
+    video_info = db.get_video(video_id)
+    if not video_info:
+        raise HTTPException(status_code=404, detail="Video not found")
+    return video_info
+
+
 @router.post("/api/animation")
 async def generate_regacy_animation(
     initial_prompt:InitialPrompt,

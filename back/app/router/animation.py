@@ -193,15 +193,17 @@ async def generate_regacy_animation(
             enhance_prompt=initial_prompt.enhance_prompt,
             max_loop=3
         )
-        
-        db.generate_video(
-            generate_id=initial_prompt.generation_id,
-            video_id=response.video_id,
-            video_path=response.video_path,
-            prompt_path=response.prompt_path,
-            manim_code_path=response.manim_code_path
-        )
-        
+
+        # 成功した場合のみDBに保存
+        if response.ok and response.video_id:
+            db.generate_video(
+                generate_id=initial_prompt.generation_id,
+                video_id=response.video_id,
+                video_path=response.video_path,
+                prompt_path=response.prompt_path,
+                manim_code_path=response.manim_code_path
+            )
+
         return response
     except Exception as e:
         # サービス内例外は 500 で返却

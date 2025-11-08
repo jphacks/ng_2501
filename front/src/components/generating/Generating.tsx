@@ -42,6 +42,7 @@ export function Generating() {
                             src="/sudo-generating.gif" 
                             alt="生成中" 
                             className="w-48 h-48 object-contain drop-shadow-2xl relative z-10"
+                            style={{ filter: 'brightness(1.3) saturate(1.4) contrast(1.1)' }}
                         />
                     </div>
                     <h3 className="text-lg font-semibold text-[#030405] mb-2">動画を生成中...</h3>

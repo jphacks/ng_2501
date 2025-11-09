@@ -16,6 +16,39 @@ export function VideoPlayer({ videoUrl }: VideoPlayerProps) {
     const [showMiniPlayer, setShowMiniPlayer] = useState(false)
 
     useEffect(() => {
+        const videoElement = videoRef.current
+        if (!videoElement) {
+            return
+        }
+
+        const playFromStart = () => {
+            videoElement.currentTime = 0
+            const playPromise = videoElement.play()
+            if (playPromise) {
+                playPromise.catch(() => {
+                    /* ユーザー操作に依存する環境では再生失敗を無視 */
+                })
+            }
+        }
+
+        const handleEnded = () => {
+            playFromStart()
+        }
+
+        const handleLoaded = () => {
+            playFromStart()
+        }
+
+        videoElement.addEventListener('loadeddata', handleLoaded)
+        videoElement.addEventListener('ended', handleEnded)
+
+        return () => {
+            videoElement.removeEventListener('loadeddata', handleLoaded)
+            videoElement.removeEventListener('ended', handleEnded)
+        }
+    }, [videoUrl])
+
+    useEffect(() => {
         const handleScroll = () => {
             if (!playerRef.current) return
 
@@ -41,13 +74,12 @@ export function VideoPlayer({ videoUrl }: VideoPlayerProps) {
                     <video
                         ref={videoRef}
                         className="w-full h-full object-contain"
+                        src={videoUrl}
                         controls
-                        preload="metadata"
-                    >
-                        <source src={videoUrl} type="video/mp4" />
-                        <track kind="captions" label="日本語" srcLang="ja" />
-                        Your browser does not support the video tag.
-                    </video>
+                        playsInline
+                        preload="auto"
+                        loop
+                    />
                 </div>
             </div>
 
@@ -59,8 +91,11 @@ export function VideoPlayer({ videoUrl }: VideoPlayerProps) {
                             <div className="aspect-video">
                                 <video
                                     className="w-full h-full object-contain"
+                                    src={videoUrl}
                                     controls
-                                    preload="metadata"
+                                    playsInline
+                                    preload="auto"
+                                    loop
                                     onPlay={(e) => {
                                         // ミニプレイヤーで再生したらメインプレイヤーも同期
                                         if (videoRef.current && e.currentTarget !== videoRef.current) {
@@ -68,11 +103,7 @@ export function VideoPlayer({ videoUrl }: VideoPlayerProps) {
                                             videoRef.current.play()
                                         }
                                     }}
-                                >
-                                    <source src={videoUrl} type="video/mp4" />
-                                    <track kind="captions" label="日本語" srcLang="ja" />
-                                    Your browser does not support the video tag.
-                                </video>
+                                />
                             </div>
 
                             {/* 元の位置に戻るボタン */}

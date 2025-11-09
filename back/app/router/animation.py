@@ -2,10 +2,10 @@ from pathlib import Path
 
 import os
 from dotenv import load_dotenv
-from fastapi import APIRouter, HTTPException ,Depends
+from fastapi import APIRouter, HTTPException ,Depends, BackgroundTasks
 from fastapi.responses import FileResponse, JSONResponse 
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict, Any
 
 # from app.service.graph_agent import ManimGraphAnimationService
 # from back.app.service.agent import ManimRegacyAgentService
@@ -13,6 +13,7 @@ from back.app.service.fast_ai_agent import ManimFastAnimationService
 from back.app.service.base_agent import SuccessResponse , PlanResponse
 from back.app.model.model import VideoDatabase, get_video_db
 from back.app.service.template_service import TemplateService
+from back.app.service.job_manager import job_manager, JobStatus
 
 load_dotenv()
 
@@ -44,17 +45,33 @@ class EditPrompt(BaseModel):
 class SearchPrompt(BaseModel):
     content: str
     
+class JobSubmissionResponse(BaseModel):
+    job_id: str
+    status: JobStatus
+
+class JobStatusResponse(BaseModel):
+    job_id: str
+    status: JobStatus
+    message: Optional[str] = None
+    ok: Optional[bool] = None
+    video_id: Optional[str] = None
+    video_path: Optional[str] = None
+    prompt_path: Optional[str] = None
+    manim_code_path: Optional[str] = None
 
 # ---------- Service ----------
 # service = ManimGraphAnimationService()
-service = ManimFastAnimationService()
+def get_manim_service() -> ManimFastAnimationService:
+    """リクエスト毎に新しいManimサービスを生成する"""
+    return ManimFastAnimationService()
 template_service = TemplateService()
 
 
 @router.post("/api/plan_animation", response_model=PlanResponse, summary="動画生成の計画立案")
 async def plan_animation(
     concept_input: ConceptInput,
-    db: VideoDatabase = Depends(get_video_db)
+    db: VideoDatabase = Depends(get_video_db),
+    service: ManimFastAnimationService = Depends(get_manim_service),
 ):
     """
     動画生成の計画立案を行う。
@@ -185,7 +202,8 @@ async def search_animation(
 @router.post("/api/animation")
 async def generate_regacy_animation(
     initial_prompt:InitialPrompt,
-    db: VideoDatabase = Depends(get_video_db)
+    db: VideoDatabase = Depends(get_video_db),
+    service: ManimFastAnimationService = Depends(get_manim_service),
     ):
     try:
         response: SuccessResponse = service.main(
@@ -214,7 +232,8 @@ async def generate_regacy_animation(
 @router.post("/api/animation/edit", response_model=SuccessResponse, summary="動画編集API")
 async def edit_video(
     edit_prompt: EditPrompt,
-    db: VideoDatabase = Depends(get_video_db)
+    db: VideoDatabase = Depends(get_video_db),
+    service: ManimFastAnimationService = Depends(get_manim_service),
 ):
     try:
         response: SuccessResponse = service.edit(
@@ -233,3 +252,130 @@ async def edit_video(
     except Exception as e:
         # サービス内例外は 500 で返却
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post(
+    "/api/animation/job",
+    response_model=JobSubmissionResponse,
+    summary="動画生成ジョブの作成",
+)
+async def enqueue_animation_job(
+    initial_prompt: InitialPrompt,
+    background_tasks: BackgroundTasks,
+    db: VideoDatabase = Depends(get_video_db),
+    service: ManimFastAnimationService = Depends(get_manim_service),
+):
+    job_id = job_manager.create_job()
+    background_tasks.add_task(
+        _run_generate_job,
+        job_id,
+        initial_prompt,
+        service,
+        db,
+    )
+    return JobSubmissionResponse(job_id=job_id, status=JobStatus.QUEUED)
+
+
+@router.post(
+    "/api/animation/job/edit",
+    response_model=JobSubmissionResponse,
+    summary="動画編集ジョブの作成",
+)
+async def enqueue_edit_job(
+    edit_prompt: EditPrompt,
+    background_tasks: BackgroundTasks,
+    db: VideoDatabase = Depends(get_video_db),
+    service: ManimFastAnimationService = Depends(get_manim_service),
+):
+    job_id = job_manager.create_job()
+    background_tasks.add_task(
+        _run_edit_job,
+        job_id,
+        edit_prompt,
+        service,
+        db,
+    )
+    return JobSubmissionResponse(job_id=job_id, status=JobStatus.QUEUED)
+
+
+@router.get(
+    "/api/animation/job/{job_id}",
+    response_model=JobStatusResponse,
+    summary="ジョブの進捗確認",
+)
+async def get_animation_job_status(job_id: str):
+    payload = job_manager.as_response(job_id)
+    if payload is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return JobStatusResponse(**payload)
+
+
+def _run_generate_job(
+    job_id: str,
+    initial_prompt: InitialPrompt,
+    service: ManimFastAnimationService,
+    db: VideoDatabase,
+):
+    job_manager.mark_running(job_id)
+    try:
+        response: SuccessResponse = service.main(
+            generation_id=initial_prompt.generation_id,
+            content=initial_prompt.content,
+            enhance_prompt=initial_prompt.enhance_prompt,
+            max_loop=3,
+        )
+        if response.ok and response.video_id:
+            db.generate_video(
+                generate_id=initial_prompt.generation_id,
+                video_id=response.video_id,
+                video_path=response.video_path,
+                prompt_path=response.prompt_path,
+                manim_code_path=response.manim_code_path,
+            )
+            job_manager.mark_succeeded(job_id, response.message, _response_to_dict(response))
+        else:
+            job_manager.mark_failed(
+                job_id,
+                response.message or "Video generation failed",
+                _response_to_dict(response),
+            )
+    except Exception as exc:
+        job_manager.mark_failed(job_id, str(exc))
+
+
+def _run_edit_job(
+    job_id: str,
+    edit_prompt: EditPrompt,
+    service: ManimFastAnimationService,
+    db: VideoDatabase,
+):
+    job_manager.mark_running(job_id)
+    try:
+        response: SuccessResponse = service.edit(
+            generation_id=edit_prompt.generation_id,
+            prior_video_id=edit_prompt.prior_video_id,
+            enhance_prompt=edit_prompt.enhance_prompt,
+            max_loop=3,
+        )
+        if response.ok and response.video_id and response.video_path:
+            db.edit_video(
+                prior_video_id=edit_prompt.prior_video_id,
+                new_video_path=response.video_path,
+                new_video_id=response.video_id,
+            )
+            job_manager.mark_succeeded(job_id, response.message, _response_to_dict(response))
+        else:
+            job_manager.mark_failed(
+                job_id,
+                response.message or "Video edit failed",
+                _response_to_dict(response),
+            )
+    except Exception as exc:
+        job_manager.mark_failed(job_id, str(exc))
+
+
+def _response_to_dict(response: SuccessResponse) -> Dict[str, Any]:
+    try:
+        return response.model_dump()
+    except AttributeError:
+        return response.dict()

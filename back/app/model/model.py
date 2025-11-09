@@ -120,7 +120,11 @@ class VideoDatabase:
         print("Initializing Video Database (SQLAlchemy)...")
         
         try:
-            self.engine = create_engine(DATABASE_URL)
+            engine_kwargs = {}
+            if IS_SQLITE:
+                engine_kwargs["connect_args"] = {"check_same_thread": False}
+
+            self.engine = create_engine(DATABASE_URL, **engine_kwargs)
             # スレッドローカルなセッションファクトリを作成
             self.Session = scoped_session(sessionmaker(bind=self.engine, autoflush=True, autocommit=False))
 
@@ -416,5 +420,4 @@ def get_video_db() -> VideoDatabase:
     if _video_db_instance is None:
         _video_db_instance = VideoDatabase()
     return _video_db_instance
-
 

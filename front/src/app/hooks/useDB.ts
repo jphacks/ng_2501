@@ -1,5 +1,22 @@
 
 import { useCallback } from 'react';
+import type { VideoData } from '@/app/datas/Video';
+
+const stripWrappingQuotes = (value: string) => value.replace(/^['"]|['"]$/g, '');
+const resolveBackendBaseUrl = () => {
+  const raw = process.env.NEXT_PUBLIC_API_URL ?? '';
+  return stripWrappingQuotes(raw).trim().replace(/\/$/, '');
+};
+const buildAnimationUrl = (videoId: string) => {
+  if (!videoId) {
+    return '';
+  }
+  const backendBase = resolveBackendBaseUrl();
+  if (!backendBase) {
+    return `/api/animation/${videoId}`;
+  }
+  return `${backendBase}/api/animation/${videoId}`;
+};
 
 // Type definitions based on the backend Pydantic models
 interface ConceptInput {
@@ -139,10 +156,64 @@ export const useDB = () => {
     }
   }, []);
 
+  const getVideoInfo = useCallback(async (videoId: string): Promise<any> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/animation/get_info/${videoId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+      });
+      if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`HTTP error! status: ${response.status}, details: ${errorData.detail}`);
+      }
+      return await response.json();
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
+  }, []);
+
+  const searchVideo = useCallback(async (content: string): Promise<VideoData[]> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/search_animation`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ content }),
+      });
+      if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`HTTP error! status: ${response.status}, details: ${errorData.detail}`);
+      }
+      const data = await response.json() as {
+        results?: Array<{ video_id?: string; content?: string }>;
+      };
+      const results = data.results ?? [];
+      return results
+        .filter((item): item is { video_id: string; content?: string } => !!item.video_id)
+        .map((item) => {
+          const videoPath = buildAnimationUrl(item.video_id);
+          return {
+            videoId: item.video_id,
+            videoPath,
+            content: item.content ?? '',
+          };
+        });
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
+  }, []);
+
   return {
     planAnimation,
     generateAnimation,
     editAnimation,
     sendVideoId,
+    getVideoInfo,
+    searchVideo,
   };
 };

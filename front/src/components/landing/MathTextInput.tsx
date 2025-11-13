@@ -14,6 +14,7 @@ import { Header } from '../common/Header'
 
 interface MathTextInputProps {
     onSubmit: (text: string, videoPrompt?: string) => Promise<void>
+    onSearch: (text: string) => void
     isGenerating: boolean
 }
 
@@ -80,7 +81,7 @@ function PreviewPanel({ text, className = '' }: { text: string; className?: stri
 /**
  * Presentation層: 数式テキスト入力フォーム（MathEditor統合版 + プレビュー対応）
  */
-export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
+export function MathTextInput({ onSubmit, onSearch, isGenerating }: MathTextInputProps) {
     const [text, setText] = useState('')
     const [videoPrompt, setVideoPrompt] = useState('')
     const [showMathEditor, setShowMathEditor] = useState(false)
@@ -139,6 +140,12 @@ export function MathTextInput({ onSubmit, isGenerating }: MathTextInputProps) {
         e.preventDefault()
         if (!text.trim()) return
         await onSubmit(text, videoPrompt || undefined)
+    }
+
+    const handleSearch = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault()
+        if (!text.trim()) return
+        onSearch(text)
     }
 
     const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -827,7 +834,15 @@ BがAとほぼ同じ方向のときは影が長く、90°に近いときはほ�
                                 </div>
 
                                 {/* 動画生成ボタン */}
-                                <div className="order-1 lg:order-3 lg:pt-3 lg:border-t border-[#0A3B7E]/20">
+                                <div className="order-1 lg:order-3 lg:pt-3 lg:border-t border-[#0A3B7E]/20 space-y-2">
+                                    <button
+                                        type="button"
+                                        onClick={handleSearch}
+                                        disabled={!text.trim() || isGenerating}
+                                        className="w-full bg-blue-500 text-white py-3 px-4 rounded text-base font-semibold hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-sm flex items-center justify-center gap-2"
+                                    >
+                                        検索
+                                    </button>
                                     <button
                                         type="submit"
                                         disabled={!text.trim() || isGenerating}

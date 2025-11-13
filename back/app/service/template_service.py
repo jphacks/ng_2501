@@ -103,7 +103,7 @@ class TemplateService:
         self,
         *,
         query: str,
-        max_gets: int = 3,
+        max_gets: int = 12,
     ) -> List[Dict[str, Any]]:
         """RAGストアから類似テンプレートを検索する。"""
         if not query:

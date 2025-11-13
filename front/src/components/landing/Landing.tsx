@@ -4,6 +4,7 @@ import { MathTextInput } from './MathTextInput'
 
 interface LandingProps {
     onSubmit: (text: string, videoPrompt?: string) => Promise<void>
+    onSearch: (query: string) => void
     isGenerating: boolean
     error: string | null
     children?: React.ReactNode // テスト用コンポーネント挿入用
@@ -12,7 +13,7 @@ interface LandingProps {
 /**
  * Presentation層: ランディングページ全体
  */
-export function Landing({ onSubmit, isGenerating, error, children }: LandingProps) {
+export function Landing({ onSubmit, onSearch, isGenerating, error, children }: LandingProps) {
     return (
         <div className="flex flex-col h-full min-w-0">
             {/* エラー表示 */}
@@ -28,7 +29,7 @@ export function Landing({ onSubmit, isGenerating, error, children }: LandingProp
 
             {/* テキスト入力フォーム（flex-1で残りスペース占有） */}
             <div className="flex-1 min-h-0 overflow-hidden">
-                <MathTextInput onSubmit={onSubmit} isGenerating={isGenerating} />
+                <MathTextInput onSubmit={onSubmit} onSearch={onSearch} isGenerating={isGenerating} />
             </div>
         </div>
     )

@@ -112,6 +112,20 @@ async def get_animation(
     return JSONResponse(status_code=404, content={"message": "Video not found"})
 
 
+@router.get("/api/animation/get_info/{video_id}", summary="生成済み動画のメタ情報取得")
+async def get_animation_info(
+        video_id: str,
+        db: VideoDatabase = Depends(get_video_db)
+    ):
+    """
+    生成済み動画のオブジェクトにある情報を取得する。
+    """
+    video_info = db.get_video(video_id)
+    if not video_info:
+        raise HTTPException(status_code=404, detail="Video not found")
+    return video_info
+
+
 @router.post("/api/register_rag/{video_id}", summary="RAG用動画登録API")
 async def register_rag_video(
     video_id: str,
@@ -171,7 +185,7 @@ async def search_animation(
     try:
         results = template_service.search(
             query=search_content,
-            max_gets=10,
+            max_gets=12,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e

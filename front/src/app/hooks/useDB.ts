@@ -54,7 +54,7 @@ type SendResponse = {
 }
 
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL+'/api' ;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL+'api' ;
 
 /**
  * Custom hook for interacting with the database and animation generation APIs.

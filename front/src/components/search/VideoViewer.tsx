@@ -18,7 +18,7 @@ function VideoCard({ video, onLoadVideo }: { video: VideoData; onLoadVideo: (vid
     const [isHovered, setIsHovered] = useState(false)
 
     return (
-        <div className="relative group border rounded-lg overflow-hidden shadow-lg bg-gray-200 hover:bg-gray-300"
+        <div className="relative group border rounded-lg overflow-hidden shadow-lg"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
@@ -52,27 +52,21 @@ function VideoCard({ video, onLoadVideo }: { video: VideoData; onLoadVideo: (vid
  * Youtubeのホーム画面のように、動画が並びカーソルを合わせるとスクリプトが表示される
  */
 export function VideoViewer({ result, isGenerating, onLoadVideo }: VideoViewerProps) {
-    // if (!result || result.length === 0) {
-    //     return (
-    //         <div className="text-center">
-    //             <p className="text-gray-500">No videos found.</p>
-    //             <button onClick={onReset} className="mt-4 px-4 py-2 text-sm font-medium text-white bg-[#0A3B7E] rounded hover:bg-[#0A3B7E]/90">
-    //                 Back to Home
-    //             </button>
-    //         </div>
-    //     )
-    // }
+    if (!result || result.length === 0) {
+        return (
+            <div className="text-center">
+                <p className="text-gray-500">No videos found.</p>
+            </div>
+        )
+    }
 
     return (
         <div>
-            {/* <div className="p-4">
-                <button onClick={onReset} className="px-4 py-2 text-sm font-medium text-white bg-[#0A3B7E] rounded hover:bg-[#0A3B7E]/90">
-                    Back to Home
-                </button>
-            </div> */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
                 {result.map((video) => (
-                    <VideoCard key={video.videoId} video={video} onLoadVideo={onLoadVideo} />
+                    <div key={video.videoId} className="p-3 rounded-lg hover:bg-[rgba(10,59,126,0.2)] transition-colors animate-fade-in">
+                        <VideoCard video={video} onLoadVideo={onLoadVideo} />
+                    </div>
                 ))}
             </div>
         </div>

@@ -29,6 +29,14 @@ export interface VideoData {
     content: string
 }
 
+export interface VideoInfo {
+    videoId: string;
+    videoPath: string;
+    content: string;
+    generateTime: string; // Assuming from JSON it will be a string
+    editCount: number;
+}
+
 /**
  * 動画生成結果
  */

@@ -11,13 +11,14 @@ interface ResultProps {
     isGenerating: boolean
     onEdit: (videoId: string, editPrompt: string) => Promise<VideoResult>
     onReset?: () => void
+    onShowHistory?: () => void
 }
 
 /**
  * Presentation層: リザルトページ全体
  * PC向けに画面を贅沢に使う2カラムレイアウト
  */
-export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
+export function Result({ result, isGenerating, onEdit, onReset, onShowHistory }: ResultProps) {
     const [showEditPanel, setShowEditPanel] = useState(false)
     const [editPrompt, setEditPrompt] = useState('')
     const [isLiked, setIsLiked] = useState(false)
@@ -72,6 +73,15 @@ export function Result({ result, isGenerating, onEdit, onReset }: ResultProps) {
                             className="w-full py-2 px-4 bg-[#3A947C] hover:bg-[#3A947C]/90 text-white text-sm rounded transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                         >
                             いいね！
+                        </button>
+                    </div>
+                    <div>
+                        <button
+                            type="button"
+                            onClick={onShowHistory}
+                            className="w-full mt-2 py-2 px-4 bg-[#CE632C] hover:bg-[#CE632C]/90 text-white text-sm rounded transition-colors"
+                        >
+                            この動画の履歴を見る
                         </button>
                     </div>
                 </div>

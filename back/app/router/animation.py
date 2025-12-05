@@ -195,6 +195,16 @@ async def search_animation(
         content={"results": results},
     )
 
+@router.get("/api/history/{generation_id}", summary="動画履歴取得API")
+async def get_animation_history(
+    generation_id: int,
+    db: VideoDatabase = Depends(get_video_db)
+):
+    history = db.get_videos_by_generation(generation_id)
+    if history is None:
+        raise HTTPException(status_code=404, detail="History not found")
+    return history
+
 
 @router.post("/api/animation")
 async def generate_regacy_animation(

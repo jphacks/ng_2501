@@ -2,6 +2,7 @@
 
 import { VideoViewer } from './VideoViewer'
 import type { VideoData } from '@/app/datas/Video'
+import { Header } from '../common/Header'
 
 interface SearchProps {
     result: VideoData[]
@@ -16,7 +17,9 @@ interface SearchProps {
 export function Search({ result, isGenerating, onLoadVideo, onReset }: SearchProps) {
     return (
         <div className="h-full flex flex-col min-w-0 w-full">
-            <VideoViewer result={result} isGenerating={isGenerating} onLoadVideo={onLoadVideo} onReset={onReset} />
+            {/* ヘッダー */}
+            <Header statusText="類似動画 検索結果" showBackButton={!!onReset} onBack={onReset} />
+            <VideoViewer result={result} isGenerating={isGenerating} onLoadVideo={onLoadVideo} />
         </div>
     )
 }

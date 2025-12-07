@@ -203,7 +203,18 @@ async def get_animation_history(
     history = db.get_videos_by_generation(generation_id)
     if history is None:
         raise HTTPException(status_code=404, detail="History not found")
-    return history
+
+    result = []
+    for video in history:
+        result.append({
+            "videoId": video.video_id,
+            "videoPath": video.video_path,
+            "promptId": video.prompt_id,
+            "manimCodeId": video.manim_code_id,
+            "generateTime": video.generate_time.isoformat(),
+            "editCount": video.edit_count,
+        })
+    return result
 
 
 @router.post("/api/animation")

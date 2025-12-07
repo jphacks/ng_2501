@@ -32,7 +32,8 @@ export interface VideoData {
 export interface VideoInfo {
     videoId: string;
     videoPath: string;
-    content: string;
+    promptId: number;
+    manimCodeId: number;
     generateTime: string; // Assuming from JSON it will be a string
     editCount: number;
 }

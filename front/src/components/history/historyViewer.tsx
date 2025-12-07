@@ -2,6 +2,9 @@
 
 import { useState } from 'react'
 import type { VideoInfo } from '@/app/datas/Video'
+import { json } from 'stream/consumers'
+import { useEffect } from 'react';
+import { fetchScript } from '@/app/hooks/fetchScript';
 
 interface HistoryViewerProps {
     historyResult: VideoInfo[] | null
@@ -15,7 +18,52 @@ interface HistoryViewerProps {
  */
 function HistoryCard({ video, onLoadVideo }: { video: VideoInfo; onLoadVideo: (videoId: string, prompt: string) => Promise<any> }) {
     const [isHovered, setIsHovered] = useState(false)
+    const [content, setContent] = useState<string>('')
+    const [isLoading, setIsLoading] = useState(true)
+    const [manimCode, setManimCode] = useState<string>('')
+    
+    // フックはコンポーネントのトップレベルで呼び出す
+    const { fetchScript: fetchScriptFn } = fetchScript();
+    
+    useEffect(() => {
+        const fetchScriptContent = async () => {
+            setIsLoading(true)
+            try {
+                const scriptData = await fetchScriptFn(video.promptId)
+                // 返却形式: { prompt: [ { trial, content, enhance_prompt }, ... ] }
+                console.log('scriptData:', scriptData)
 
+                if (scriptData && scriptData.message) {
+                    const message = typeof scriptData.message === 'string' ? JSON.parse(scriptData.message) : scriptData.message
+                    if (message && Array.isArray(message.prompt)) {
+                        const index = video.editCount - 1
+                        const item = message.prompt[index]
+
+                        if (item && typeof item.content === 'string' && item.content!="") {
+                            setContent(item.content)
+                        } else if (item && typeof item.enhance_prompt === 'string' && item.enhance_prompt!="") {
+                            setContent(item.enhance_prompt)
+                        } else {
+                            setContent('')
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching script content:', error);
+            } finally {
+                setIsLoading(false)
+            }
+        }
+        fetchScriptContent();
+    }, [video.promptId, video.editCount, fetchScriptFn]);
+
+    if (isLoading) {
+        return <div className="w-full h-full flex items-center justify-center bg-gray-200 min-h-[200px]">
+            <p className="text-gray-500">Loading...</p>
+        </div>
+    }
+
+    console.log('Rendering HistoryCard with content:', content);
     return (
         <div className="relative group border rounded-lg overflow-hidden shadow-lg bg-gray-200 hover:bg-gray-300"
             onMouseEnter={() => setIsHovered(true)}
@@ -24,7 +72,7 @@ function HistoryCard({ video, onLoadVideo }: { video: VideoInfo; onLoadVideo: (v
             <button
                 type="button"
                 className="w-full h-full"
-                onClick={() => onLoadVideo(video.videoId, video.content)}
+                onClick={() => onLoadVideo(video.videoId, content)}
             >
                 <video
                     src={video.videoPath}
@@ -38,7 +86,7 @@ function HistoryCard({ video, onLoadVideo }: { video: VideoInfo; onLoadVideo: (v
                 {isHovered && (
                     <div className="absolute inset-0 bg-black bg-opacity-70 p-4 overflow-y-auto text-white animate-fade-in">
                         <h3 className="font-bold mb-2">Script</h3>
-                        <p className="text-sm whitespace-pre-wrap">{video.content}</p>
+                        <p className="text-sm whitespace-pre-wrap">{content || 'No script available'}</p>
                     </div>
                 )}
             </button>
@@ -48,6 +96,7 @@ function HistoryCard({ video, onLoadVideo }: { video: VideoInfo; onLoadVideo: (v
             </div>
         </div>
     )
+    
 }
 
 /**
@@ -65,6 +114,7 @@ export function HistoryViewer({ historyResult, onLoadVideo, onClose }: HistoryVi
             </div>
         )
     }
+    console.log('Rendering historyResult:', historyResult);
 
     return (
         <div>

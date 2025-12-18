@@ -5,6 +5,7 @@ import type { VideoInfo } from '@/app/datas/Video'
 import { json } from 'stream/consumers'
 import { useEffect } from 'react';
 import { fetchScript } from '@/app/hooks/fetchScript';
+import { fetchManimCode } from '@/app/hooks/fetchManimCode';
 import fetchVideo from '@/app/hooks/fetchVideo';
 
 interface HistoryViewerProps {
@@ -29,6 +30,7 @@ function HistoryCard({ video, onLoadVideo }: { video: VideoInfo; onLoadVideo: (v
     
     // フックはコンポーネントのトップレベルで呼び出す
     const { fetchScript: fetchScriptFn } = fetchScript();
+    const { fetchManimCode: fetchManimCodeFn } = fetchManimCode();
 
     const handleVideoClick = async () => {
         try {
@@ -40,16 +42,21 @@ function HistoryCard({ video, onLoadVideo }: { video: VideoInfo; onLoadVideo: (v
     }
     
     useEffect(() => {
-        const fetchScriptContent = async () => {
+        const fetchAllContent = async () => {
             setIsLoading(true)
             try {
                 // 動画URLを生成
+                console.log('Fetching video URL for:', video.videoId)
                 const url = await fetchVideo(video.videoId)
                 if (url) {
                     setVideoUrl(url)
+                    console.log('Video URL fetched:', url)
                 }
 
+                // スクリプトを取得
+                console.log('Fetching script for promptId:', video.promptId)
                 const scriptData = await fetchScriptFn(video.promptId)
+                console.log('Script data received:', scriptData)
 
                 if (scriptData && scriptData.message) {
                     const message = typeof scriptData.message === 'string' ? JSON.parse(scriptData.message) : scriptData.message
@@ -86,23 +93,37 @@ function HistoryCard({ video, onLoadVideo }: { video: VideoInfo; onLoadVideo: (v
                         setScript('')
                     }
                 }
+
+                // Manimコードを取得
+                console.log('Fetching manim code for manimCodeId:', video.manimCodeId)
+                const manimCodeData = await fetchManimCodeFn(video.manimCodeId)
+                console.log('Manim code data received:', manimCodeData)
+                
+                if (manimCodeData && manimCodeData.message) {
+                    setManimCode(manimCodeData.message)
+                } else {
+                    setManimCode('')
+                }
             } catch (error) {
-                console.error('Error fetching script content:', error);
+                if (error instanceof Error) {
+                    console.error('Error details:', error.message, error.stack)
+                }
             } finally {
                 setIsLoading(false)
             }
         }
-        fetchScriptContent();
+        
+        fetchAllContent();
         setEditCount(video.editCount);
         setGenerateTime(video.generateTime);
-    }, [video.promptId, video.editCount, fetchScriptFn]);
+    }, [video.promptId, video.manimCodeId, video.editCount, fetchScriptFn, fetchManimCodeFn]);
 
     if (isLoading) {
         return <div className="w-full h-full flex items-center justify-center bg-gray-200 min-h-[200px]">
             <p className="text-gray-500">Loading...</p>
         </div>
     }
-
+    console.log("video:", video);
     return (
         <div className="relative group border rounded-lg shadow-lg bg-gray-200 hover:bg-gray-300"
             onMouseEnter={() => setIsHovered(true)}
@@ -135,15 +156,19 @@ function HistoryCard({ video, onLoadVideo }: { video: VideoInfo; onLoadVideo: (v
                 )}
             </div>
             <div 
-                className={`bg-white rounded-b-lg transition-all duration-300 ease-in-out overflow-hidden ${
-                    isHovered ? 'max-h-48 p-2 opacity-100' : 'max-h-0 p-0 opacity-0'
+                className={`bg-white rounded-b-lg transition-all duration-300 ease-in-out overflow-y-auto ${
+                    isHovered ? 'max-h-96 p-2 opacity-100' : 'max-h-0 p-0 opacity-0'
                 }`}
             >
                 <p className="text-xs text-gray-600">Edited {editCount} times</p>
                 <p className="text-xs text-gray-600">Generated on {new Date(generateTime).toLocaleString()}</p>
-                <p className="mt-1 font-semibold text-gray-800">Prompt:</p>
-                <div className="mt-2 max-h-32 overflow-y-auto border-t-2 pb-4">
-                    <p className="text-sm font-medium text-gray-800 whitespace-pre-wrap">{script}</p>
+                <p className="mt-2 font-semibold text-gray-800">Prompt:</p>
+                <div className="mt-1 max-h-32 overflow-y-auto border rounded p-2 bg-gray-50">
+                    <p className="text-xs font-medium text-gray-800 whitespace-pre-wrap">{script}</p>
+                </div>
+                <p className="mt-2 font-semibold text-gray-800">Manim Code:</p>
+                <div className="mt-1 mb-2 max-h-40 overflow-y-auto border rounded p-2 bg-gray-50">
+                    <p className="text-xs font-mono text-gray-800 whitespace-pre-wrap">{manimCode}</p>
                 </div>
             </div>
         </div>

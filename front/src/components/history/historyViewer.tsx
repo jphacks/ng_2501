@@ -21,6 +21,7 @@ interface HistoryViewerProps {
 function HistoryCard({ video, onLoadVideo }: { video: VideoInfo; onLoadVideo: (videoId: string, prompt: string) => Promise<any> }) {
     const [isHovered, setIsHovered] = useState(false)
     const [content, setContent] = useState<string>('')
+    const [title, setTitle] = useState<string>('Script')
     const [script, setScript] = useState<string>('')
     const [editCount, setEditCount] = useState<number>(video.editCount)
     const [generateTime, setGenerateTime] = useState<string>(video.generateTime)
@@ -67,30 +68,37 @@ function HistoryCard({ video, onLoadVideo }: { video: VideoInfo; onLoadVideo: (v
                         if (item && typeof item.content === 'string' && item.content!="") {
                             setContent(item.content)
                             setScript(item.content)
+                            setTitle('Script')
                         } else if (item && typeof item.enhance_prompt === 'string' && item.enhance_prompt!="") {
                             setContent(item.enhance_prompt)
                             setScript(item.enhance_prompt)
+                            setTitle('Script')
                         } else {
                             setContent('')
                             setScript('')
+                            setTitle('Script')
                         }
                     } else if (Array.isArray(message)) {
                         const index = 3*(video.editCount - 1)
                         if (message[index]['content'] === '' && message[index]['enhance_prompt']) {
                             setContent(message[index]['enhance_prompt'])
                             setScript('')
+                            setTitle('Enhance Script')
                         } else if (message[index]['content']) {
                             const content = message[index]['content']
                             const script = message[index+1]['content']
                             setContent(content)
                             setScript(script)
+                            setTitle('Script')
                         } else {
                             setContent('')
                             setScript('')
+                            setTitle('Script')
                         }
                     } else {
                         setContent('')
                         setScript('')
+                        setTitle('Script')
                     }
                 }
 
@@ -150,7 +158,7 @@ function HistoryCard({ video, onLoadVideo }: { video: VideoInfo; onLoadVideo: (v
                         className="absolute inset-x-0 top-0 bottom-0 bg-black bg-opacity-70 p-4 overflow-y-auto text-white animate-fade-in cursor-pointer"
                         onClick={handleVideoClick}
                     >
-                        <h3 className="font-bold mb-2">Script</h3>
+                        <h3 className="font-bold mb-2">{title}</h3>
                         <p className="text-sm whitespace-pre-wrap">{content || 'No script available'}</p>
                     </div>
                 )}

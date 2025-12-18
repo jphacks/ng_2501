@@ -71,6 +71,11 @@ export function VideoGenerationFlow() {
     }
     const showResult = () => setCurrentView('result')
 
+    const handleLoadVideoFromHistory = async (videoId: string, promptText: string) => {
+        await loadExistingVideo(videoId, promptText)
+        setCurrentView('result')
+    }
+
     return (
         <div className={`h-full flex flex-col w-full min-w-0 ${containerOverflowClass}`}>
             {/* 状態1: ランディング（テキスト入力） */}
@@ -95,7 +100,7 @@ export function VideoGenerationFlow() {
             {/* 状態4: リザルト */}
             {isResult && currentView === 'result' && result && <Result result={result} isGenerating={isGenerating} onEdit={editVideo} onReset={clearResult} onShowHistory={showHistory} />}
 
-            {currentView === 'history' && prompt && <History historyResult={historyResult} onLoadVideo={loadExistingVideo} onClose={showResult} />}
+            {currentView === 'history' && prompt && <History historyResult={historyResult} onLoadVideo={handleLoadVideoFromHistory} onClose={showResult} />}
         </div>
     )
 }

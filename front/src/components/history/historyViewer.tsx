@@ -29,6 +29,15 @@ function HistoryCard({ video, onLoadVideo }: { video: VideoInfo; onLoadVideo: (v
     
     // フックはコンポーネントのトップレベルで呼び出す
     const { fetchScript: fetchScriptFn } = fetchScript();
+
+    const handleVideoClick = async () => {
+        try {
+            console.log('Loading video:', video.videoId, 'with prompt:', content)
+            await onLoadVideo(video.videoId, content)
+        } catch (error) {
+            console.error('Error loading video:', error)
+        }
+    }
     
     useEffect(() => {
         const fetchScriptContent = async () => {
@@ -103,7 +112,7 @@ function HistoryCard({ video, onLoadVideo }: { video: VideoInfo; onLoadVideo: (v
                 <button
                     type="button"
                     className="w-full h-full block"
-                    onClick={() => onLoadVideo(video.videoId, content)}
+                    onClick={handleVideoClick}
                 >
                     <video
                         src={videoUrl}
@@ -118,7 +127,7 @@ function HistoryCard({ video, onLoadVideo }: { video: VideoInfo; onLoadVideo: (v
                 {isHovered && (
                     <div 
                         className="absolute inset-x-0 top-0 bottom-0 bg-black bg-opacity-70 p-4 overflow-y-auto text-white animate-fade-in cursor-pointer"
-                        onClick={() => onLoadVideo(video.videoId, content)}
+                        onClick={handleVideoClick}
                     >
                         <h3 className="font-bold mb-2">Script</h3>
                         <p className="text-sm whitespace-pre-wrap">{content || 'No script available'}</p>

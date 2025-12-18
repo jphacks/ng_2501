@@ -46,38 +46,12 @@ const API_BASE_URL = `${resolveBackendBaseUrl()}/api`;
 /**
  * Custom hook for interacting with the database and animation generation APIs.
  */
-export const fetchScript = () => {
+export const fetchManimCode = () => {
   const handleError = (error: unknown) => {
     console.error("API call failed:", error);
     // In a real app, you might want to set an error state here
     throw error;
   };
-
-  /**
-   * Edits an existing animation.
-   */
-  const fetchScript = useCallback(async (prompt_id: number): Promise<SuccessResponse> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/get_prompt/${prompt_id}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`HTTP error! status: ${response.status}, details: ${errorData.detail}`);
-      }
-      const data = await response.json();
-      return {
-        ok: true,
-        message: data.prompt,
-      };
-    } catch (error) {
-      handleError(error);
-      throw error;
-    }
-  }, []);
 
   const fetchManimCode = useCallback(async (manim_code_id: number): Promise<SuccessResponse> => {
     try {
@@ -94,7 +68,7 @@ export const fetchScript = () => {
       const data = await response.json();
       return {
         ok: true,
-        message: data.manim_code,
+        message: data.content,
       };
     } catch (error) {
       handleError(error);
@@ -104,7 +78,6 @@ export const fetchScript = () => {
 
 
   return {
-    fetchScript,
     fetchManimCode,
   };
 };

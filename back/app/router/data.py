@@ -83,7 +83,6 @@ async def get_prompt(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# TODO: 正常に実装
 @router.get("/api/get_manim_code/{manim_code_id}", summary="manimコード内容取得API")
 async def get_manim_code(
     manim_code_id: int,
@@ -97,6 +96,6 @@ async def get_manim_code(
     try:
         with open(manim_code_path_full, 'r') as f:
             content = f.read()
-        return JSONResponse(content={"manim_code_id": manim_code_id, "content": content})
+        return JSONResponse(content={"manim_code": content})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

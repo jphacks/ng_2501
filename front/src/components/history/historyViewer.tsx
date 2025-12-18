@@ -14,24 +14,24 @@ interface HistoryViewerProps {
     onClose: () => void
 }
 
+interface HistoryCardProps {
+    video: VideoInfo
+    onLoadVideo: (videoId: string, prompt: string) => Promise<any>
+    content: string
+    title: string
+    manimCode: string
+}
+
 /**
  * A component to display a single video card.
  * On hover, it shows the script.
  */
-function HistoryCard({ video, onLoadVideo }: { video: VideoInfo; onLoadVideo: (videoId: string, prompt: string) => Promise<any> }) {
+function HistoryCard({ video, onLoadVideo, content, title, manimCode }: HistoryCardProps) {
     const [isHovered, setIsHovered] = useState(false)
-    const [content, setContent] = useState<string>('')
-    const [title, setTitle] = useState<string>('Script')
-    const [script, setScript] = useState<string>('')
-    const [editCount, setEditCount] = useState<number>(video.editCount)
-    const [generateTime, setGenerateTime] = useState<string>(video.generateTime)
+    const [editCount] = useState<number>(video.editCount)
+    const [generateTime] = useState<string>(video.generateTime)
     const [isLoading, setIsLoading] = useState(true)
-    const [manimCode, setManimCode] = useState<string>('')
     const [videoUrl, setVideoUrl] = useState<string>('')
-    
-    // フックはコンポーネントのトップレベルで呼び出す
-    const { fetchScript: fetchScriptFn } = fetchScript();
-    const { fetchManimCode: fetchManimCodeFn } = fetchManimCode();
 
     const handleVideoClick = async () => {
         try {
@@ -43,88 +43,23 @@ function HistoryCard({ video, onLoadVideo }: { video: VideoInfo; onLoadVideo: (v
     }
     
     useEffect(() => {
-        const fetchAllContent = async () => {
+        const fetchVideoUrl = async () => {
             setIsLoading(true)
             try {
                 // 動画URLを生成
-                console.log('Fetching video URL for:', video.videoId)
                 const url = await fetchVideo(video.videoId)
                 if (url) {
                     setVideoUrl(url)
-                    console.log('Video URL fetched:', url)
-                }
-
-                // スクリプトを取得
-                console.log('Fetching script for promptId:', video.promptId)
-                const scriptData = await fetchScriptFn(video.promptId)
-                console.log('Script data received:', scriptData)
-
-                if (scriptData && scriptData.message) {
-                    const message = typeof scriptData.message === 'string' ? JSON.parse(scriptData.message) : scriptData.message
-                    if (message && Array.isArray(message.prompt)) {
-                        const index = 3*(video.editCount - 1)
-                        const item = message.prompt[index]
-
-                        if (item && typeof item.content === 'string' && item.content!="") {
-                            setContent(item.content)
-                            setScript(item.content)
-                            setTitle('Script')
-                        } else if (item && typeof item.enhance_prompt === 'string' && item.enhance_prompt!="") {
-                            setContent(item.enhance_prompt)
-                            setScript(item.enhance_prompt)
-                            setTitle('Script')
-                        } else {
-                            setContent('')
-                            setScript('')
-                            setTitle('Script')
-                        }
-                    } else if (Array.isArray(message)) {
-                        const index = 3*(video.editCount - 1)
-                        if (message[index]['content'] === '' && message[index]['enhance_prompt']) {
-                            setContent(message[index]['enhance_prompt'])
-                            setScript('')
-                            setTitle('Enhance Script')
-                        } else if (message[index]['content']) {
-                            const content = message[index]['content']
-                            const script = message[index+1]['content']
-                            setContent(content)
-                            setScript(script)
-                            setTitle('Script')
-                        } else {
-                            setContent('')
-                            setScript('')
-                            setTitle('Script')
-                        }
-                    } else {
-                        setContent('')
-                        setScript('')
-                        setTitle('Script')
-                    }
-                }
-
-                // Manimコードを取得
-                console.log('Fetching manim code for manimCodeId:', video.manimCodeId)
-                const manimCodeData = await fetchManimCodeFn(video.manimCodeId)
-                console.log('Manim code data received:', manimCodeData)
-                
-                if (manimCodeData && manimCodeData.message) {
-                    setManimCode(manimCodeData.message)
-                } else {
-                    setManimCode('')
                 }
             } catch (error) {
-                if (error instanceof Error) {
-                    console.error('Error details:', error.message, error.stack)
-                }
+                console.error('Error fetching video URL:', error)
             } finally {
                 setIsLoading(false)
             }
         }
         
-        fetchAllContent();
-        setEditCount(video.editCount);
-        setGenerateTime(video.generateTime);
-    }, [video.promptId, video.manimCodeId, video.editCount, fetchScriptFn, fetchManimCodeFn]);
+        fetchVideoUrl();
+    }, [video.videoId]);
 
     if (isLoading) {
         return <div className="w-full h-full flex items-center justify-center bg-gray-200 min-h-[200px]">
@@ -153,7 +88,7 @@ function HistoryCard({ video, onLoadVideo }: { video: VideoInfo; onLoadVideo: (v
                         preload="auto"
                     />
                 </button>
-                {isHovered && (
+                {isHovered && false && (
                     <div 
                         className="absolute inset-x-0 top-0 bottom-0 bg-black bg-opacity-70 p-4 overflow-y-auto text-white animate-fade-in cursor-pointer"
                         onClick={handleVideoClick}
@@ -170,9 +105,9 @@ function HistoryCard({ video, onLoadVideo }: { video: VideoInfo; onLoadVideo: (v
             >
                 <p className="text-xs text-gray-600">Edited {editCount} times</p>
                 <p className="text-xs text-gray-600">Generated on {new Date(generateTime).toLocaleString()}</p>
-                <p className="mt-2 font-semibold text-gray-800">Prompt:</p>
+                <p className="mt-2 font-semibold text-gray-800">{title}:</p>
                 <div className="mt-1 max-h-32 overflow-y-auto border rounded p-2 bg-gray-50">
-                    <p className="text-xs font-medium text-gray-800 whitespace-pre-wrap">{script}</p>
+                    <p className="text-xs font-medium text-gray-800 whitespace-pre-wrap">{content}</p>
                 </div>
                 <p className="mt-2 font-semibold text-gray-800">Manim Code:</p>
                 <div className="mt-1 mb-2 max-h-40 overflow-y-auto border rounded p-2 bg-gray-50">
@@ -188,7 +123,125 @@ function HistoryCard({ video, onLoadVideo }: { video: VideoInfo; onLoadVideo: (v
  * Presentation層: 検索された動画をグリッド表示する
  * Youtubeのホーム画面のように、動画が並びカーソルを合わせるとスクリプトが表示される
  */
+interface VideoData {
+    content: string
+    title: string
+    script: string
+    manimCode: string
+}
+
 export function HistoryViewer({ historyResult, onLoadVideo, onClose }: HistoryViewerProps) {
+    const [basePrompt, setBasePrompt] = useState<string>('')
+    const [videoDataMap, setVideoDataMap] = useState<Map<string, VideoData>>(new Map())
+    const [isLoading, setIsLoading] = useState(true)
+    const { fetchScript: fetchScriptFn } = fetchScript();
+    const { fetchManimCode: fetchManimCodeFn } = fetchManimCode();
+
+    useEffect(() => {
+        // 全動画の情報を一度に取得
+        const fetchAllData = async () => {
+            if (!historyResult || historyResult.length === 0) return
+            
+            setIsLoading(true)
+            try {
+                // 最初の動画からスクリプト情報を取得（全動画共通のpromptId）
+                const firstVideo = historyResult[0]
+                const scriptData = await fetchScriptFn(firstVideo.promptId)
+                
+                if (scriptData && scriptData.message) {
+                    const message = typeof scriptData.message === 'string' ? JSON.parse(scriptData.message) : scriptData.message
+                    const newVideoDataMap = new Map<string, VideoData>()
+                    
+                    if (message && Array.isArray(message.prompt)) {
+                        // ベースプロンプトを取得（最初のアイテム）
+                        const firstItem = message.prompt[0]
+                        if (firstItem && typeof firstItem.content === 'string' && firstItem.content !== "") {
+                            setBasePrompt(firstItem.content)
+                        } else if (firstItem && typeof firstItem.enhance_prompt === 'string' && firstItem.enhance_prompt !== "") {
+                            setBasePrompt(firstItem.enhance_prompt)
+                        }
+                        
+                        // 各動画のeditCountに応じた情報を抽出
+                        for (const video of historyResult) {
+                            const index = 3 * (video.editCount - 1)
+                            const item = message.prompt[index]
+                            
+                            let content = ''
+                            let title = 'Script'
+                            let script = ''
+                            
+                            if (item && typeof item.content === 'string' && item.content !== "") {
+                                content = item.content
+                                script = item.content
+                            } else if (item && typeof item.enhance_prompt === 'string' && item.enhance_prompt !== "") {
+                                content = item.enhance_prompt
+                                script = item.enhance_prompt
+                            }
+                            
+                            // Manimコードを取得
+                            let manimCode = ''
+                            try {
+                                const manimCodeData = await fetchManimCodeFn(video.manimCodeId)
+                                if (manimCodeData && manimCodeData.message) {
+                                    manimCode = manimCodeData.message
+                                }
+                            } catch (error) {
+                                console.error('Error fetching manim code for', video.videoId, error)
+                            }
+                            
+                            newVideoDataMap.set(video.videoId, { content, title, script, manimCode })
+                        }
+                    } else if (Array.isArray(message)) {
+                        // 旧形式のメッセージ構造
+                        if (message.length > 0) {
+                            if (message[0]['content']) {
+                                setBasePrompt(message[0]['content'])
+                            } else if (message[0]['enhance_prompt']) {
+                                setBasePrompt(message[0]['enhance_prompt'])
+                            }
+                        }
+                        
+                        for (const video of historyResult) {
+                            const index = 3 * (video.editCount - 1)
+                            let content = ''
+                            let title = 'Script'
+                            let script = ''
+                            
+                            if (message[index] && message[index]['content'] === '' && message[index]['enhance_prompt']) {
+                                content = message[index]['enhance_prompt']
+                                title = 'Enhance Script'
+                            } else if (message[index] && message[index]['content']) {
+                                content = message[index]['content']
+                                script = message[index + 1] ? message[index + 1]['content'] : ''
+                            }
+                            
+                            // Manimコードを取得
+                            let manimCode = ''
+                            try {
+                                const manimCodeData = await fetchManimCodeFn(video.manimCodeId)
+                                if (manimCodeData && manimCodeData.message) {
+                                    manimCode = manimCodeData.message
+                                }
+                            } catch (error) {
+                                console.error('Error fetching manim code for', video.videoId, error)
+                            }
+                            
+                            newVideoDataMap.set(video.videoId, { content, title, script, manimCode })
+                        }
+                    }
+                    
+                    setVideoDataMap(newVideoDataMap)
+                }
+            } catch (error) {
+                console.error('Error fetching all data:', error)
+            } finally {
+                setIsLoading(false)
+            }
+        }
+        
+        fetchAllData()
+    }, [historyResult, fetchScriptFn, fetchManimCodeFn])
+
     if (!historyResult || historyResult.length === 0) {
         return (
             <div className="text-center">
@@ -199,15 +252,50 @@ export function HistoryViewer({ historyResult, onLoadVideo, onClose }: HistoryVi
             </div>
         )
     }
-    console.log('Rendering historyResult:', historyResult);
+
+    if (isLoading) {
+        return (
+            <div className="h-full flex items-center justify-center">
+                <p className="text-gray-500">Loading video history...</p>
+            </div>
+        )
+    }
 
     return (
-        <div>
+        <div className="h-full flex flex-col">
             <Header statusText='履歴一覧' showBackButton={true} onBack={onClose} />
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-                {historyResult.map((video) => (
-                    <HistoryCard key={video.videoId} video={video} onLoadVideo={onLoadVideo} />
-                ))}
+            <div className="flex-1 flex overflow-hidden">
+                {/* 左側: 動画グリッド */}
+                <div className="flex-1 overflow-y-auto p-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {historyResult.map((video) => {
+                            const videoData = videoDataMap.get(video.videoId) || {
+                                content: '',
+                                title: 'Script',
+                                script: '',
+                                manimCode: ''
+                            }
+                            return (
+                                <HistoryCard 
+                                    key={video.videoId} 
+                                    video={video} 
+                                    onLoadVideo={onLoadVideo}
+                                    content={videoData.content}
+                                    title={videoData.title}
+                                    manimCode={videoData.manimCode}
+                                />
+                            )
+                        })}
+                    </div>
+                </div>
+                
+                {/* 右側: ベースプロンプト表示 */}
+                <div className="w-96 border-l border-gray-300 bg-white overflow-y-auto p-4">
+                    <h2 className="text-lg font-bold mb-4 text-gray-800">Base Prompt</h2>
+                    <div className="bg-gray-50 border rounded p-4">
+                        <p className="text-sm text-gray-800 whitespace-pre-wrap">{basePrompt || 'No base prompt available'}</p>
+                    </div>
+                </div>
             </div>
         </div>
     )

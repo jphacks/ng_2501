@@ -5,6 +5,7 @@ import type { VideoInfo } from '@/app/datas/Video'
 import { json } from 'stream/consumers'
 import { useEffect } from 'react';
 import { fetchScript } from '@/app/hooks/fetchScript';
+import fetchVideo from '@/app/hooks/fetchVideo';
 
 interface HistoryViewerProps {
     historyResult: VideoInfo[] | null
@@ -19,8 +20,12 @@ interface HistoryViewerProps {
 function HistoryCard({ video, onLoadVideo }: { video: VideoInfo; onLoadVideo: (videoId: string, prompt: string) => Promise<any> }) {
     const [isHovered, setIsHovered] = useState(false)
     const [content, setContent] = useState<string>('')
+    const [script, setScript] = useState<string>('')
+    const [editCount, setEditCount] = useState<number>(video.editCount)
+    const [generateTime, setGenerateTime] = useState<string>(video.generateTime)
     const [isLoading, setIsLoading] = useState(true)
     const [manimCode, setManimCode] = useState<string>('')
+    const [videoUrl, setVideoUrl] = useState<string>('')
     
     // フックはコンポーネントのトップレベルで呼び出す
     const { fetchScript: fetchScriptFn } = fetchScript();
@@ -29,23 +34,47 @@ function HistoryCard({ video, onLoadVideo }: { video: VideoInfo; onLoadVideo: (v
         const fetchScriptContent = async () => {
             setIsLoading(true)
             try {
+                // 動画URLを生成
+                const url = await fetchVideo(video.videoId)
+                if (url) {
+                    setVideoUrl(url)
+                }
+
                 const scriptData = await fetchScriptFn(video.promptId)
-                // 返却形式: { prompt: [ { trial, content, enhance_prompt }, ... ] }
-                console.log('scriptData:', scriptData)
 
                 if (scriptData && scriptData.message) {
                     const message = typeof scriptData.message === 'string' ? JSON.parse(scriptData.message) : scriptData.message
                     if (message && Array.isArray(message.prompt)) {
-                        const index = video.editCount - 1
+                        const index = 3*(video.editCount - 1)
                         const item = message.prompt[index]
 
                         if (item && typeof item.content === 'string' && item.content!="") {
                             setContent(item.content)
+                            setScript(item.content)
                         } else if (item && typeof item.enhance_prompt === 'string' && item.enhance_prompt!="") {
                             setContent(item.enhance_prompt)
+                            setScript(item.enhance_prompt)
                         } else {
                             setContent('')
+                            setScript('')
                         }
+                    } else if (Array.isArray(message)) {
+                        const index = 3*(video.editCount - 1)
+                        if (message[index]['content'] === '' && message[index]['enhance_prompt']) {
+                            setContent(message[index]['enhance_prompt'])
+                            setScript('')
+                        } else if (message[index]['content']) {
+                            const content = message[index]['content']
+                            const script = message[index+1]['content']
+                            setContent(content)
+                            setScript(script)
+                        } else {
+                            setContent('')
+                            setScript('')
+                        }
+                    } else {
+                        setContent('')
+                        setScript('')
                     }
                 }
             } catch (error) {
@@ -55,6 +84,8 @@ function HistoryCard({ video, onLoadVideo }: { video: VideoInfo; onLoadVideo: (v
             }
         }
         fetchScriptContent();
+        setEditCount(video.editCount);
+        setGenerateTime(video.generateTime);
     }, [video.promptId, video.editCount, fetchScriptFn]);
 
     if (isLoading) {
@@ -63,36 +94,48 @@ function HistoryCard({ video, onLoadVideo }: { video: VideoInfo; onLoadVideo: (v
         </div>
     }
 
-    console.log('Rendering HistoryCard with content:', content);
     return (
-        <div className="relative group border rounded-lg overflow-hidden shadow-lg bg-gray-200 hover:bg-gray-300"
+        <div className="relative group border rounded-lg shadow-lg bg-gray-200 hover:bg-gray-300"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            <button
-                type="button"
-                className="w-full h-full"
-                onClick={() => onLoadVideo(video.videoId, content)}
-            >
-                <video
-                    src={video.videoPath}
-                    className="w-full h-full object-cover"
-                    playsInline
-                    muted
-                    autoPlay
-                    loop
-                    preload="auto"
-                />
+            <div className="relative overflow-hidden rounded-t-lg">
+                <button
+                    type="button"
+                    className="w-full h-full block"
+                    onClick={() => onLoadVideo(video.videoId, content)}
+                >
+                    <video
+                        src={videoUrl}
+                        className="w-full h-full object-cover"
+                        playsInline
+                        muted
+                        autoPlay
+                        loop
+                        preload="auto"
+                    />
+                </button>
                 {isHovered && (
-                    <div className="absolute inset-0 bg-black bg-opacity-70 p-4 overflow-y-auto text-white animate-fade-in">
+                    <div 
+                        className="absolute inset-x-0 top-0 bottom-0 bg-black bg-opacity-70 p-4 overflow-y-auto text-white animate-fade-in cursor-pointer"
+                        onClick={() => onLoadVideo(video.videoId, content)}
+                    >
                         <h3 className="font-bold mb-2">Script</h3>
                         <p className="text-sm whitespace-pre-wrap">{content || 'No script available'}</p>
                     </div>
                 )}
-            </button>
-            <div className="p-2 bg-white">
-                <p className="text-xs text-gray-600">Edited {video.editCount} times</p>
-                <p className="text-xs text-gray-600">Generated on {new Date(video.generateTime).toLocaleString()}</p>
+            </div>
+            <div 
+                className={`bg-white rounded-b-lg transition-all duration-300 ease-in-out overflow-hidden ${
+                    isHovered ? 'max-h-48 p-2 opacity-100' : 'max-h-0 p-0 opacity-0'
+                }`}
+            >
+                <p className="text-xs text-gray-600">Edited {editCount} times</p>
+                <p className="text-xs text-gray-600">Generated on {new Date(generateTime).toLocaleString()}</p>
+                <p className="mt-1 font-semibold text-gray-800">Prompt:</p>
+                <div className="mt-2 max-h-32 overflow-y-auto border-t-2 pb-4">
+                    <p className="text-sm font-medium text-gray-800 whitespace-pre-wrap">{script}</p>
+                </div>
             </div>
         </div>
     )

@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-import type { VideoInfo } from '@/app/datas/Video'
-import { json } from 'stream/consumers'
+import { useState } from 'react';
+import type { VideoInfo } from '@/app/datas/Video';
 import { useEffect } from 'react';
 import { fetchScript } from '@/app/hooks/fetchScript';
 import { fetchManimCode } from '@/app/hooks/fetchManimCode';
 import fetchVideo from '@/app/hooks/fetchVideo';
+import { Header } from '../common/Header';
 
 interface HistoryViewerProps {
     historyResult: VideoInfo[] | null
@@ -195,11 +195,7 @@ export function HistoryViewer({ historyResult, onLoadVideo, onClose }: HistoryVi
 
     return (
         <div>
-            <div className="p-4">
-                <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-white bg-[#0A3B7E] rounded hover:bg-[#0A3B7E]/90">
-                    Back to Home
-                </button>
-            </div>
+            <Header statusText='履歴一覧' showBackButton={true} onBack={onClose} />
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
                 {historyResult.map((video) => (
                     <HistoryCard key={video.videoId} video={video} onLoadVideo={onLoadVideo} />

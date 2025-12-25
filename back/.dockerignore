@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+.eggs/
+*.egg-info/
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Build
+*.log
+.ruff_cache/
+.mypy_cache/
+
+# Development
+tmp/
+Makefile
+
+# Media (生成済みファイルは含めない)
+media/videos/
+media/Tex/
+media/texts/
+
+# その他
+.env
+.env.local
+.env.*.local
+*.local

@@ -66,9 +66,9 @@ class BaseManimAgent(ABC):
         # プロンプトの読み込み
         self.prompts = self._load_prompt(path=prompt_path)
         # LLMの初期化
-        self.pro_llm = self._load_llm("gemini-2.5-pro")
-        self.flash_llm = self._load_llm("gemini-2.5-flash")
-        self.lite_llm = self._load_llm("gemini-2.5-flash-lite")
+        self.pro_llm = self._load_llm("gemini-3-pro-preview")
+        self.flash_llm = self._load_llm("gemini-3-flash-preview")
+        self.lite_llm = self._load_llm("gemini-3-flash-preview")
         self.manim_linter = ManimLinter()
 
         # ローカル関数のpath関連

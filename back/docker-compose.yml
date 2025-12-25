@@ -1,0 +1,12 @@
+services:
+  backend:
+    build: .
+    container_name: ai-agent-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # 生成した動画を永続化
+      - ./media:/app/media
+    restart: unless-stopped

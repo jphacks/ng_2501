@@ -51,8 +51,10 @@ COPY . .
 RUN uv sync --frozen --no-dev
 
 # 仮想環境の PATH を設定
+# PYTHONPATH=/ により back.app... のインポートを可能にする
 ENV PATH="/back/.venv/bin:${PATH}" \
-    VIRTUAL_ENV="/back/.venv"
+    VIRTUAL_ENV="/back/.venv" \
+    PYTHONPATH="/"
 
 # media ディレクトリを作成
 RUN mkdir -p /back/media

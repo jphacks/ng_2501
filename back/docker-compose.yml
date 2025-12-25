@@ -6,7 +6,25 @@ services:
       - "8080:8080"
     environment:
       - PYTHONUNBUFFERED=1
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/devdb
     volumes:
-      # 生成した動画を永続化
       - ./media:/app/media
+    depends_on:
+      - db
     restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    container_name: ai-agent-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: devdb
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+volumes:
+  db_data:

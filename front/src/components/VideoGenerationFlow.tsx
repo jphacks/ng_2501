@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { VideoData } from '@/app/datas/Video'
+import type { VideoData, VideoInfo } from '@/app/datas/Video'
 import { useVideoGeneration } from '../app/hooks/useTextAnalysis'
 import { Generating } from './generating/Generating'
 import { Landing } from './landing/Landing'
@@ -9,6 +9,7 @@ import { Prompt } from './prompt/Prompt'
 import { Result } from './result/Result'
 import { useDB } from '../app/hooks/useDB'
 import { Search } from './search/Search'
+import { History } from './history/history'
 
 // ⚠️ テスト用import（Issue#58）
 // この import を削除すると、テスト用ボタンが表示されなくなります
@@ -22,7 +23,9 @@ import { Search } from './search/Search'
 export function VideoGenerationFlow() {
     const { isGenerating, prompt, result, error, generatePrompt, generateVideo, editVideo, loadExistingVideoTest, loadExistingVideo, clearResult } = useVideoGeneration()
     const [searchResult, setSearchResult] = useState<VideoData[] | null>(null)
-    const { searchVideo } = useDB()
+    const [historyResult, setHistoryResult] = useState<VideoInfo[] | null>(null)
+    const [currentView, setCurrentView] = useState<'result' | 'history'>('result')
+    const { searchVideo, getAnimationHistory } = useDB()
 
     // Landing画面で送信時：プロンプトを生成してPrompt画面に遷移
     const handleLandingSubmit = async (text: string, videoPrompt?: string) => {
@@ -59,6 +62,20 @@ export function VideoGenerationFlow() {
     const isResult = !!result && !isGenerating
     const containerOverflowClass = isLanding ? 'overflow-hidden' : 'overflow-auto'
 
+    const showHistory = async () => {
+        if (!prompt) return
+        const generationId = prompt.generationId
+        const history = await getAnimationHistory(generationId)
+        setHistoryResult(history)
+        setCurrentView('history')
+    }
+    const showResult = () => setCurrentView('result')
+
+    const handleLoadVideoFromHistory = async (videoId: string, promptText: string) => {
+        await loadExistingVideo(videoId, promptText)
+        setCurrentView('result')
+    }
+
     return (
         <div className={`h-full flex flex-col w-full min-w-0 ${containerOverflowClass}`}>
             {/* 状態1: ランディング（テキスト入力） */}
@@ -81,7 +98,9 @@ export function VideoGenerationFlow() {
             {isGeneratingScreen && <Generating />}
 
             {/* 状態4: リザルト */}
-            {isResult && result && <Result result={result} isGenerating={isGenerating} onEdit={editVideo} onReset={clearResult} />}
+            {isResult && currentView === 'result' && result && <Result result={result} isGenerating={isGenerating} onEdit={editVideo} onReset={clearResult} onShowHistory={showHistory} />}
+
+            {currentView === 'history' && prompt && <History historyResult={historyResult} onLoadVideo={handleLoadVideoFromHistory} onClose={showResult} />}
         </div>
     )
 }

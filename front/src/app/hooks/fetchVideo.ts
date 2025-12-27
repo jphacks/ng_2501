@@ -1,3 +1,5 @@
+// TODO: フロントでURLをもとに動画を取得・表示する処理を実装するのではなく、エンコードされているファイル内容を返すように実装する
+
 const stripWrappingQuotes = (value: string) => value.replace(/^['"]|['"]$/g, '')
 
 const resolveBackendUrl = () => {

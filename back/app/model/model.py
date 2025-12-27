@@ -416,5 +416,3 @@ def get_video_db() -> VideoDatabase:
     if _video_db_instance is None:
         _video_db_instance = VideoDatabase()
     return _video_db_instance
-
-

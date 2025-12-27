@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.router import animation
+from app.router import animation, data
 
 app = FastAPI(
     title="AI Agent Backend",
@@ -24,6 +24,7 @@ def root():
     return {"message": "FastAPI server is running 🚀"}
 # ルーター登録
 app.include_router(animation.router)
+app.include_router(data.router)
 
 
 

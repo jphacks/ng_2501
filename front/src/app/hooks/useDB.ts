@@ -1,6 +1,6 @@
 
 import { useCallback } from 'react';
-import type { VideoData } from '@/app/datas/Video';
+import type { VideoData, VideoInfo } from '@/app/datas/Video';
 
 const stripWrappingQuotes = (value: string) => value.replace(/^['"]|['"]$/g, '');
 const resolveBackendBaseUrl = () => {
@@ -208,6 +208,30 @@ export const useDB = () => {
     }
   }, []);
 
+  /**
+   * Fetches the animation history for a given generation ID.
+   * Returns an array of VideoInfo objects.
+   */
+  const getAnimationHistory = useCallback(async (generationId: number): Promise<VideoInfo[]> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/history/${generationId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`HTTP error! status: ${response.status}, details: ${errorData.detail}`);
+      }
+      return await response.json();
+    } catch (error) {
+      handleError(error);
+      throw error;
+    }
+  }, []);
+
+
   return {
     planAnimation,
     generateAnimation,
@@ -215,5 +239,6 @@ export const useDB = () => {
     sendVideoId,
     getVideoInfo,
     searchVideo,
+    getAnimationHistory,
   };
 };
